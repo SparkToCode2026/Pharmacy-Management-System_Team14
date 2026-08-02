@@ -1,0 +1,13 @@
+## WORKSPACE EXECUTIVE SUMMARY (YAML)
+# Generated: 2026-08-02T14:32:03.7299204+04:00
+# Root: C:\Users\Haitham\Documents\SparkToCode\Final Project\Pharmacy-Management-System_Team14\Pharmacy Management System
+Architecture:
+  Type: General Codebase
+  Scale: 1 relevant source files
+  Components: 0
+  Controllers: 0
+  Models: 0
+  Services: 0
+---
+- File: Pharmacy Management System.slnx
+  Preview: "<Solution /> "
