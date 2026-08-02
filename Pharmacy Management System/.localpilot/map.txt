@@ -1,13 +1,73 @@
 ## WORKSPACE EXECUTIVE SUMMARY (YAML)
-# Generated: 2026-08-02T14:32:03.7299204+04:00
+# Generated: 2026-08-02T14:54:38.9456178+04:00
 # Root: C:\Users\Haitham\Documents\SparkToCode\Final Project\Pharmacy-Management-System_Team14\Pharmacy Management System
 Architecture:
-  Type: General Codebase
-  Scale: 1 relevant source files
+  Type: Backend (C#/.NET)
+  Scale: 31 relevant source files
   Components: 0
-  Controllers: 0
-  Models: 0
+  Controllers: 12
+  Models: 12
   Services: 0
 ---
+- File: Pharmacy Management System\Pharmacy Management System.csproj
+  Preview: "<Project Sdk='Microsoft.NET.Sdk.Web'>  <PropertyGroup>   <TargetFramework>net10.0</TargetFramework>   <Nullable>enable</Nullable>   <ImplicitUsings>en..."
 - File: Pharmacy Management System.slnx
-  Preview: "<Solution /> "
+  Preview: "<Solution>  <Project Path='Pharmacy Management System/Pharmacy Management System.csproj' /> </Solution> "
+- File: Pharmacy Management System\appsettings.Development.json
+  Preview: "{  'Logging': {   'LogLevel': {    'Default': 'Information',    'Microsoft.AspNetCore': 'Warning'   }  } } "
+- File: Pharmacy Management System\appsettings.json
+  Preview: "{  'Logging': {   'LogLevel': {    'Default': 'Information',    'Microsoft.AspNetCore': 'Warning'   }  },  'AllowedHosts': '*' } "
+- File: Pharmacy Management System\Program.cs
+  Preview: " namespace Pharmacy_Management_System {   public class Program   {     public static void Main(string[] args)     {       var builder = WebApplication..."
+- File: Pharmacy Management System\ProjectContext.cs
+  Preview: "namespace Pharmacy_Management_System {   public class ProjectContext   {   } } "
+- File: Pharmacy Management System\Controllers\BranchController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class BranchController   {   } } "
+- File: Pharmacy Management System\Controllers\CustomerProfileController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class CustomerProfileController   {   } } "
+- File: Pharmacy Management System\Controllers\ManufacturerController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class ManufacturerController   {   } } "
+- File: Pharmacy Management System\Controllers\MedicineCategoryController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class MedicineCategoryController   {   } } "
+- File: Pharmacy Management System\Controllers\MedicineController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class MedicineController   {   } } "
+- File: Pharmacy Management System\Controllers\OrderController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class OrderController   {   } } "
+- File: Pharmacy Management System\Controllers\OrderItemController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class OrderItemController   {   } } "
+- File: Pharmacy Management System\Controllers\PaymentController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class PaymentController   {   } } "
+- File: Pharmacy Management System\Controllers\PrescriptionController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class PrescriptionController   {   } } "
+- File: Pharmacy Management System\Controllers\StockLevelController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class StockLevelController   {   } } "
+- File: Pharmacy Management System\Controllers\SupplierController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class SupplierController   {   } } "
+- File: Pharmacy Management System\Controllers\UserController.cs
+  Preview: "namespace Pharmacy_Management_System.Controllers {   public class UserController   {   } } "
+- File: Pharmacy Management System\Models\Branch.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class Branch   {   } } "
+- File: Pharmacy Management System\Models\CustomerProfile.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class CustomerProfile   {   } } "
+- File: Pharmacy Management System\Models\Manufacturer.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class Manufacturer   {   } } "
+- File: Pharmacy Management System\Models\Medicine.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class Medicine   {   } } "
+- File: Pharmacy Management System\Models\MedicineCategory.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class MedicineCategory   {   } } "
+- File: Pharmacy Management System\Models\Order.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class Order   {   } } "
+- File: Pharmacy Management System\Models\OrderItem.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class OrderItem   {   } } "
+- File: Pharmacy Management System\Models\Payment.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class Payment   {   } } "
+- File: Pharmacy Management System\Models\Prescription.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class Prescription   {   } } "
+- File: Pharmacy Management System\Models\StockLevel.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class StockLevel   {   } } "
+- File: Pharmacy Management System\Models\Supplier.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class Supplier   {   } } "
+- File: Pharmacy Management System\Models\User.cs
+  Preview: "namespace Pharmacy_Management_System.Models {   public class User   {   } } "
+- File: Pharmacy Management System\Properties\launchSettings.json
+  Preview: "{  '$schema': 'https://json.schemastore.org/launchsettings.json',  'profiles': {   'http': {    'commandName': 'Project',    'dotnetRunMessages': true..."
