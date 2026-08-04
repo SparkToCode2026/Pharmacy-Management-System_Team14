@@ -10,8 +10,8 @@ namespace Pharmacy_Management_System.Models
         public DateTime DateOfBirth { get; set; }
 
 
-        [ForeignKey("Customer")]
+        [ForeignKey("Users")]
         public int UserId { get; set; } // Foreign key to the User entity
-        public User Customer { get; set; } // Navigation property to the User entity
+        public User Users { get; set; } // Navigation property to the User entity
     }
 }
