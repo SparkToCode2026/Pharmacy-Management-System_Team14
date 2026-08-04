@@ -6,7 +6,7 @@ namespace Pharmacy_Management_System.Models
         [Key]
         public int RoleId { get; set; }
         [Required]
-        public string RoleName { get; set; }
+        public string RoleName { get; set; } = string.Empty;
 
         // Navigation property back to User
         public List<User> Users { get; set; } = new List<User>();
