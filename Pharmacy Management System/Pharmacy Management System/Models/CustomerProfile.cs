@@ -1,4 +1,6 @@
-﻿namespace Pharmacy_Management_System.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Pharmacy_Management_System.Models
 {
     public class CustomerProfile
     {
@@ -7,5 +9,9 @@
         public string CustomerAddress { get; set; }
         public DateTime DateOfBirth { get; set; }
 
+
+        [ForeignKey("Customer")]
+        public int UserId { get; set; } // Foreign key to the User entity
+        public User Customer { get; set; } // Navigation property to the User entity
     }
 }
