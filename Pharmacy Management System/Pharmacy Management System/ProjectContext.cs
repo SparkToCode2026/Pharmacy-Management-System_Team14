@@ -7,5 +7,8 @@ namespace Pharmacy_Management_System
     {
         public DbSet<Manufacturer> Manufacturer { get; set; }
         public DbSet<User> User { get; set; }
+
+        public DbSet<Branch> Branch { get; set; }
+        public DbSet<CustomerProfile> CustomerProfile { get; set; }
     }
 }
