@@ -15,6 +15,8 @@
         [ForeignKey("Manufacturer")]
         public int ManufacturerId { get; set; }
         public Manufacturer Manufacturer { get; set; }
+        public DateTime MedicineProductionDate { get; set; }
+        public DateTime MedicineExpiryDate { get; set; }
 
         // 1: N Relationship with OrderItem
         public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
