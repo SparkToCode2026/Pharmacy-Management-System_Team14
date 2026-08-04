@@ -6,5 +6,6 @@ namespace Pharmacy_Management_System
     public class ProjectContext : DbContext
     {
         public DbSet<Manufacturer> Manufacturer { get; set; }
+        public DbSet<User> User { get; set; }
     }
 }
