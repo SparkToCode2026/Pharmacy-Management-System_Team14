@@ -18,5 +18,12 @@ namespace Pharmacy_Management_System.DTOs
 
         public List<string> Roles { get; set; } = new();
     }
-
+    // DTO for sending data back to the client (Response)
+    public class UserOutputDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public List<string> Roles { get; set; } = new();
+    }
 }
