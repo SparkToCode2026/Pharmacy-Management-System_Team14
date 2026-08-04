@@ -20,4 +20,13 @@ namespace Pharmacy_Management_System.DTOs
         [StringLength(150)]
         public string ContactEmail { get; set; } = string.Empty;
     }
+    // DTO for sending data back to the client
+    public class ManufacturerOutputDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string LicenseNumber { get; set; } = string.Empty;
+        public string ContactPhone { get; set; } = string.Empty;
+        public string ContactEmail { get; set; } = string.Empty;
+    }
 }
