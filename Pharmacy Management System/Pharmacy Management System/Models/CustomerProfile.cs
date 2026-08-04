@@ -1,12 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Pharmacy_Management_System.Models
 {
     public class CustomerProfile
     {
+        [Key]
         public int CustomerId { get; set; }
-        public string CustomerPhone { get; set; }
+        [Required, Phone]
+        public int CustomerPhone { get; set; } 
+        [Required]
         public string CustomerAddress { get; set; }
+        [Required]
         public DateTime DateOfBirth { get; set; }
 
 

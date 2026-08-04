@@ -1,13 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Pharmacy_Management_System.Models
 {
     public class Branch
     {
+        [Key]
         public int BranchId { get; set; }
+        [Required]
         public string BranchName { get; set; }
+        [Required]
         public string BranchAddress { get; set; }
+        [Required]
         public string BranchCity { get; set; }
+        [Required, Phone]
         public int BranchPhone { get; set; }
 
 
