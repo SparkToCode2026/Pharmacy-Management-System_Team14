@@ -1,4 +1,6 @@
-﻿namespace Pharmacy_Management_System.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+namespace Pharmacy_Management_System.Models
 {
     public class Medicine
     {
@@ -22,7 +24,7 @@
         public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
         //N: N Relationship with Prescription
-        public List<Prescription> Prescriptions { get; set; } = new List<Prescription();
+        public List<Prescription> Prescriptions { get; set; } = new List<Prescription>();
 
         // 1: N Relationship with MedicineCategory
         [ForeignKey("MedicineCategory")]

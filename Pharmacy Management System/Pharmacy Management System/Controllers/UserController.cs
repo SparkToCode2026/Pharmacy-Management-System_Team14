@@ -1,6 +1,17 @@
-﻿namespace Pharmacy_Management_System.Controllers
+﻿using Microsoft.AspNetCore.Mvc;
+using Pharmacy_Management_System.Models;
+namespace Pharmacy_Management_System.Controllers
 {
-    public class UserController
+    [ApiController]
+    [Route("User")]
+    public class UserController : ControllerBase
     {
+        private ProjectContext _context;
+        public UserController(ProjectContext context)
+        {
+            _context = context;
+        }
+
+
     }
 }
