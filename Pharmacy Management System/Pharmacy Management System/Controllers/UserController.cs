@@ -37,7 +37,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // Update the username and email of a user
         [HttpPut("{id}")]
-        public IActionResult UpdateUser(int id, User U)
+        public IActionResult UpdateUser(int id, [FromBody] User U)
         {
             //Check if the user exists in the database
             var user = _context.User.Find(id);
@@ -58,7 +58,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // Update the password of a user
         [HttpPatch("{id}/password")]
-        public IActionResult UpdatePassword(int id, string newPassword)
+        public IActionResult UpdatePassword(int id, [FromBody] string newPassword)
         {
             //Check if the user exists in the database
             var user = _context.User.Find(id);
@@ -119,7 +119,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         [HttpGet("search")]
-        public IActionResult SearchUsers(string? search)
+        public IActionResult SearchUsers([FromQuery] string? search)
         {
             // Retrieve users based on the search query, including their related entity
             var query = _context.User
@@ -138,10 +138,11 @@ namespace Pharmacy_Management_System.Controllers
         }
 
 
-
+        // Sort users by ID in ascending order
         [HttpGet("SortByID")]
         public IActionResult SortbyID()
         {
+            // Retrieve all users including their related entity and sort them by ID in ascending order
             var user = _context.User
                                 .Include(u => u.CustomerProfile)
                                 .OrderBy(u => u.UserId)
