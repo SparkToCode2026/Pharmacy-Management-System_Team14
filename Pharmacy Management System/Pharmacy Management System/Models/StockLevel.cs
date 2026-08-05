@@ -79,5 +79,23 @@
                                            .ToList();
                 return Ok(stockLevels);
             }
+
+
+
+            //Get a stock level by id with their medicine and branch
+            [HttpGet("{id}")]
+            public IActionResult GetStockLevel(int id)
+            {
+                //Check if the stock level exists in database
+                var stock = _context.StockLevel
+                                     .Include(s => s.Medicine)
+                                     .Include(s => s.Branch)
+                                     .FirstOrDefault(s => s.StockLevelId == id);
+                if (stock == null)
+                {
+                    return NotFound();
+                }
+                return Ok(stock);
+            }
         }
 }
