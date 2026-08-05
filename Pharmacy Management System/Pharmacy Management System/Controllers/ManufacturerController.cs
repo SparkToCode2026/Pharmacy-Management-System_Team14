@@ -110,13 +110,18 @@ namespace Pharmacy_Management_System.Controllers
 
         //Search for manufacturers by name
         [HttpGet("search")]
-        public IActionResult SearchManufacturer([FromQuery] string name)
+        public IActionResult SearchManufacturer([FromQuery] string? name)
         {
             //Search for manufacturers by name
-            var manufacturers = _context.Manufacturer
-                                        .Where(m => m.ManufacturerName.Contains(name))
-                                        .Include(m => m.Medicines)
-                                        .ToList();
+            var query = _context.Manufacturer
+                        .Include(m => m.Medicines)
+                        .AsQueryable();
+            //If the name is not null or empty, filter the manufacturers by name
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                query = query.Where(m => m.ManufacturerName.Contains(name));
+            }
+            var manufacturers = query.ToList();
             return Ok(manufacturers);
         }
 
