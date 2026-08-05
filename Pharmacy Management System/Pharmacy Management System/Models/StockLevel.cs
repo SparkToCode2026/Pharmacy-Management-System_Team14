@@ -20,5 +20,22 @@
                 _context.SaveChanges();
                 return Ok(stockLevel);
             }
+
+            //Update stock quantity and reorder level
+            [HttpPut("{id}")]
+            public IActionResult UpdateStockLevel(int id, [FromBody] StockLevel stockLevel)
+            {
+                //Check i stock level exists in DB
+                var stock = _context.StockLevel.Find(id);
+                if (stock == null)
+                {
+                    return NotFound();
+                }
+                stock.CurrentQuantity = stockLevel.CurrentQuantity;
+                stock.ReorderLevel = stockLevel.ReorderLevel;
+
+                _context.SaveChanges();
+                return Ok(stock);
+            }
         }
 }
