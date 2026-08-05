@@ -89,6 +89,23 @@ namespace Pharmacy_Management_System.Controllers
                                                 .ToList();
             return Ok(manufacturers);
         }
+
+
+
+        //Get a manufacturer by id with their medicines
+        [HttpGet("{id}")]
+        public IActionResult GetManufacturer(int id)
+        {
+            //Check if the manufacturer exists in the database
+            var manu = _context.Manufacturer
+                                 .Include(m => m.Medicines)
+                                 .FirstOrDefault(m => m.ManufacturerId == id);
+            if (manu == null)
+            {
+                return NotFound();
+            }
+            return Ok(manu);
+        }
     }
 }
 
