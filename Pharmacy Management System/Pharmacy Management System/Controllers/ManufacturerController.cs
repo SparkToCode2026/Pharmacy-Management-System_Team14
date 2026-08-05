@@ -15,7 +15,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Create a new manufacturer
-        [HttpPost ("CreateManufacturer")]
+        [HttpPost("CreateManufacturer")]
         public IActionResult CreateManufacturer([FromBody] Manufacturer manufacturer)
         {
             bool ManuExists = _context.Manufacturer.Any(m => m.ManufacturerName == manufacturer.ManufacturerName || m.LicenseNumber == manufacturer.LicenseNumber);
@@ -119,5 +119,16 @@ namespace Pharmacy_Management_System.Controllers
                                         .ToList();
             return Ok(manufacturers);
         }
+
+
+
+        //Get the count of manufacturers
+        [HttpGet("count")]
+        public IActionResult Count()
+        {
+            var count = _context.Manufacturer.Count();
+            return Ok(count);
+        }
+    }
 }
 
