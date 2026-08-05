@@ -97,5 +97,18 @@
                 }
                 return Ok(stock);
             }
+
+
+            //Filter items where CurrentQuantity is at or below ReorderLevel
+            [HttpGet("low-stock")]
+            public IActionResult GetLowStock()
+            {
+                var lowStock = _context.StockLevel
+                                        .Include(s => s.Medicine)
+                                        .Include(s => s.Branch)
+                                        .Where(s => s.CurrentQuantity <= s.ReorderLevel)
+                                        .ToList();
+                return Ok(lowStock);
+            }
         }
 }
