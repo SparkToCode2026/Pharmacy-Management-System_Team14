@@ -136,5 +136,17 @@ namespace Pharmacy_Management_System.Controllers
             var users = query.ToList();
             return Ok(users);
         }
+
+
+
+        [HttpGet("SortByID")]
+        public IActionResult SortbyID()
+        {
+            var user = _context.User
+                                .Include(u => u.CustomerProfile)
+                                .OrderBy(u => u.UserId)
+                                .ToList();
+            return Ok(user);
+        }
     }
 }
