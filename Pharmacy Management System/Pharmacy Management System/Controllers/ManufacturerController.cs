@@ -106,6 +106,18 @@ namespace Pharmacy_Management_System.Controllers
             }
             return Ok(manu);
         }
-    }
+
+
+        //Search for manufacturers by name
+        [HttpGet("search")]
+        public IActionResult SearchManufacturer([FromQuery] string name)
+        {
+            //Search for manufacturers by name
+            var manufacturers = _context.Manufacturer
+                                        .Where(m => m.ManufacturerName.Contains(name))
+                                        .Include(m => m.Medicines)
+                                        .ToList();
+            return Ok(manufacturers);
+        }
 }
 
