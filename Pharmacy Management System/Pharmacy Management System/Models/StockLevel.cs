@@ -68,5 +68,16 @@
                 _context.SaveChanges();
                 return Ok();
             }
+
+            //Get stock records with corresponding medicine and branch
+            [HttpGet]
+            public IActionResult GetAllStockLevels()
+            {
+                var stockLevels = _context.StockLevel
+                                           .Include(s => s.Medicine)
+                                           .Include(s => s.Branch)
+                                           .ToList();
+                return Ok(stockLevels);
+            }
         }
 }
