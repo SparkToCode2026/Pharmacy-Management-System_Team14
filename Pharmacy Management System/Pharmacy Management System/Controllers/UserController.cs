@@ -89,7 +89,17 @@ namespace Pharmacy_Management_System.Controllers
         }
 
 
+        // Get a list of all users along with their related entity
+        [HttpGet]
+        public IActionResult getAllUsers()
+        {
+            // Retrieve all users including their related entity 
+            var users = _context.User
+                                .Include(u => u.CustomerProfile)
+                                .ToList();
 
+            return Ok(users);
+        }
 
 
 
