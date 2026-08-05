@@ -115,5 +115,26 @@ namespace Pharmacy_Management_System.Controllers
             }
             return Ok(user);
         }
+
+
+
+        [HttpGet("search")]
+        public IActionResult SearchUsers(string? search)
+        {
+            // Retrieve users based on the search query, including their related entity
+            var query = _context.User
+                        .Include(u => u.CustomerProfile)
+                        .AsQueryable();
+
+            // If a search query is provided, filter the users based on the username or email
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                query = query.Where(u => u.Username.Contains(search) || u.Email.Contains(search));
+            }
+
+            
+            var users = query.ToList();
+            return Ok(users);
+        }
     }
 }
