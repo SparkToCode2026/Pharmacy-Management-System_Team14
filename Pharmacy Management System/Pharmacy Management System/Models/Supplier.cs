@@ -10,18 +10,27 @@ namespace Pharmacy_Management_System.Models
 
 
         // Supplier information
+
         [Required]
         public string SupplierName { get; set; } = string.Empty;
+
 
         [Required]
         public string SupplierEmail { get; set; } = string.Empty;
 
+
         [Required]
         public string SupplierPhone { get; set; } = string.Empty;
+
 
         [Required]
         public string SupplierAddress { get; set; } = string.Empty;
 
+
+
+        // 1:N Relationship with Medicine
+
+        public List<Medicine> Medicines { get; set; } = new List<Medicine>();
 
     }
 }
