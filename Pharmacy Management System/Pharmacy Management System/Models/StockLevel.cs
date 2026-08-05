@@ -53,5 +53,20 @@
                 _context.SaveChanges();
                 return Ok(stock);
             }
+
+            //Delete stock level entry
+            [HttpDelete("{id}")]
+            public IActionResult DeleteStockLevel(int id)
+            {
+                //Check that stock level exists in DB
+                var stock = _context.StockLevel.Find(id);
+                if (stock == null)
+                {
+                    return NotFound();
+                }
+                _context.StockLevel.Remove(stock);
+                _context.SaveChanges();
+                return Ok();
+            }
         }
 }
