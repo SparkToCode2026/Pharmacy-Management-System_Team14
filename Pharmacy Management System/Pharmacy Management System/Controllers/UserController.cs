@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
 namespace Pharmacy_Management_System.Controllers
 {
@@ -71,6 +72,22 @@ namespace Pharmacy_Management_System.Controllers
             _context.SaveChanges();
             return Ok(user);
         }
+
+        // Delete a user
+        [HttpDelete("{id}")]
+        public IActionResult DeleteUser(int id)
+        {
+            //Check if the user exists in the database
+            var user = _context.User.Find(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            _context.User.Remove(user);
+            _context.SaveChanges();
+            return Ok("User deleted successfully.");
+        }
+
 
 
 
