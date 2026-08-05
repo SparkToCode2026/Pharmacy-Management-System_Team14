@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace Pharmacy_Management_System.Models
 {
     public class MedicineCategory
@@ -7,8 +7,6 @@ namespace Pharmacy_Management_System.Models
         // Primary Key
         [Key]
         public int MedicineCategoryId { get; set; }
-
-
 
         // Medicine Category information
 
