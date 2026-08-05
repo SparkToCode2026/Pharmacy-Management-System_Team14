@@ -23,7 +23,5 @@ namespace Pharmacy_Management_System.Models
         public string SupplierAddress { get; set; } = string.Empty;
 
 
-        // 1:N Relationship with Prescription
-        public List<Prescription> Prescriptions { get; set; } = new List<Prescription>();
     }
 }
