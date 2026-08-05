@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-namespace Pharmacy_Management_System.Models
+﻿namespace Pharmacy_Management_System.Models
 {
     public class MedicineCategory
     {
