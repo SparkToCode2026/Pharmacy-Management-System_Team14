@@ -102,6 +102,18 @@ namespace Pharmacy_Management_System.Controllers
         }
 
 
-
+        // Get a specific user by ID along with their related entity
+        [HttpGet("{id}")]
+        public IActionResult getUser(int id) {
+            // Retrieve the user by ID including their related entity
+            var user = _context.User
+                                .Include(u => u.CustomerProfile)
+                                .FirstOrDefault(u => u.UserId == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
+        }
     }
 }
