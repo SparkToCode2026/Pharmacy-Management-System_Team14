@@ -13,6 +13,8 @@ namespace Pharmacy_Management_System.Controllers
         }
 
 
+
+        // Register a new user
         [HttpPost("register")]
         public IActionResult Register(User U)
         {
@@ -22,10 +24,17 @@ namespace Pharmacy_Management_System.Controllers
             {
                 return BadRequest("Username or Email is already taken.");
             }
+            // Hash the password before saving it to the database
+            U.Password = BCrypt.Net.BCrypt.HashPassword(U.Password);
             _context.User.Add(U);
             _context.SaveChanges();
             return Ok(U.UserId);
         }
+
+
+
+
+        // Update the username and email of a user
         [HttpPut("{id}")]
         public IActionResult UpdateUser(int id, User U)
         {
@@ -41,6 +50,31 @@ namespace Pharmacy_Management_System.Controllers
             _context.SaveChanges();
             return Ok(user);
         }
+
+
+
+
+
+        // Update the password of a user
+        [HttpPatch("{id}/password")]
+        public IActionResult UpdatePassword(int id, string newPassword)
+        {
+            //Check if the user exists in the database
+            var user = _context.User.Find(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            // Hash the new password before saving it to the database
+            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            
+            _context.SaveChanges();
+            return Ok(user);
+        }
+
+
+
+
 
     }
 }
