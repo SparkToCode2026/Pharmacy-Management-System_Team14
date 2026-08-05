@@ -62,6 +62,21 @@ namespace Pharmacy_Management_System.Controllers
         }
 
 
+
+        //Delete a manufacturer
+        [HttpDelete("{id}")]
+        public IActionResult DeleteManufacturer(int id)
+        {
+            //Check if the manufacturer exists in the database
+            var manu = _context.Manufacturer.Find(id);
+            if (manu == null)
+            {
+                return NotFound();
+            }
+            _context.Manufacturer.Remove(manu);
+            _context.SaveChanges();
+            return Ok();
+        }
     }
 }
 
