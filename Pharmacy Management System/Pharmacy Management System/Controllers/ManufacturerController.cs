@@ -46,6 +46,20 @@ namespace Pharmacy_Management_System.Controllers
 
 
 
+        //Update the contact information of a manufacturer
+        [HttpPatch("{id}/contact")]
+        public IActionResult UpdateContactManufacturer(int id, [FromBody] string newContactInfo)
+        {
+            //Check if the manufacturer exists in the database
+            var manu = _context.Manufacturer.Find(id);
+            if (manu == null)
+            {
+                return NotFound();
+            }
+            manu.ContactNumber = newContactInfo;
+            _context.SaveChanges();
+            return Ok(manu);
+        }
 
 
     }
