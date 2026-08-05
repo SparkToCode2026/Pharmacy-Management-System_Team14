@@ -110,5 +110,19 @@
                                         .ToList();
                 return Ok(lowStock);
             }
+
+            //Sort stock levels by quantity and total quantity per branch
+            [HttpGet("summary")]
+            public IActionResult GetStockSummary()
+            {
+                var sorted = _context.StockLevel
+                                      .OrderBy(s => s.CurrentQuantity)
+                                      .ToList();
+                var totalPerBranch = _context.StockLevel
+                                              .GroupBy(s => s.BranchId)
+                                              .Select(g => new { BranchId = g.Key, TotalQuantity = g.Sum(s => s.CurrentQuantity) })
+                                              .ToList();
+                return Ok(new { SortedByQuantity = sorted, TotalPerBranch = totalPerBranch });
+            }
         }
 }
