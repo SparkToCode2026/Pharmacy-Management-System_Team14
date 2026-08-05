@@ -77,6 +77,18 @@ namespace Pharmacy_Management_System.Controllers
             _context.SaveChanges();
             return Ok();
         }
+
+
+        //Get all manufacturers with their medicines
+        [HttpGet]
+        public IActionResult GetAllManufacturer()
+        {
+            //Get all manufacturers with their medicines
+            var manufacturers = _context.Manufacturer.
+                                                Include(m => m.Medicines)
+                                                .ToList();
+            return Ok(manufacturers);
+        }
     }
 }
 
