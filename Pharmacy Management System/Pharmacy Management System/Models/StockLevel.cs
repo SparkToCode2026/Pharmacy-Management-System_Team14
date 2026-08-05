@@ -37,5 +37,21 @@
                 _context.SaveChanges();
                 return Ok(stock);
             }
+
+            //Restock: add quantity and update the last restocked date
+            [HttpPatch("{id}/restock")]
+            public IActionResult Restock(int id, [FromBody] int quantityAdded)
+            {
+                //Check if stock level exists in DB
+                var stock = _context.StockLevel.Find(id);
+                if (stock == null)
+                {
+                    return NotFound();
+                }
+                stock.CurrentQuantity += quantityAdded;
+                stock.LastRestockedDate = DateTime.Now;
+                _context.SaveChanges();
+                return Ok(stock);
+            }
         }
 }
