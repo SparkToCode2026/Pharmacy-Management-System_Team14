@@ -1,12 +1,14 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Pharmacy_Management_System.Models
 {
     public class Order
     {
         [Key]
+        [JsonIgnore]
         public int OrderId { get; set; }
 
         [Required]
@@ -24,15 +26,17 @@ namespace Pharmacy_Management_System.Models
         // N:1 Relationship with User
         [ForeignKey("User")]
         public int UserId { get; set; }
-
+        [JsonIgnore]
         public User? User { get; set; }
 
 
         // 1:N Relationship with OrderItem
-        public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        [JsonIgnore]
+        public List<OrderItem>? OrderItems { get; set; } = new List<OrderItem>();
 
         // N:1 Relationship with Branch
         public int BranchId { get; set; }
+        [JsonIgnore]
         public Branch? Branch { get; set; }
 
 

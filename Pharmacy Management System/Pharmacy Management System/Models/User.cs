@@ -6,6 +6,7 @@ namespace Pharmacy_Management_System.Models
     public class User
     {
         [Key]
+        [JsonIgnore]
         public int UserId { get; set; }
         [Required]
         public string Username { get; set; } = string.Empty;
@@ -18,17 +19,21 @@ namespace Pharmacy_Management_System.Models
 
 
         // Multi-valued attribute 
-        public List<Role> Roles { get; set; } = new List<Role>();
+        [JsonIgnore]
+        public List<Role>? Roles { get; set; } = new List<Role>();
 
 
         // 1:1 Relationship with CustomerProfile
+        [JsonIgnore]
         public CustomerProfile? CustomerProfile { get; set; }
 
         // 1:N Relationship with Order
-        public List<Order> Orders { get; set; } = new List<Order>();
+        [JsonIgnore]
+        public List<Order>? Orders { get; set; } = new List<Order>();
 
 
         // 1:N Relationship with Prescription
-        public List<Prescription> Prescriptions { get; set; } = new List<Prescription>();
+        [JsonIgnore]
+        public List<Prescription>? Prescriptions { get; set; } = new List<Prescription>();
     }
 }

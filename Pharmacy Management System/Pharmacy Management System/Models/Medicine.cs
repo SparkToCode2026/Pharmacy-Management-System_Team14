@@ -7,7 +7,7 @@ namespace Pharmacy_Management_System.Models
     {
         // Primary Key
         [Key]
-        
+        [JsonIgnore]
         public int MedicineId { get; set; }
 
 
@@ -24,7 +24,7 @@ namespace Pharmacy_Management_System.Models
         [ForeignKey("Manufacturer")]
         public int ManufacturerId { get; set; }
         [JsonIgnore]
-        public Manufacturer Manufacturer { get; set; }
+        public Manufacturer? Manufacturer { get; set; }
 
         // Medicine Production and Expiry Dates
         public DateTime MedicineProductionDate { get; set; }
@@ -33,29 +33,29 @@ namespace Pharmacy_Management_System.Models
 
         // 1:N Relationship with OrderItem
         [JsonIgnore]
-        public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public List<OrderItem>? OrderItems { get; set; } = new List<OrderItem>();
 
 
         // N:N Relationship with Prescription
         [JsonIgnore]
-        public List<Prescription> Prescriptions { get; set; } = new List<Prescription>();
+        public List<Prescription>? Prescriptions { get; set; } = new List<Prescription>();
 
 
         // 1:N Relationship with MedicineCategory
         [ForeignKey("MedicineCategory")]
         public int MedicineCategoryId { get; set; }
         [JsonIgnore]
-        public MedicineCategory MedicineCategory { get; set; }
+        public MedicineCategory? MedicineCategory { get; set; }
 
         //1: N Relationship with Supplier
         [ForeignKey("Supplier")]
         public int SupplierId { get; set; }
         [JsonIgnore]
-        public Supplier Supplier { get; set; }
+        public Supplier? Supplier { get; set; }
 
         // 1: N Relationship with stocklevel
         [JsonIgnore]
-        public List<StockLevel> StockLevels { get; set; } = new List<StockLevel>();
+        public List<StockLevel>? StockLevels { get; set; } = new List<StockLevel>();
 
 
     }

@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Pharmacy_Management_System.Models
 {
     public class StockLevel
     {
         [Key]
+        [JsonIgnore]
         public int StockLevelId { get; set; }
 
         [Required]
@@ -19,11 +21,13 @@ namespace Pharmacy_Management_System.Models
         // N:1 Relationship with Medicine
         [Required]
         public int MedicineId { get; set; }
-        public Medicine Medicine { get; set; } = null!;
+        [JsonIgnore]
+        public Medicine? Medicine { get; set; } = null!;
 
         // N:1 Relationship with Branch
         [Required]
         public int BranchId { get; set; }
-        public Branch Branch { get; set; } = null!;
+        [JsonIgnore]
+        public Branch? Branch { get; set; } = null!;
     }
 }

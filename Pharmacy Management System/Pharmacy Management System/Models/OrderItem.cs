@@ -7,6 +7,7 @@ namespace Pharmacy_Management_System.Models
     public class OrderItem
     {
         [Key]
+        [JsonIgnore]
         public int OrderItemId { get; set; }
 
         [Required]
@@ -17,13 +18,21 @@ namespace Pharmacy_Management_System.Models
 
         public decimal Subtotal { get; set; }
 
+
+
+
+
+        // Foreign key for Order
         public int OrderId { get; set; }
 
         [JsonIgnore]
         public Order? Order { get; set; }
 
+
+        // Foreign key for Medicine
         public int MedicineId { get; set; }
 
+        [JsonIgnore]    
         public Medicine? Medicine { get; set; }
 
         public void RecalculateSubtotal()

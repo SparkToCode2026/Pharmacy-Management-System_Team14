@@ -7,7 +7,7 @@ namespace Pharmacy_Management_System.Models
     {
         // Primary Key
         [Key]
-        
+        [JsonIgnore]
         public int MedicineCategoryId { get; set; }
 
         // Medicine Category information
@@ -23,7 +23,7 @@ namespace Pharmacy_Management_System.Models
 
         // 1:N Relationship with Medicine
         [JsonIgnore]
-        public List<Medicine> Medicines { get; set; } = new List<Medicine>();
+        public List<Medicine>? Medicines { get; set; } = new List<Medicine>();
 
     }
 }

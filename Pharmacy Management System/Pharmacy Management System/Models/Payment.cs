@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Pharmacy_Management_System.Models
 {
     public class Payment
     {
         [Key]
+        [JsonIgnore]
         public int PaymentId { get; set; }
 
         [Required]
@@ -22,7 +24,8 @@ namespace Pharmacy_Management_System.Models
         // 1:1 Relationship with Order
         [Required]
         public int OrderId { get; set; }
-        public Order Order { get; set; } = null!;
+        [JsonIgnore]
+        public Order? Order { get; set; } = null!;
     }
 
     public enum PaymentMethod
