@@ -31,6 +31,10 @@ namespace Pharmacy_Management_System.Models
         // 1:N Relationship with OrderItem
         public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 
+        // N:1 Relationship with Branch
+        public int BranchId { get; set; }
+        public Branch? Branch { get; set; }
+
 
         // TotalAmount is a derived attribute: the sum of all line subtotals.
         public void RecalculateTotal()

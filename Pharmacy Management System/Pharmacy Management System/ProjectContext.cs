@@ -30,5 +30,10 @@ namespace Pharmacy_Management_System
         public DbSet<StockLevel> StockLevel => StockLevels;
         public DbSet<Payment> Payment => Payments;
 
+        public ProjectContext(DbContextOptions<ProjectContext> options) : base(options)
+        {
+        }
+
+
     }
 }
