@@ -7,7 +7,7 @@ namespace Pharmacy_Management_System.Models
     {
         // Primary Key
         [Key]
-        [JsonIgnore]
+        
         public int MedicineCategoryId { get; set; }
 
         // Medicine Category information
