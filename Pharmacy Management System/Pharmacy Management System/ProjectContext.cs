@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
 
+
 namespace Pharmacy_Management_System
 {
     public class ProjectContext : DbContext
@@ -10,5 +11,12 @@ namespace Pharmacy_Management_System
 
         public DbSet<Branch> Branch { get; set; }
         public DbSet<CustomerProfile> CustomerProfile { get; set; }
+        public DbSet<Medicine> Medicines { get; set; }
+        public DbSet<MedicineCategory> MedicineCategories { get; set; }
+        public DbSet<Order> Order { get; set; }
+        public DbSet<OrderItem> OrderItem { get; set; }
+        public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<Prescription> Prescriptions { get; set; }
+
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Pharmacy_Management_System.Models
 {
@@ -11,6 +12,7 @@ namespace Pharmacy_Management_System.Models
         [Required]
         public string Email { get; set; } = string.Empty;
         [Required]
+        [JsonIgnore]
         public string Password { get; set; }= string.Empty;
         public DateTime createdAt { get; set; } = DateTime.Now;
 
