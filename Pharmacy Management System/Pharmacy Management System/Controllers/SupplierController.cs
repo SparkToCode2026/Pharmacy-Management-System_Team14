@@ -20,7 +20,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 1. GET: Get all suppliers
         // Retrieve all supplier information
-        [HttpGet]
+        [HttpGet("GetSuppliers")]
         public async Task<ActionResult<IEnumerable<Supplier>>> GetSuppliers()
         {
             return await _context.Suppliers.ToListAsync();
@@ -31,7 +31,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 2. GET: Get supplier by Id
         // Find specific supplier using SupplierId
-        [HttpGet("{id}")]
+        [HttpGet("GetSupplierById")]
         public async Task<ActionResult<Supplier>> GetSupplierById(int id)
         {
             var supplier = await _context.Suppliers
@@ -53,7 +53,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 3. POST: Create new supplier
         // Add new supplier record
-        [HttpPost]
+        [HttpPost("CreateSupplier")]
         public async Task<ActionResult<Supplier>> CreateSupplier(Supplier supplier)
         {
             _context.Suppliers.Add(supplier);
@@ -72,7 +72,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 4. PUT: Update supplier
         // Modify supplier information
-        [HttpPut("{id}")]
+        [HttpPut("UpdateSupplier")]
         public async Task<IActionResult> UpdateSupplier(int id, Supplier supplier)
         {
             if (id != supplier.SupplierId)
@@ -96,7 +96,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 5. DELETE: Delete supplier
         // Remove supplier from database
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteSupplier")]
         public async Task<IActionResult> DeleteSupplier(int id)
         {
             var supplier = await _context.Suppliers

@@ -29,7 +29,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Update a payment record
-        [HttpPut("{id}")]
+        [HttpPut("UpdatePayment")]
         public IActionResult UpdatePayment(int id, [FromBody] Payment payment)
         {
             var pay = _context.Payment.Find(id);
@@ -46,7 +46,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Update the payment status
-        [HttpPatch("{id}/status")]
+        [HttpPatch("UpdatePaymentStatus")]
         public IActionResult UpdatePaymentStatus(int id, [FromBody] PaymentStatus newStatus)
         {
             var pay = _context.Payment.Find(id);
@@ -60,7 +60,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Delete a payment record
-        [HttpDelete("{id}")]
+        [HttpDelete("DeletePayment")]
         public IActionResult DeletePayment(int id)
         {
             var pay = _context.Payment.Find(id);
@@ -74,7 +74,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Get all payments with their order
-        [HttpGet]
+        [HttpGet("GetAllPayments")]
         public IActionResult GetAllPayments()
         {
             var payments = _context.Payment
@@ -84,7 +84,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Get a payment by id with their order
-        [HttpGet("{id}")]
+        [HttpGet("GetPayment")]
         public IActionResult GetPayment(int id)
         {
             var pay = _context.Payment
@@ -98,7 +98,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Filter payments by status
-        [HttpGet("filter")]
+        [HttpGet("FilterByStatus")]
         public IActionResult FilterByStatus([FromQuery] PaymentStatus? status)
         {
             var query = _context.Payment.AsQueryable();
@@ -111,7 +111,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Sort payments by date and calculate total revenue
-        [HttpGet("revenue")]
+        [HttpGet("GetRevenue")]
         public IActionResult GetRevenue()
         {
             var sorted = _context.Payment

@@ -20,7 +20,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 1. POST: Create a new Prescription
         // Create prescription record with validation
-        [HttpPost]
+        [HttpPost("CreatePrescription")]
         public async Task<ActionResult<Prescription>> CreatePrescription(Prescription prescription)
         {
             _context.Prescriptions.Add(prescription);
@@ -36,7 +36,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 2. PUT: Update Prescription information
         // Update all prescription details
-        [HttpPut("{id}")]
+        [HttpPut("UpdatePrescription")]
         public async Task<IActionResult> UpdatePrescription(int id, Prescription prescription)
         {
             if (id != prescription.PrescriptionId)
@@ -57,7 +57,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 3. PUT: Second update case
         // Update prescription status only
-        [HttpPut("{id}/status")]
+        [HttpPut("UpdatePrescriptionStatus  ")]
         public async Task<IActionResult> UpdatePrescriptionStatus(int id, string status)
         {
             var prescription = await _context.Prescriptions
@@ -83,7 +83,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // 4. DELETE: Delete Prescription
-        [HttpDelete("{id}")]
+        [HttpDelete("DeletePrescription")]
         public async Task<IActionResult> DeletePrescription(int id)
         {
             var prescription = await _context.Prescriptions
@@ -110,7 +110,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 5. GET: Get all prescriptions
         // Include related User and Medicines data
-        [HttpGet]
+        [HttpGet("GetAllPrescriptions")]
         public async Task<ActionResult<IEnumerable<Prescription>>> GetPrescriptions()
         {
             return await _context.Prescriptions
@@ -123,7 +123,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // 6. GET: Find prescription by Id
-        [HttpGet("{id}")]
+        [HttpGet("GetPrescriptionById")]
         public async Task<ActionResult<Prescription>> GetPrescriptionById(int id)
         {
             var prescription = await _context.Prescriptions
@@ -148,7 +148,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // 7. GET: Filter prescriptions using LINQ
         // Filter by prescription status
-        [HttpGet("filter/{status}")]
+        [HttpGet("FilterPrescription")]
         public async Task<ActionResult<IEnumerable<Prescription>>> FilterPrescription(string status)
         {
             var prescriptions = await _context.Prescriptions

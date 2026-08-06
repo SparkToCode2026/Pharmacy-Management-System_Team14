@@ -28,7 +28,7 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(manufacturer);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("UpdateManufacturer")]
         public IActionResult UpdateManufacturer(int id, [FromBody] Manufacturer manufacturer)
         {
             //Check if the manufacturer exists in the database
@@ -47,7 +47,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         //Update the contact information of a manufacturer
-        [HttpPatch("{id}/contact")]
+        [HttpPatch("UpdateManufacturerContact")]
         public IActionResult UpdateContactManufacturer(int id, [FromBody] string newContactInfo)
         {
             //Check if the manufacturer exists in the database
@@ -64,7 +64,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         //Delete a manufacturer
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteManufacturer")]
         public IActionResult DeleteManufacturer(int id)
         {
             //Check if the manufacturer exists in the database
@@ -80,7 +80,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         //Get all manufacturers with their medicines
-        [HttpGet]
+        [HttpGet("GetAllManufacturers")]
         public IActionResult GetAllManufacturer()
         {
             //Get all manufacturers with their medicines
@@ -93,7 +93,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         //Get a manufacturer by id with their medicines
-        [HttpGet("{id}")]
+        [HttpGet("GetManufacturerById")]
         public IActionResult GetManufacturer(int id)
         {
             //Check if the manufacturer exists in the database
@@ -109,7 +109,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         //Search for manufacturers by name
-        [HttpGet("search")]
+        [HttpGet("SearchManufacturer")]
         public IActionResult SearchManufacturer([FromQuery] string? name)
         {
             //Search for manufacturers by name

@@ -20,9 +20,10 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 1 - POST: create a new order with its order items.
-        [HttpPost]
+        [HttpPost("CreateOrder")]
         public async Task<ActionResult<Order>> CreateOrder(Order order)
         {
+            // Validate the order and its items before saving to the database.
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -72,7 +73,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 2 - PUT: update an existing order.
-        [HttpPut("{id}")]
+        [HttpPut("UpdateOrder")]
         public async Task<IActionResult> UpdateOrder(int id, Order updated)
         {
             if (!ModelState.IsValid)
@@ -110,7 +111,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 3 - PATCH: a distinct update that only changes the order status.
-        [HttpPatch("{id}/status")]
+        [HttpPatch("UpdateOrderStatus")]
         public async Task<IActionResult> UpdateOrderStatus(int id, string status)
         {
             string[] allowed = { "Pending", "Confirmed", "Preparing", "Ready", "Completed", "Cancelled" };
@@ -140,7 +141,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 4 - DELETE: delete an order and its items.
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteOrder")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
             var order = await _context.Orders
@@ -161,7 +162,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 5 - GET (list): all orders, including OrderItems and User via Include().
-        [HttpGet]
+        [HttpGet("GetAllOrders")]
         public async Task<ActionResult<IEnumerable<Order>>> GetAllOrders()
         {
             var orders = await _context.Order
@@ -175,7 +176,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 6 - GET (find): a single order by id.
-        [HttpGet("{id}")]
+        [HttpGet("GetOrderById")]
         public async Task<ActionResult<Order>> GetOrderById(int id)
         {
             var order = await _context.Order
@@ -194,7 +195,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 7 - GET (filter): filter orders using LINQ Where().
-        [HttpGet("filter")]
+        [HttpGet("FilterOrders")]
         public async Task<ActionResult<IEnumerable<Order>>> FilterOrders(
             string? status, int? userId, DateTime? fromDate, DateTime? toDate, string? username)
         {

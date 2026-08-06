@@ -36,7 +36,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Update the username and email of a user
-        [HttpPut("{id}")]
+        [HttpPut("UpdateUser")] 
         public IActionResult UpdateUser(int id, [FromBody] User U)
         {
             //Check if the user exists in the database
@@ -57,7 +57,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Update the password of a user
-        [HttpPatch("{id}/password")]
+        [HttpPatch("UpdatePassword")]
         public IActionResult UpdatePassword(int id, [FromBody] string newPassword)
         {
             //Check if the user exists in the database
@@ -74,7 +74,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         // Delete a user
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteUser")]
         public IActionResult DeleteUser(int id)
         {
             //Check if the user exists in the database
@@ -90,7 +90,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Get a list of all users along with their related entity
-        [HttpGet]
+        [HttpGet("GetAllUsers")]
         public IActionResult getAllUsers()
         {
             // Retrieve all users including their related entity 
@@ -103,7 +103,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Get a specific user by ID along with their related entity
-        [HttpGet("{id}")]
+        [HttpGet("GetUserById")]
         public IActionResult getUser(int id) {
             // Retrieve the user by ID including their related entity
             var user = _context.User

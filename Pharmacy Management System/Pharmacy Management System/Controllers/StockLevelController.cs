@@ -24,7 +24,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Update stock quantity and reorder level
-        [HttpPut("{id}")]
+        [HttpPut("UpdateStockLevel")]
         public IActionResult UpdateStockLevel(int id, [FromBody] StockLevel stockLevel)
         {
             var stock = _context.StockLevel.Find(id);
@@ -40,7 +40,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Restock quantity and update the last restocked date
-        [HttpPatch("{id}/restock")]
+        [HttpPatch("restock")]
         public IActionResult Restock(int id, [FromBody] int quantityAdded)
         {
             var stock = _context.StockLevel.Find(id);
@@ -55,7 +55,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Delete stock level entry
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteStockLevel")]
         public IActionResult DeleteStockLevel(int id)
         {
             var stock = _context.StockLevel.Find(id);
@@ -69,7 +69,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Get stock records with corresponding medicine and branch
-        [HttpGet]
+        [HttpGet("GetAllStockLevels")]
         public IActionResult GetAllStockLevels()
         {
             var stockLevels = _context.StockLevel
@@ -80,7 +80,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         //Get a stock level by id with their medicine and branch
-        [HttpGet("{id}")]
+        [HttpGet("GetStockLevel")]
         public IActionResult GetStockLevel(int id)
         {
             var stock = _context.StockLevel

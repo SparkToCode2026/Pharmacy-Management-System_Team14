@@ -1,9 +1,14 @@
-# Use this workspace to collaborate
 workspace:
   id: 893d1551-f5b2-4237-8a41-3840ec2ac6ba
-
-# All resources in the `postman/` folder are automatically registered in Local View.
-# Point to additional files outside the `postman/` folder to register them individually. Example:
-#localResources:
-#  collections:
-#    - ../tests/E2E Test Collection/
+localResources:
+  specs:
+    - ../postman/specs/Pharmacy Management System/index.json
+    - ../postman/specs/Pharmacy Management System-1/index.json
+    - ../postman/specs/Pharmacy Management System-2/index.json
+    - ../postman/specs/Pharmacy Management System-3/swagger.json
+resourceNameMappings:
+  specs:
+    - ../postman/specs/Pharmacy Management System/index.json: Pharmacy Management System
+    - ../postman/specs/Pharmacy Management System-1/index.json: Pharmacy Management System
+    - ../postman/specs/Pharmacy Management System-2/index.json: Pharmacy Management System
+    - ../postman/specs/Pharmacy Management System-3/swagger.json: Pharmacy Management System
