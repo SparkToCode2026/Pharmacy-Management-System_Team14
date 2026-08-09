@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Pharmacy_Management_System.Models
 {
@@ -8,6 +9,7 @@ namespace Pharmacy_Management_System.Models
     {
         // Primary Key
         [Key]
+        [JsonIgnore]
         public int PrescriptionId { get; set; }
 
 
@@ -36,6 +38,7 @@ namespace Pharmacy_Management_System.Models
 
         // 1:N Relationship with User
         // One User can have many Prescriptions
+        [JsonIgnore]
         public User? User { get; set; }
 
 
@@ -43,7 +46,8 @@ namespace Pharmacy_Management_System.Models
         // N:N Relationship with Medicine
         // One Prescription can contain many Medicines
         // One Medicine can exist in many Prescriptions
-        public List<Medicine> Medicines { get; set; } = new List<Medicine>();
+        [JsonIgnore]
+        public List<Medicine>? Medicines { get; set; } = new List<Medicine>();
 
     }
 }

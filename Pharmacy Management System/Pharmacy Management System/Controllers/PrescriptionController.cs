@@ -22,10 +22,8 @@ namespace Pharmacy_Management_System.Controllers
 
         // =====================================================
         // 1. POST: Create a new Prescription
-        // Creates a new prescription record and saves it into the database.
-        // Model validation is checked before saving the data.
-        // =====================================================
-        [HttpPost]
+        // Create prescription record with validation
+        [HttpPost("CreatePrescription")]
         public async Task<ActionResult<Prescription>> CreatePrescription(Prescription prescription)
         {
             // Check if the submitted data follows the validation rules
@@ -53,12 +51,9 @@ namespace Pharmacy_Management_System.Controllers
 
 
 
-
-        // =====================================================
-        // 2. PUT: Update Prescription
-        // Updates all prescription information.
-        // =====================================================
-        [HttpPut("{id}")]
+        // 2. PUT: Update Prescription information
+        // Update all prescription details
+        [HttpPut("UpdatePrescription")]
         public async Task<IActionResult> UpdatePrescription(int id, Prescription prescription)
         {
             // Check if the route id matches the prescription id
@@ -99,13 +94,9 @@ namespace Pharmacy_Management_System.Controllers
 
 
 
-
-        // =====================================================
-        // 3. PUT: Update Prescription Status
-        // Updates only the status of a prescription.
-        // This is a second independent update case.
-        // =====================================================
-        [HttpPut("{id}/status")]
+        // 3. PUT: Second update case
+        // Update prescription status only
+        [HttpPut("UpdatePrescriptionStatus  ")]
         public async Task<IActionResult> UpdatePrescriptionStatus(int id, string status)
         {
             // Search for the prescription by id
@@ -137,9 +128,7 @@ namespace Pharmacy_Management_System.Controllers
 
         // =====================================================
         // 4. DELETE: Delete Prescription
-        // Removes a prescription record from the database.
-        // =====================================================
-        [HttpDelete("{id}")]
+        [HttpDelete("DeletePrescription")]
         public async Task<IActionResult> DeletePrescription(int id)
         {
             // Find the prescription that should be deleted
@@ -168,13 +157,9 @@ namespace Pharmacy_Management_System.Controllers
 
 
 
-
-        // =====================================================
-        // 5. GET: Get All Prescriptions
-        // Returns all prescriptions with related User and Medicines data.
-        // Include() is used to load navigation properties.
-        // =====================================================
-        [HttpGet]
+        // 5. GET: Get all prescriptions
+        // Include related User and Medicines data
+        [HttpGet("GetAllPrescriptions")]
         public async Task<ActionResult<IEnumerable<Prescription>>> GetPrescriptions()
         {
             return await _context.Prescriptions
@@ -191,12 +176,8 @@ namespace Pharmacy_Management_System.Controllers
 
 
 
-
-        // =====================================================
-        // 6. GET: Get Prescription By Id
-        // Returns a single prescription using its primary key.
-        // =====================================================
-        [HttpGet("{id}")]
+        // 6. GET: Find prescription by Id
+        [HttpGet("GetPrescriptionById")]
         public async Task<ActionResult<Prescription>> GetPrescriptionById(int id)
         {
             // Search for prescription and include related data
@@ -224,13 +205,9 @@ namespace Pharmacy_Management_System.Controllers
 
 
 
-        // =====================================================
-        // 7. GET: Filter Prescriptions
-        // Filters prescriptions based on their status.
-        // Uses LINQ Where() method.
-        // Example: Pending, Completed.
-        // =====================================================
-        [HttpGet("filter/{status}")]
+        // 7. GET: Filter prescriptions using LINQ
+        // Filter by prescription status
+        [HttpGet("FilterPrescription")]
         public async Task<ActionResult<IEnumerable<Prescription>>> FilterPrescription(string status)
         {
             var prescriptions = await _context.Prescriptions

@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 namespace Pharmacy_Management_System.Models
 {
     public class Manufacturer
     {
         [Key]
+        [JsonIgnore]
         public int ManufacturerId { get; set; }
         [Required]
         public string ManufacturerName { get; set; }
@@ -15,7 +17,8 @@ namespace Pharmacy_Management_System.Models
         public string ContactEmail { get; set; }
 
         // 1:N Relationship with Medicine
-        public List<Medicine> Medicines { get; set; } = new List<Medicine>();
+        [JsonIgnore]
+        public List<Medicine>? Medicines { get; set; } = new List<Medicine>();
 
     }
 }
