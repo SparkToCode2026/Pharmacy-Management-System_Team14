@@ -13,9 +13,9 @@ namespace Pharmacy_Management_System.Models
         public string Username { get; set; } = string.Empty;
         [Required]
         public string Email { get; set; } = string.Empty;
-        [Required]
         
-        public string Password { get; set; }= string.Empty;
+        
+        public string? Password { get; set; }
         public DateTime createdAt { get; set; } = DateTime.Now;
 
 
