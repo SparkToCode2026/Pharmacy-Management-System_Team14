@@ -19,7 +19,6 @@ namespace Pharmacy_Management_System
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
-        public DbSet<Role> Roles { get; set; }
 
         // Backwards-compatible singular property names used elsewhere in the codebase
         public DbSet<Manufacturer> Manufacturer => Manufacturers;

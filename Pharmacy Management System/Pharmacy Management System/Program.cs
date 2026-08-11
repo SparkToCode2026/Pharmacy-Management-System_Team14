@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -9,25 +10,11 @@ namespace Pharmacy_Management_System
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Define CORS Policy Name
-            var allowAllOrigins = "_allowAllOrigins";
-
             // Add services to the container.
             builder.Services.AddDbContext<ProjectContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // 2. Register CORS Service
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(name: allowAllOrigins,
-                    policy =>
-                    {
-                        policy.AllowAnyOrigin()
-                              .AllowAnyMethod()
-                              .AllowAnyHeader();
-                    });
-            });
-
+            //builder.Services.AddControllers();
             builder.Services.AddControllers(options =>
             {
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
@@ -60,7 +47,8 @@ namespace Pharmacy_Management_System
                         new List<string>()
                     }
                 });
-            });
+                        });
+
 
             var app = builder.Build();
 
@@ -73,10 +61,8 @@ namespace Pharmacy_Management_System
 
             app.UseHttpsRedirection();
 
-            // 3. Enable CORS Middleware (Must be before UseAuthorization)
-            app.UseCors(allowAllOrigins);
-
             app.UseAuthorization();
+
 
             app.MapControllers();
 
