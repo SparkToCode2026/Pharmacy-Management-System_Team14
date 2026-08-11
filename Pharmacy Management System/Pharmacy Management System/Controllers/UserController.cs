@@ -47,7 +47,18 @@ namespace Pharmacy_Management_System.Controllers
             }
             user.Username = U.Username;
             user.Email = U.Email;
-            
+            if (U.RoleId > 0)
+            {
+                user.RoleId = U.RoleId;
+            }
+
+            ModelState.Remove("Password");
+            ModelState.Remove("Role");
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             _context.SaveChanges();
             return Ok(user);
         }
