@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Pharmacy_Management_System.Models
@@ -6,21 +7,23 @@ namespace Pharmacy_Management_System.Models
     public class User
     {
         [Key]
-        [JsonIgnore]
+        
         public int UserId { get; set; }
         [Required]
         public string Username { get; set; } = string.Empty;
         [Required]
         public string Email { get; set; } = string.Empty;
         [Required]
-        [JsonIgnore]
+        
         public string Password { get; set; }= string.Empty;
         public DateTime createdAt { get; set; } = DateTime.Now;
 
 
         // Multi-valued attribute 
-        [JsonIgnore]
-        public List<Role>? Roles { get; set; } = new List<Role>();
+        public int? RoleId { get; set; }
+
+        [ForeignKey("RoleId")]
+        public Role? Role { get; set; }
 
 
         // 1:1 Relationship with CustomerProfile
