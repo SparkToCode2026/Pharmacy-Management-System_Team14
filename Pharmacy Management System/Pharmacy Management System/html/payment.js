@@ -1,8 +1,8 @@
 const API = "http://localhost:5009/Payment";
 
-// 1. GET ALL
+// 1. GET ALL 
 function loadPayments() {
-  fetch(`${API}`)
+  fetch(`${API}/GetAllPayments`)
     .then(res => {
       if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
       return res.json();
@@ -36,7 +36,7 @@ function statusBadge(status) {
   return `<span class="badge bg-${colors[status] || 'secondary'}">${status}</span>`;
 }
 
-// 2. CREATE
+// 2. CREATE 
 document.getElementById("paymentForm")?.addEventListener("submit", e => {
   e.preventDefault();
   const newPayment = {
@@ -71,7 +71,7 @@ function editPayment(id, amount, date, method) {
   modal.show();
 }
 
-// 4. UPDATE
+// 4. UPDATE 
 document.getElementById("editPaymentForm")?.addEventListener("submit", e => {
   e.preventDefault();
   const id = document.getElementById("editPaymentId").value;
@@ -81,7 +81,7 @@ document.getElementById("editPaymentForm")?.addEventListener("submit", e => {
     paymentDate: document.getElementById("editPaymentDate").value,
     paymentMethod: document.getElementById("editPaymentMethod").value
   };
-  fetch(`${API}/${id}`, {
+  fetch(`${API}/UpdatePayment?id=${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedData)
@@ -95,10 +95,10 @@ document.getElementById("editPaymentForm")?.addEventListener("submit", e => {
   });
 });
 
-// 5. DELETE
+// 5. DELETE 
 function deletePayment(id) {
   if (confirm("Are you sure?")) {
-    fetch(`${API}/${id}`, { method: "DELETE" })
+    fetch(`${API}/DeletePayment?id=${id}`, { method: "DELETE" })
       .then(res => { if (res.ok) loadPayments(); });
   }
 }
