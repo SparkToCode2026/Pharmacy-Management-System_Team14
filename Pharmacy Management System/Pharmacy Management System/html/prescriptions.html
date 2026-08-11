@@ -2,329 +2,508 @@
 <html lang="en">
 
 <head>
+
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 
   <title>Prescription Management - Pharmacy System</title>
 
+
   <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link 
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+  rel="stylesheet">
+
 
   <!-- Custom CSS -->
   <link href="style.css" rel="stylesheet">
+
+
 </head>
+
 
 
 <body>
 
-  <!-- Navigation Bar Placeholder -->
-  <div id="navbar-placeholder"></div>
 
+<!-- Navigation Bar Placeholder -->
 
-  <main class="container my-5">
+<div id="navbar-placeholder"></div>
 
-    <h2 class="mb-4 text-primary">
-      Prescription Management
-    </h2>
 
 
-    <!-- Add New Prescription Card -->
 
-    <div class="card mb-4 shadow-sm">
+<main class="container my-5">
 
-      <div class="card-header bg-primary text-white">
-        <h5 class="card-title mb-0">
-          Register New Prescription
-        </h5>
-      </div>
 
+<h2 class="mb-4 text-primary">
+  Prescription Management
+</h2>
 
-      <div class="card-body">
 
-        <form id="addPrescriptionForm">
 
-          <div class="row g-3">
 
 
-            <div class="col-md-4">
-              <label for="prescriptionDoctorName" class="form-label">
-                Doctor Name
-              </label>
+<!-- Register New Prescription Card -->
 
-              <input type="text"
-                     class="form-control"
-                     id="prescriptionDoctorName"
-                     placeholder="Enter doctor name">
-            </div>
 
+<div class="card mb-4 shadow-sm">
 
 
-            <div class="col-md-4">
+<div class="card-header bg-primary text-white">
 
-              <label for="prescriptionDate" class="form-label">
-                Prescription Date
-              </label>
+<h5 class="card-title mb-0">
+  Register New Prescription
+</h5>
 
-              <input type="date"
-                     class="form-control"
-                     id="prescriptionDate">
+</div>
 
-            </div>
 
 
 
-            <div class="col-md-4">
+<div class="card-body">
 
-              <label for="prescriptionDosage" class="form-label">
-                Dosage
-              </label>
 
-              <input type="text"
-                     class="form-control"
-                     id="prescriptionDosage"
-                     placeholder="Enter dosage">
+<form id="addPrescriptionForm">
 
-            </div>
 
+<div class="row g-3">
 
 
-            <div class="col-md-4">
 
-              <label for="prescriptionDuration" class="form-label">
-                Duration
-              </label>
 
-              <input type="text"
-                     class="form-control"
-                     id="prescriptionDuration"
-                     placeholder="Example: 7 Days">
 
-            </div>
+<!-- Doctor Name -->
 
+<div class="col-md-3">
 
+<label for="prescriptionDoctorName" class="form-label">
+Doctor Name
+</label>
 
-            <div class="col-md-4">
 
-              <label for="prescriptionStatus" class="form-label">
-                Status
-              </label>
+<input
+type="text"
+class="form-control"
+id="prescriptionDoctorName"
+placeholder="Enter doctor name"
+required>
 
-              <select class="form-select" id="prescriptionStatus">
 
-                <option selected disabled>
-                  Select status...
-                </option>
+</div>
 
-                <option>
-                  Pending
-                </option>
 
-                <option>
-                  Approved
-                </option>
 
-                <option>
-                  Completed
-                </option>
 
-              </select>
 
-            </div>
+<!-- Date -->
 
+<div class="col-md-3">
 
+<label for="prescriptionDate" class="form-label">
+Prescription Date
+</label>
 
-            <div class="col-md-4">
 
-              <label for="userId" class="form-label">
-                User ID
-              </label>
+<input
+type="date"
+class="form-control"
+id="prescriptionDate"
+required>
 
-              <input type="number"
-                     class="form-control"
-                     id="userId"
-                     placeholder="Enter User ID">
 
-            </div>
+</div>
 
 
-          </div>
 
 
 
-          <button type="submit"
-                  class="btn btn-success mt-3">
+<!-- Dosage -->
 
-            Add Prescription
+<div class="col-md-3">
 
-          </button>
+<label for="prescriptionDosage" class="form-label">
+Dosage
+</label>
 
 
-        </form>
+<input
+type="text"
+class="form-control"
+id="prescriptionDosage"
+placeholder="Enter dosage"
+required>
 
-      </div>
 
-    </div>
+</div>
 
 
 
 
 
-    <!-- Prescription List Card -->
+<!-- Duration -->
 
+<div class="col-md-3">
 
-    <div class="card shadow-sm">
+<label for="prescriptionDuration" class="form-label">
+Duration
+</label>
 
 
-      <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+<input
+type="text"
+class="form-control"
+id="prescriptionDuration"
+placeholder="Example: 7 Days"
+required>
 
 
-        <h5 class="card-title mb-0">
-          Prescription List
-        </h5>
+</div>
 
 
-        <button class="btn btn-sm btn-light">
-          Refresh
-        </button>
 
 
-      </div>
 
+<!-- Status -->
 
+<div class="col-md-3">
 
-      <div class="card-body">
+<label for="prescriptionStatus" class="form-label">
+Status
+</label>
 
 
-        <table class="table table-striped table-hover">
+<select
+class="form-select"
+id="prescriptionStatus"
+required>
 
 
-          <thead>
+<option selected disabled>
+Select status...
+</option>
 
-            <tr>
 
-              <th>ID</th>
-              <th>Doctor Name</th>
-              <th>Date</th>
-              <th>Dosage</th>
-              <th>Duration</th>
-              <th>Status</th>
-              <th>User ID</th>
-              <th>Actions</th>
+<option>
+Pending
+</option>
 
-            </tr>
 
-          </thead>
+<option>
+Approved
+</option>
 
 
+<option>
+Completed
+</option>
 
-          <tbody>
 
+</select>
 
-            <tr>
 
-              <td>1</td>
-              <td>Dr. Ahmed</td>
-              <td>2026-08-01</td>
-              <td>500mg</td>
-              <td>7 Days</td>
-              <td>Approved</td>
-              <td>2</td>
+</div>
 
-              <td>
 
-                <button class="btn btn-sm btn-warning">
-                  Edit
-                </button>
 
-                <button class="btn btn-sm btn-danger">
-                  Delete
-                </button>
 
-              </td>
 
-            </tr>
+<!-- User ID -->
 
+<div class="col-md-3">
 
+<label for="userId" class="form-label">
+User ID
+</label>
 
 
-            <tr>
+<input
+type="number"
+class="form-control"
+id="userId"
+placeholder="Enter User ID"
+required>
 
-              <td>2</td>
-              <td>Dr. Ali</td>
-              <td>2026-08-05</td>
-              <td>250mg</td>
-              <td>5 Days</td>
-              <td>Pending</td>
-              <td>1</td>
 
+</div>
 
-              <td>
 
-                <button class="btn btn-sm btn-warning">
-                  Edit
-                </button>
 
 
-                <button class="btn btn-sm btn-danger">
-                  Delete
-                </button>
+</div>
 
-              </td>
 
-            </tr>
 
 
 
-          </tbody>
+<button
+type="submit"
+class="btn btn-success mt-3">
 
+Add Prescription
 
-        </table>
+</button>
 
 
-      </div>
 
+</form>
 
-    </div>
 
+</div>
 
-  </main>
 
+</div>
 
 
 
 
-  <!-- Footer Placeholder -->
 
-  <div id="footer-placeholder"></div>
 
 
+<!-- Registered Prescriptions Card -->
 
 
+<div class="card shadow-sm">
 
-  <!-- Shared Component Loader -->
 
-  <script>
 
-    fetch("navbar.html")
-      .then(response => response.text())
-      .then(data => {
+<div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
 
-        document.getElementById("navbar-placeholder").innerHTML = data;
 
-      });
+<h5 class="card-title mb-0">
 
+Registered Prescriptions
 
+</h5>
 
-    fetch("footer.html")
-      .then(response => response.text())
-      .then(data => {
 
-        document.getElementById("footer-placeholder").innerHTML = data;
 
-      });
+<button class="btn btn-sm btn-light">
 
+Refresh
 
-  </script>
+</button>
+
+
+
+</div>
+
+
+
+
+
+
+<div class="card-body">
+
+
+<table class="table table-striped table-hover align-middle">
+
+
+
+<thead>
+
+
+<tr>
+
+<th>ID</th>
+
+<th>Doctor Name</th>
+
+<th>Date</th>
+
+<th>Dosage</th>
+
+<th>Duration</th>
+
+<th>Status</th>
+
+<th>User ID</th>
+
+<th class="text-center">
+Actions
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+
+
+
+<tbody>
+
+
+
+<tr>
+
+
+<td>1</td>
+
+<td>Dr. Ahmed</td>
+
+<td>2026-08-01</td>
+
+<td>500mg</td>
+
+<td>7 Days</td>
+
+<td>Approved</td>
+
+<td>2</td>
+
+
+
+<td class="text-center">
+
+
+<button class="btn btn-sm btn-warning me-1">
+
+Edit
+
+</button>
+
+
+
+<button class="btn btn-sm btn-danger">
+
+Delete
+
+</button>
+
+
+
+</td>
+
+
+</tr>
+
+
+
+
+
+<tr>
+
+
+<td>2</td>
+
+<td>Dr. Ali</td>
+
+<td>2026-08-05</td>
+
+<td>250mg</td>
+
+<td>5 Days</td>
+
+<td>Pending</td>
+
+<td>1</td>
+
+
+
+<td class="text-center">
+
+
+<button class="btn btn-sm btn-warning me-1">
+
+Edit
+
+</button>
+
+
+
+<button class="btn btn-sm btn-danger">
+
+Delete
+
+</button>
+
+
+
+</td>
+
+
+</tr>
+
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+</main>
+
+
+
+
+
+
+
+<!-- Footer Placeholder -->
+
+
+<div id="footer-placeholder"></div>
+
+
+
+
+
+
+
+<!-- Shared Component Loader -->
+
+
+<script>
+
+
+fetch("navbar.html")
+
+.then(response => response.text())
+
+.then(data => {
+
+document.getElementById("navbar-placeholder").innerHTML = data;
+
+});
+
+
+
+
+
+fetch("footer.html")
+
+.then(response => response.text())
+
+.then(data => {
+
+document.getElementById("footer-placeholder").innerHTML = data;
+
+});
+
+
+
+</script>
+
+
 
 
 </body>
