@@ -16,7 +16,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         [HttpPost("AddMedicine")]
-        public IActionResult AddMedicine(Medicine medicine)
+        public IActionResult AddMedicine([FromBody] Medicine medicine)
         {
             
             context.Medicines.Add(medicine);
@@ -36,7 +36,7 @@ namespace Pharmacy_Management_System.Controllers
             return NotFound("Medicine not found.");
         }
         [HttpPut("UpdateMedicine")]
-        public IActionResult UpdateMedicine(Medicine medicine)
+        public IActionResult UpdateMedicine([FromBody] Medicine medicine)
         {
             var existingMedicine = context.Medicines.FirstOrDefault(m => m.MedicineId == medicine.MedicineId);
             if (existingMedicine != null)
@@ -48,6 +48,7 @@ namespace Pharmacy_Management_System.Controllers
                 existingMedicine.MedicineDescription = medicine.MedicineDescription;
                 existingMedicine.MedicineProductionDate = medicine.MedicineProductionDate;
                 existingMedicine.MedicineExpiryDate = medicine.MedicineExpiryDate;
+                existingMedicine.SupplierId = medicine.SupplierId;
                 context.SaveChanges();
                 return Ok("Medicine updated successfully.");
             }
