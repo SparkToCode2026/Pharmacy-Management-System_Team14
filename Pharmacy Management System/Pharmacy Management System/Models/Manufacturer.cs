@@ -5,7 +5,7 @@ namespace Pharmacy_Management_System.Models
     public class Manufacturer
     {
         [Key]
-        [JsonIgnore]
+        
         public int ManufacturerId { get; set; }
         [Required]
         public string ManufacturerName { get; set; }
