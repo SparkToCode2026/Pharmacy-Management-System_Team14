@@ -3,35 +3,28 @@
 
 <head>
 
-  <meta charset="UTF-8" />
+<meta charset="UTF-8" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-
-  <title>Prescription Management - Pharmacy System</title>
-
-
-  <!-- Bootstrap 5 CSS -->
-  <link 
-  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
-  rel="stylesheet">
+<title>Prescription Management - Pharmacy System</title>
 
 
-  <!-- Custom CSS -->
-  <link href="style.css" rel="stylesheet">
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+
+<link href="style.css" rel="stylesheet">
 
 
 </head>
 
 
-
 <body>
 
 
-<!-- Navigation Bar Placeholder -->
-
 <div id="navbar-placeholder"></div>
-
 
 
 
@@ -39,15 +32,14 @@
 
 
 <h2 class="mb-4 text-primary">
-  Prescription Management
+Prescription Management
 </h2>
 
 
 
 
 
-<!-- Register New Prescription Card -->
-
+<!-- Add Prescription -->
 
 <div class="card mb-4 shadow-sm">
 
@@ -55,11 +47,10 @@
 <div class="card-header bg-primary text-white">
 
 <h5 class="card-title mb-0">
-  Register New Prescription
+Register New Prescription
 </h5>
 
 </div>
-
 
 
 
@@ -73,13 +64,9 @@
 
 
 
-
-
-<!-- Doctor Name -->
-
 <div class="col-md-3">
 
-<label for="prescriptionDoctorName" class="form-label">
+<label class="form-label">
 Doctor Name
 </label>
 
@@ -91,18 +78,14 @@ id="prescriptionDoctorName"
 placeholder="Enter doctor name"
 required>
 
-
 </div>
 
 
 
 
-
-<!-- Date -->
-
 <div class="col-md-3">
 
-<label for="prescriptionDate" class="form-label">
+<label class="form-label">
 Prescription Date
 </label>
 
@@ -113,18 +96,14 @@ class="form-control"
 id="prescriptionDate"
 required>
 
-
 </div>
 
 
 
 
-
-<!-- Dosage -->
-
 <div class="col-md-3">
 
-<label for="prescriptionDosage" class="form-label">
+<label class="form-label">
 Dosage
 </label>
 
@@ -136,18 +115,14 @@ id="prescriptionDosage"
 placeholder="Enter dosage"
 required>
 
-
 </div>
 
 
 
 
-
-<!-- Duration -->
-
 <div class="col-md-3">
 
-<label for="prescriptionDuration" class="form-label">
+<label class="form-label">
 Duration
 </label>
 
@@ -159,18 +134,16 @@ id="prescriptionDuration"
 placeholder="Example: 7 Days"
 required>
 
-
 </div>
 
 
 
 
 
-<!-- Status -->
-
 <div class="col-md-3">
 
-<label for="prescriptionStatus" class="form-label">
+
+<label class="form-label">
 Status
 </label>
 
@@ -181,22 +154,22 @@ id="prescriptionStatus"
 required>
 
 
-<option selected disabled>
+<option value="">
 Select status...
 </option>
 
 
-<option>
+<option value="Pending">
 Pending
 </option>
 
 
-<option>
+<option value="Approved">
 Approved
 </option>
 
 
-<option>
+<option value="Completed">
 Completed
 </option>
 
@@ -210,11 +183,11 @@ Completed
 
 
 
-<!-- User ID -->
 
 <div class="col-md-3">
 
-<label for="userId" class="form-label">
+
+<label class="form-label">
 User ID
 </label>
 
@@ -228,7 +201,6 @@ required>
 
 
 </div>
-
 
 
 
@@ -262,34 +234,30 @@ Add Prescription
 
 
 
-<!-- Registered Prescriptions Card -->
+<!-- Prescription Table -->
 
 
 <div class="card shadow-sm">
-
 
 
 <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
 
 
 <h5 class="card-title mb-0">
-
 Registered Prescriptions
-
 </h5>
 
 
-
-<button class="btn btn-sm btn-light">
+<button
+class="btn btn-sm btn-light"
+onclick="getAllPrescriptions()">
 
 Refresh
 
 </button>
 
 
-
 </div>
-
 
 
 
@@ -301,9 +269,7 @@ Refresh
 <table class="table table-striped table-hover align-middle">
 
 
-
 <thead>
-
 
 <tr>
 
@@ -333,104 +299,7 @@ Actions
 
 
 
-
-
-
-<tbody>
-
-
-
-<tr>
-
-
-<td>1</td>
-
-<td>Dr. Ahmed</td>
-
-<td>2026-08-01</td>
-
-<td>500mg</td>
-
-<td>7 Days</td>
-
-<td>Approved</td>
-
-<td>2</td>
-
-
-
-<td class="text-center">
-
-
-<button class="btn btn-sm btn-warning me-1">
-
-Edit
-
-</button>
-
-
-
-<button class="btn btn-sm btn-danger">
-
-Delete
-
-</button>
-
-
-
-</td>
-
-
-</tr>
-
-
-
-
-
-<tr>
-
-
-<td>2</td>
-
-<td>Dr. Ali</td>
-
-<td>2026-08-05</td>
-
-<td>250mg</td>
-
-<td>5 Days</td>
-
-<td>Pending</td>
-
-<td>1</td>
-
-
-
-<td class="text-center">
-
-
-<button class="btn btn-sm btn-warning me-1">
-
-Edit
-
-</button>
-
-
-
-<button class="btn btn-sm btn-danger">
-
-Delete
-
-</button>
-
-
-
-</td>
-
-
-</tr>
-
-
+<tbody id="prescriptionsTableBody">
 
 
 </tbody>
@@ -443,9 +312,7 @@ Delete
 </div>
 
 
-
 </div>
-
 
 
 
@@ -458,7 +325,254 @@ Delete
 
 
 
-<!-- Footer Placeholder -->
+
+
+<!-- Edit Prescription Modal -->
+
+
+<div
+class="modal fade"
+id="editPrescriptionModal"
+tabindex="-1">
+
+
+
+<div class="modal-dialog">
+
+
+<div class="modal-content">
+
+
+
+<div class="modal-header bg-warning text-dark">
+
+
+<h5 class="modal-title">
+Edit Prescription
+</h5>
+
+
+<button
+type="button"
+class="btn-close"
+data-bs-dismiss="modal">
+
+</button>
+
+
+</div>
+
+
+
+
+
+<form id="editPrescriptionForm">
+
+
+
+<div class="modal-body">
+
+
+
+<input
+type="hidden"
+id="editPrescriptionId">
+
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+Doctor Name
+</label>
+
+
+<input
+type="text"
+class="form-control"
+id="editDoctorName"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+Prescription Date
+</label>
+
+
+<input
+type="date"
+class="form-control"
+id="editDate"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+Dosage
+</label>
+
+
+<input
+type="text"
+class="form-control"
+id="editDosage"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+Duration
+</label>
+
+
+<input
+type="text"
+class="form-control"
+id="editDuration"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+Status
+</label>
+
+
+<select
+class="form-select"
+id="editStatus">
+
+
+<option value="Pending">
+Pending
+</option>
+
+
+<option value="Approved">
+Approved
+</option>
+
+
+<option value="Completed">
+Completed
+</option>
+
+
+</select>
+
+
+</div>
+
+
+
+
+
+<div class="mb-3">
+
+
+<label class="form-label">
+User ID
+</label>
+
+
+<input
+type="number"
+class="form-control"
+id="editUserId"
+required>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+<div class="modal-footer">
+
+
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancel
+
+</button>
+
+
+
+<button
+type="submit"
+class="btn btn-primary">
+
+Save Changes
+
+</button>
+
+
+
+</div>
+
+
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
 
 
 <div id="footer-placeholder"></div>
@@ -468,41 +582,37 @@ Delete
 
 
 
-
-<!-- Shared Component Loader -->
-
-
 <script>
 
 
 fetch("navbar.html")
+.then(response=>response.text())
+.then(data=>{
 
-.then(response => response.text())
-
-.then(data => {
-
-document.getElementById("navbar-placeholder").innerHTML = data;
+document.getElementById("navbar-placeholder").innerHTML=data;
 
 });
-
-
 
 
 
 fetch("footer.html")
+.then(response=>response.text())
+.then(data=>{
 
-.then(response => response.text())
-
-.then(data => {
-
-document.getElementById("footer-placeholder").innerHTML = data;
+document.getElementById("footer-placeholder").innerHTML=data;
 
 });
 
 
-
 </script>
 
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script src="prescription.js"></script>
 
 
 
