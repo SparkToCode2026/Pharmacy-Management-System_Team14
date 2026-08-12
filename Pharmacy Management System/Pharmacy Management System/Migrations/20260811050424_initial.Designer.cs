@@ -12,7 +12,7 @@ using Pharmacy_Management_System;
 namespace Pharmacy_Management_System.Migrations
 {
     [DbContext(typeof(ProjectContext))]
-    [Migration("20260806123818_initial")]
+    [Migration("20260811050424_initial")]
     partial class initial
     {
         /// <inheritdoc />
@@ -339,7 +339,7 @@ namespace Pharmacy_Management_System.Migrations
 
                     b.HasKey("RoleId");
 
-                    b.ToTable("Role");
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Pharmacy_Management_System.Models.StockLevel", b =>
@@ -419,6 +419,9 @@ namespace Pharmacy_Management_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("RoleId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -428,22 +431,9 @@ namespace Pharmacy_Management_System.Migrations
 
                     b.HasKey("UserId");
 
+                    b.HasIndex("RoleId");
+
                     b.ToTable("User");
-                });
-
-            modelBuilder.Entity("RoleUser", b =>
-                {
-                    b.Property<int>("RolesRoleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsersUserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("RolesRoleId", "UsersUserId");
-
-                    b.HasIndex("UsersUserId");
-
-                    b.ToTable("RoleUser");
                 });
 
             modelBuilder.Entity("MedicinePrescription", b =>
@@ -578,19 +568,13 @@ namespace Pharmacy_Management_System.Migrations
                     b.Navigation("Medicine");
                 });
 
-            modelBuilder.Entity("RoleUser", b =>
+            modelBuilder.Entity("Pharmacy_Management_System.Models.User", b =>
                 {
-                    b.HasOne("Pharmacy_Management_System.Models.Role", null)
-                        .WithMany()
-                        .HasForeignKey("RolesRoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Pharmacy_Management_System.Models.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId");
 
-                    b.HasOne("Pharmacy_Management_System.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("UsersUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("Pharmacy_Management_System.Models.Branch", b =>
@@ -620,6 +604,11 @@ namespace Pharmacy_Management_System.Migrations
             modelBuilder.Entity("Pharmacy_Management_System.Models.Order", b =>
                 {
                     b.Navigation("OrderItems");
+                });
+
+            modelBuilder.Entity("Pharmacy_Management_System.Models.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Pharmacy_Management_System.Models.Supplier", b =>

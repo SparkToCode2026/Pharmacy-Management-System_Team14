@@ -36,18 +36,32 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Update the username and email of a user
-        [HttpPut("UpdateUser")] 
+        [HttpPut("UpdateUser")]
         public IActionResult UpdateUser(int id, [FromBody] User U)
         {
-            //Check if the user exists in the database
+            // Check if the user exists in the database
             var user = _context.User.Find(id);
             if (user == null)
             {
                 return NotFound();
             }
+
             user.Username = U.Username;
             user.Email = U.Email;
-            
+            if (U.RoleId > 0)
+            {
+                user.RoleId = U.RoleId;
+            }
+
+            // Remove Password and Role from ModelState validation checks
+            ModelState.Remove("Password");
+            ModelState.Remove("Role");
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.SaveChanges();
             return Ok(user);
         }
