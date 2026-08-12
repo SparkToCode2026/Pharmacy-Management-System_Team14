@@ -31,18 +31,23 @@ namespace Pharmacy_Management_System.Controllers
         [HttpPut("UpdateManufacturer")]
         public IActionResult UpdateManufacturer(int id, [FromBody] Manufacturer manufacturer)
         {
-            //Check if the manufacturer exists in the database
+            // Check if the manufacturer exists in the database
             var manu = _context.Manufacturer.Find(id);
             if (manu == null)
             {
                 return NotFound();
             }
+
+            // Update all properties
             manu.ManufacturerName = manufacturer.ManufacturerName;
             manu.LicenseNumber = manufacturer.LicenseNumber;
+            manu.ContactNumber = manufacturer.ContactNumber;
+            manu.ContactEmail = manufacturer.ContactEmail;
 
             _context.SaveChanges();
             return Ok(manu);
         }
+        
 
 
 
