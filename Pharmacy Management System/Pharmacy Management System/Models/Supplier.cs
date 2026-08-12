@@ -7,7 +7,6 @@ namespace Pharmacy_Management_System.Models
     {
         // Primary Key
         [Key]
-        [JsonIgnore]
         public int SupplierId { get; set; }
 
 

@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Supplier Management - Pharmacy System</title>
+
+
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet">
+
+
+<link href="style.css" rel="stylesheet">
+
+
+</head>
+
+
+
+<body>
+
+
+<div id="navbar-placeholder"></div>
+
+
+
+
+<main class="container my-5">
+
+
+<h2 class="mb-4 text-primary">
+Supplier Management
+</h2>
+
+
+
+
+<!-- Add Supplier -->
+
+
+<div class="card mb-4 shadow-sm">
+
+
+<div class="card-header bg-primary text-white">
+
+
+<h5 class="card-title mb-0">
+
+Register New Supplier
+
+</h5>
+
+
+</div>
+
+
+
+
+<div class="card-body">
+
+
+<form id="addSupplierForm">
+
+
+<div class="row g-3">
+
+
+
+<div class="col-md-3">
+
+<label class="form-label">
+Supplier Name
+</label>
+
+
+<input
+type="text"
+class="form-control"
+id="supplierName"
+placeholder="Enter supplier name"
+required>
+
+
+</div>
+
+
+
+
+<div class="col-md-3">
+
+<label class="form-label">
+Phone Number
+</label>
+
+
+<input
+type="text"
+class="form-control"
+id="supplierPhone"
+placeholder="Enter phone number"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="col-md-3">
+
+<label class="form-label">
+Email
+</label>
+
+
+<input
+type="email"
+class="form-control"
+id="supplierEmail"
+placeholder="Enter email"
+required>
+
+
+</div>
+
+
+
+
+
+<div class="col-md-3">
+
+<label class="form-label">
+Address
+</label>
+
+
+<input
+type="text"
+class="form-control"
+id="supplierAddress"
+placeholder="Enter address"
+required>
+
+
+</div>
+
+
+
+</div>
+
+
+
+<button
+type="submit"
+class="btn btn-success mt-3">
+
+Add Supplier
+
+</button>
+
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- Supplier Table -->
+
+
+<div class="card shadow-sm">
+
+
+<div class="card-header bg-secondary text-white d-flex justify-content-between">
+
+
+<h5 class="card-title mb-0">
+
+Registered Suppliers
+
+</h5>
+
+
+<button
+class="btn btn-sm btn-light"
+onclick="getAllSuppliers()">
+
+Refresh
+
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="card-body">
+
+
+<table class="table table-striped table-hover">
+
+
+<thead>
+
+
+<tr>
+
+
+<th>ID</th>
+
+<th>Name</th>
+
+<th>Phone</th>
+
+<th>Email</th>
+
+<th>Address</th>
+
+<th class="text-center">
+Actions
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+<tbody id="suppliersTableBody">
+
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+</div>
+
+
+
+</main>
+
+
+
+
+
+
+<!-- Edit Modal -->
+
+
+<div class="modal fade"
+id="editSupplierModal">
+
+
+<div class="modal-dialog">
+
+
+<div class="modal-content">
+
+
+<div class="modal-header bg-warning">
+
+
+<h5 class="modal-title">
+
+Edit Supplier
+
+</h5>
+
+
+<button
+class="btn-close"
+data-bs-dismiss="modal">
+
+</button>
+
+
+</div>
+
+
+
+
+<form id="editSupplierForm">
+
+
+<div class="modal-body">
+
+
+<input
+type="hidden"
+id="editSupplierId">
+
+
+
+<div class="mb-3">
+
+<label class="form-label">
+Supplier Name
+</label>
+
+
+<input
+class="form-control"
+id="editSupplierName"
+required>
+
+</div>
+
+
+
+
+<div class="mb-3">
+
+<label class="form-label">
+Phone
+</label>
+
+
+<input
+class="form-control"
+id="editSupplierPhone"
+required>
+
+</div>
+
+
+
+
+<div class="mb-3">
+
+<label class="form-label">
+Email
+</label>
+
+
+<input
+class="form-control"
+id="editSupplierEmail"
+required>
+
+</div>
+
+
+
+
+<div class="mb-3">
+
+<label class="form-label">
+Address
+</label>
+
+
+<input
+class="form-control"
+id="editSupplierAddress"
+required>
+
+</div>
+
+
+
+</div>
+
+
+
+
+<div class="modal-footer">
+
+
+<button
+type="button"
+class="btn btn-secondary"
+data-bs-dismiss="modal">
+
+Cancel
+
+</button>
+
+
+
+<button
+type="submit"
+class="btn btn-primary">
+
+Save Changes
+
+</button>
+
+
+</div>
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div id="footer-placeholder"></div>
+
+
+
+
+
+
+<script>
+
+fetch("navbar.html")
+.then(response=>response.text())
+.then(data=>{
+
+document.getElementById("navbar-placeholder").innerHTML=data;
+
+});
+
+
+
+fetch("footer.html")
+.then(response=>response.text())
+.then(data=>{
+
+document.getElementById("footer-placeholder").innerHTML=data;
+
+});
+
+
+</script>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script src="supplier.js"></script>
+
+
+
+</body>
+
+</html>
