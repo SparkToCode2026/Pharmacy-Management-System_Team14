@@ -138,22 +138,17 @@ Swagger will be available when the application starts.
 
 ---
 
-## 🗄️ Final ERD
-
-Add the final ERD diagram here.
-
----
 
 ## 👥 Team Members and Responsibilities
 
 | Team Member | Responsibility |
 |-------------|----------------|
 | Haitham  | User & Manufacturer |
-| Mariyam 2 | MedicineCategory & Medicine |
-| Abdul Rahman 3 | Supplier & Prescription |
-| Amal 4 | Order & OrderItem |
-| Mohammed 5 | Payment & StockLevel |
-| Noora 6 | Branch & CustomerProfile |
+| Mariyam  | MedicineCategory & Medicine |
+| Abdul Rahman  | Supplier & Prescription |
+| Amal  | Order & OrderItem |
+| Mohammed  | Payment & StockLevel |
+| Noora  | Branch & CustomerProfile |
 
 ---
 
