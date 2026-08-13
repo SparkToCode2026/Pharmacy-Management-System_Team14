@@ -25,6 +25,10 @@ namespace Pharmacy_Management_System.Controllers
             {
                 return BadRequest("Username or Email is already taken.");
             }
+            if (U.RoleId == null || U.RoleId == 0)
+            {
+                U.RoleId = 3; 
+            }
             // Hash the password before saving it to the database
             U.Password = BCrypt.Net.BCrypt.HashPassword(U.Password);
             _context.User.Add(U);
@@ -161,6 +165,30 @@ namespace Pharmacy_Management_System.Controllers
                                 .Include(u => u.CustomerProfile)
                                 .OrderBy(u => u.UserId)
                                 .ToList();
+            return Ok(user);
+        }
+
+
+        // Login endpoint with BCrypt password verification
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] User loginData)
+        {
+            // Find user by Username or Email
+            var user = _context.User
+                .FirstOrDefault(u => u.Username == loginData.Username || u.Email == loginData.Email);
+
+            if (user == null)
+            {
+                return BadRequest("Invalid username or password.");
+            }
+
+            // Verify the hashed password using BCrypt
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginData.Password, user.Password);
+            if (!isPasswordValid)
+            {
+                return BadRequest("Invalid username or password.");
+            }
+
             return Ok(user);
         }
     }
