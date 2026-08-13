@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 namespace Pharmacy_Management_System
@@ -12,7 +15,7 @@ namespace Pharmacy_Management_System
             // 1. Define CORS Policy Name
             var allowAllOrigins = "_allowAllOrigins";
 
-            // Add services to the container.
+            // Add Database Context
             builder.Services.AddDbContext<ProjectContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -28,12 +31,40 @@ namespace Pharmacy_Management_System
                     });
             });
 
+            // 3. Register JWT Authentication Service
+            var jwtKey = builder.Configuration["Jwt:Key"];
+            var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+            var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtIssuer,
+                    ValidAudience = jwtAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                };
+            });
+
+            builder.Services.AddAuthorization();
+
             builder.Services.AddControllers(options =>
             {
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
             });
 
             builder.Services.AddEndpointsApiExplorer();
+
+            // Swagger Configuration with JWT Bearer Definition
             builder.Services.AddSwaggerGen(c =>
             {
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -73,8 +104,11 @@ namespace Pharmacy_Management_System
 
             app.UseHttpsRedirection();
 
-            // 3. Enable CORS Middleware (Must be before UseAuthorization)
+            // Enable CORS Middleware (Must be before UseAuthentication & UseAuthorization)
             app.UseCors(allowAllOrigins);
+
+            // Enable Authentication (MUST be placed BEFORE UseAuthorization)
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
