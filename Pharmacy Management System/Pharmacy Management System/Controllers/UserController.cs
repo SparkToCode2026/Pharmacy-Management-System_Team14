@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Pharmacy_Management_System.Models;
@@ -9,6 +10,7 @@ namespace Pharmacy_Management_System.Controllers
 {
     [ApiController]
     [Route("User")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private ProjectContext _context;

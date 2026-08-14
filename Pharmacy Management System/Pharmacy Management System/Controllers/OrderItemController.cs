@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq; // optional but useful for LINQ operators like Contains, Where, OrderBy
 using Pharmacy_Management_System.Models;
+using System.Linq; // optional but useful for LINQ operators like Contains, Where, OrderBy
 
 namespace Pharmacy_Management_System.Controllers
 {
@@ -9,6 +11,7 @@ namespace Pharmacy_Management_System.Controllers
     // [Authorize] goes here once the JWT self-study task is merged.
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class OrderItemController : ControllerBase
     {
         private readonly ProjectContext _context;
@@ -20,10 +23,21 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // CASE 1 - POST: create a new order with its order items.
+        [Authorize]
         [HttpPost("CreateOrder")]
         public async Task<ActionResult<Order>> CreateOrder(Order order)
         {
-            // Validate the order and its items before saving to the database.
+            // Extract UserId directly from the JWT claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+
+            order.UserId = int.Parse(userIdClaim);
+
+            // Validate model state (ignoring UserId validation if required)
+            ModelState.Remove("UserId");
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -37,7 +51,7 @@ namespace Pharmacy_Management_System.Controllers
             var userExists = await _context.Users.AnyAsync(u => u.UserId == order.UserId);
             if (!userExists)
             {
-                return BadRequest("User " + order.UserId + " does not exist.");
+                return BadRequest($"User {order.UserId} does not exist.");
             }
 
             foreach (var item in order.OrderItems)
@@ -47,7 +61,7 @@ namespace Pharmacy_Management_System.Controllers
 
                 if (!medicineExists)
                 {
-                    return BadRequest("Medicine " + item.MedicineId + " does not exist.");
+                    return BadRequest($"Medicine {item.MedicineId} does not exist.");
                 }
 
                 if (item.Quantity <= 0)
@@ -64,9 +78,6 @@ namespace Pharmacy_Management_System.Controllers
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
-
-            // TODO (self-study): send the order confirmation email here
-            // once the shared email service is merged.
 
             return CreatedAtAction(nameof(GetOrderById), new { id = order.OrderId }, order);
         }
