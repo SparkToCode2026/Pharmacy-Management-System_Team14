@@ -7,7 +7,6 @@ namespace Pharmacy_Management_System.Models
     public class Branch
     {
         [Key]
-        [JsonIgnore]
         public int BranchId { get; set; }
         [Required]
         public string BranchName { get; set; }
@@ -15,7 +14,7 @@ namespace Pharmacy_Management_System.Models
         public string BranchAddress { get; set; }
         [Required]
         public string BranchCity { get; set; }
-        [Required, Phone]
+        [Required]
         public int BranchPhone { get; set; }
 
 

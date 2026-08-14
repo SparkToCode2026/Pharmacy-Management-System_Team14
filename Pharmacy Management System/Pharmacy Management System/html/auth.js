@@ -31,6 +31,25 @@ toggleAuthBtn.addEventListener("click", () => {
   }
 });
 
+// Helper: Safely parse JWT token to extract claims (username, role)
+function parseJwt(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error("Failed to parse JWT:", e);
+    return null;
+  }
+}
+
 // 2. Handle Login Submission calling POST /User/login
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -50,27 +69,58 @@ loginForm.addEventListener("submit", async (e) => {
     });
 
     if (response.ok) {
-      const responseData = await response.json();
+      const contentType = response.headers.get("content-type");
+      let token = "";
+      let userData = {};
 
-      // Store JWT Token if returned by the backend
-      if (responseData.token) {
-        localStorage.setItem("token", responseData.token);
-      } else if (typeof responseData === "string") {
-        localStorage.setItem("token", responseData);
+      if (contentType && contentType.includes("application/json")) {
+        const responseData = await response.json();
+
+        // Extract token depending on whether backend sends object or plain token string
+        token = responseData.token || responseData.Token || responseData;
+        userData = responseData.user || responseData.User || responseData;
+      } else {
+        // Plain text token response
+        token = await response.text();
       }
 
-      // Store user info
-      const user = responseData.user || responseData;
-      localStorage.setItem("currentUser", JSON.stringify(user));
+      // Store JWT Token
+      localStorage.setItem("token", token);
 
-      showAlert(
-        `Welcome back, ${user.username || "User"}! Redirecting...`,
-        "success",
-      );
+      // Parse JWT payload claims for role and username fallback
+      const tokenClaims = parseJwt(token);
+      const username =
+        userData.username ||
+        userData.Username ||
+        (tokenClaims
+          ? tokenClaims[
+              "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+            ] || tokenClaims.sub
+          : null) ||
+        searchInput;
+
+      const role =
+        userData.role ||
+        userData.Role ||
+        userData.roleId ||
+        (tokenClaims
+          ? tokenClaims[
+              "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+            ] || tokenClaims.role
+          : null);
+
+      // Save user object
+      const currentUser = {
+        username: username,
+        role: role,
+      };
+      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+      showAlert(`Welcome back, ${username}! Redirecting...`, "success");
 
       setTimeout(() => {
         window.location.href = "index.html";
-      }, 1500);
+      }, 1200);
     } else {
       const errorMsg = await response.text();
       showAlert(errorMsg || "Invalid username/email or password.", "danger");
@@ -105,14 +155,14 @@ registerForm.addEventListener("submit", async (e) => {
     if (response.ok) {
       const createdUserId = await response.text();
       showAlert(
-        `User registered successfully (ID: ${createdUserId})! Switching to login...`,
+        `User registered successfully! Switching to login...`,
         "success",
       );
 
       registerForm.reset();
       setTimeout(() => {
         toggleAuthBtn.click();
-      }, 1500);
+      }, 1200);
     } else {
       const errorText = await response.text();
       showAlert(

@@ -1,12 +1,28 @@
 <nav class="site-navbar">
-  <div class="container">
-    <a class="brand-logo" href="index.html">Pharmacy System</a>
-    <div class="nav-menu">
-      <ul class="nav-list">
-        <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-        <li class="nav-item"><a class="nav-link" href="orders.html">Orders</a></li>
+  <div class="container d-flex justify-content-between align-items-center">
+    <a
+      class="brand-logo fw-bold fs-4 text-decoration-none text-primary"
+      href="index.html"
+      >Pharmacy System</a
+    >
+
+    <div class="nav-menu d-flex align-items-center">
+      <ul class="nav-list list-unstyled d-flex gap-3 mb-0 me-3">
+        <li class="nav-item">
+          <a class="nav-link active" href="index.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branch.html">Branches</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="orders.html">Orders</a>
+        </li>
       </ul>
+
+      <!-- User Auth Container -->
+      <div id="nav-auth-section" class="d-flex align-items-center">
+        <!-- Injected dynamically via navbar.js -->
+      </div>
     </div>
   </div>
 </nav>
