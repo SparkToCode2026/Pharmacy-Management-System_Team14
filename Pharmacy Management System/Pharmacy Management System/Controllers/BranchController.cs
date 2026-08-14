@@ -1,89 +1,115 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pharmacy_Management_System.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Pharmacy_Management_System.Controllers
 {
     [ApiController]
-    [Route("Branch")]
-    public class BranchController : ControllerBase  
+    [Route("api/[controller]")]
+    [Authorize]
+    public class BranchController : ControllerBase
     {
-        private ProjectContext context;
+        private readonly ProjectContext _context;
 
-        public BranchController(ProjectContext _context)
+        public BranchController(ProjectContext context)
         {
-            context = _context;
+            _context = context;
         }
 
+        // Add a new branch (Admin / Pharmacist)
+        [Authorize(Roles = "1,2")]
         [HttpPost("AddBranch")]
-        public IActionResult AddBranch(Branch b)
+        public IActionResult AddBranch([FromBody] Branch b)
         {
-            context.Branches.Add(b);
-            context.SaveChanges();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _context.Branches.Add(b);
+            _context.SaveChanges();
             return Ok(b.BranchId);
         }
 
-        [HttpPut("UpdateAllBranch")]
-        public IActionResult UpdateAllBranch(int id, Branch newBranch)
+        // Update all fields of a branch (Admin / Pharmacist)
+        [Authorize(Roles = "1,2")]
+        [HttpPut("UpdateAllBranch/{id}")]
+        public IActionResult UpdateAllBranch(int id, [FromBody] Branch newBranch)
         {
-            Branch b = context.Branches.FirstOrDefault(b => b.BranchId == id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            Branch? b = _context.Branches.FirstOrDefault(branch => branch.BranchId == id);
             if (b == null)
             {
                 return NotFound("Branch not found.");
             }
-            else
-            {
-                b.BranchName = newBranch.BranchName;
-                b.BranchAddress = newBranch.BranchAddress;
-                b.BranchCity = newBranch.BranchCity;
-                b.BranchPhone = newBranch.BranchPhone;
-                context.SaveChanges();
-                return Ok("Branch updated successfully.");
-            }
+
+            b.BranchName = newBranch.BranchName;
+            b.BranchAddress = newBranch.BranchAddress;
+            b.BranchCity = newBranch.BranchCity;
+            b.BranchPhone = newBranch.BranchPhone;
+
+            _context.SaveChanges();
+            return Ok("Branch updated successfully.");
         }
 
-        [HttpPatch("UpdateBranchName")]
-        public IActionResult UpdateBranchName(int id, string newName)
+        // Update branch name only (Admin / Pharmacist)
+        [Authorize(Roles = "1,2")]
+        [HttpPatch("UpdateBranchName/{id}")]
+        public IActionResult UpdateBranchName(int id, [FromBody] string newName)
         {
-            Branch b = context.Branches.FirstOrDefault(b => b.BranchId == id);
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                return BadRequest("Branch name cannot be empty.");
+            }
+
+            Branch? b = _context.Branches.FirstOrDefault(branch => branch.BranchId == id);
             if (b == null)
             {
                 return NotFound("Branch not found.");
             }
-            else
-            {
-                b.BranchName = newName;
-                context.SaveChanges();
-                return Ok("Branch name updated successfully.");
-            }
+
+            b.BranchName = newName;
+            _context.SaveChanges();
+            return Ok("Branch name updated successfully.");
         }
 
-        [HttpDelete("RemoveBranch")]
+        // Remove a branch (Admin / Pharmacist)
+        [Authorize(Roles = "1,2")]
+        [HttpDelete("RemoveBranch/{id}")]
         public IActionResult RemoveBranch(int id)
         {
-            Branch b = context.Branches.FirstOrDefault(b => b.BranchId == id);
+            Branch? b = _context.Branches.FirstOrDefault(branch => branch.BranchId == id);
             if (b == null)
             {
                 return NotFound("Branch not found.");
             }
-            context.Branches.Remove(b);
-            context.SaveChanges();
+
+            _context.Branches.Remove(b);
+            _context.SaveChanges();
             return Ok("Branch removed successfully.");
         }
 
-        //Get all branches
+        // Get all branches (Public access)
+        [AllowAnonymous]
         [HttpGet("GetAllBranch")]
         public IActionResult GetAllBranch()
         {
-            List<Branch> b = context.Branches.ToList();
-            return Ok(b);
+            List<Branch> branches = _context.Branches.ToList();
+            return Ok(branches);
         }
 
-        // Get a single branch by id
-        [HttpGet("GetBranch")]
+        // Get a single branch by id (Public access)
+        [AllowAnonymous]
+        [HttpGet("GetBranch/{id}")]
         public IActionResult GetBranch(int id)
         {
-            Branch b = context.Branches.FirstOrDefault(b => b.BranchId == id);
+            Branch? b = _context.Branches.FirstOrDefault(branch => branch.BranchId == id);
             if (b == null)
             {
                 return NotFound("Branch not found.");
@@ -91,20 +117,30 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(b);
         }
 
-        // Filter branches using LINQ (Where)
+        // Filter branches by city (Public access)
+        [AllowAnonymous]
         [HttpGet("GetByBranchCity")]
-        public IActionResult GetByBranchCity(string city)
+        public IActionResult GetByBranchCity([FromQuery] string city)
         {
-            List<Branch> b = context.Branches.Where(b => b.BranchCity == (city)).ToList();
-            return Ok(b);
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                return BadRequest("City search term cannot be empty.");
+            }
+
+            List<Branch> branches = _context.Branches
+                .Where(b => b.BranchCity.ToLower().Contains(city.ToLower()))
+                .ToList();
+
+            return Ok(branches);
         }
 
-        // Count the number of branches
+        // Count total branches (Public access)
+        [AllowAnonymous]
         [HttpGet("GetTotalBranches")]
         public IActionResult GetTotalBranches()
         {
-            int total = context.Branches.Count();
-            return Ok("Total branches: " + total);
+            int total = _context.Branches.Count();
+            return Ok(new { TotalBranches = total });
         }
     }
 }
