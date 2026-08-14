@@ -30,7 +30,9 @@ namespace Pharmacy_Management_System.Controllers
 
             cp.UserId = int.Parse(userIdClaim);
 
+            // Clear EF Core navigation property validation errors
             ModelState.Remove("UserId");
+            ModelState.Remove("User");
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -48,10 +50,11 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(cp.CustomerId);
         }
 
-        // Update profile
-        [HttpPut("UpdateAllCustomerProfile/{id}")]
-        public async Task<IActionResult> UpdateAllCustomerProfile(int id, [FromBody] CustomerProfile newProfile)
+        // Update profile (Matches PUT api/CustomerProfile/UpdateCustomerProfile/{id})
+        [HttpPut("UpdateCustomerProfile/{id}")]
+        public async Task<IActionResult> UpdateCustomerProfile(int id, [FromBody] CustomerProfile newProfile)
         {
+            ModelState.Remove("User");
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -127,20 +130,33 @@ namespace Pharmacy_Management_System.Controllers
             return Ok("Customer profile removed successfully.");
         }
 
-        // Get all customer profiles (Admin / Pharmacist only)
+        // Get all customer profiles with User included (Admin / Pharmacist only)
         [Authorize(Roles = "1,2")]
         [HttpGet("GetAllCustomerProfiles")]
         public async Task<IActionResult> GetAllCustomerProfiles()
         {
-            var profiles = await _context.CustomerProfiles.ToListAsync();
+            var profiles = await _context.CustomerProfiles
+                .Include(p => p.Users)
+                .Select(p => new
+                {
+                    p.CustomerId,
+                    p.CustomerPhone,
+                    p.CustomerAddress,
+                    p.DateOfBirth,
+                    p.UserId,
+                    UserName = p.Users != null ? p.Users.Username : "N/A"
+                })
+                .ToListAsync();
+
             return Ok(profiles);
         }
 
-        // Get single customer profile by id
+        // Get single customer profile by CustomerId
         [HttpGet("GetCustomerProfile/{id}")]
         public async Task<IActionResult> GetCustomerProfile(int id)
         {
             var p = await _context.CustomerProfiles
+                .Include(p => p.Users)
                 .FirstOrDefaultAsync(profile => profile.CustomerId == id);
 
             if (p == null)
@@ -156,7 +172,47 @@ namespace Pharmacy_Management_System.Controllers
                 return Forbid();
             }
 
-            return Ok(p);
+            return Ok(new
+            {
+                p.CustomerId,
+                p.CustomerPhone,
+                p.CustomerAddress,
+                p.DateOfBirth,
+                p.UserId,
+                UserName = p.Users != null ? p.Users.Username : "N/A"
+            });
+        }
+
+        // Get profile by UserId
+        [HttpGet("GetCustomerProfileByUserId/{userId}")]
+        public async Task<IActionResult> GetCustomerProfileByUserId(int userId)
+        {
+            var p = await _context.CustomerProfiles
+                .Include(p => p.Users)
+                .FirstOrDefaultAsync(profile => profile.UserId == userId);
+
+            if (p == null)
+            {
+                return NotFound("Customer Profile not found for this User ID.");
+            }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userRole != "1" && userRole != "2" && p.UserId.ToString() != userIdClaim)
+            {
+                return Forbid();
+            }
+
+            return Ok(new
+            {
+                p.CustomerId,
+                p.CustomerPhone,
+                p.CustomerAddress,
+                p.DateOfBirth,
+                p.UserId,
+                UserName = p.Users != null ? p.Users.Username : "N/A"
+            });
         }
 
         // Filter profiles by address (Admin / Pharmacist only)
@@ -170,7 +226,17 @@ namespace Pharmacy_Management_System.Controllers
             }
 
             var profiles = await _context.CustomerProfiles
+                .Include(p => p.Users)
                 .Where(p => p.CustomerAddress.ToLower().Contains(address.ToLower()))
+                .Select(p => new
+                {
+                    p.CustomerId,
+                    p.CustomerPhone,
+                    p.CustomerAddress,
+                    p.DateOfBirth,
+                    p.UserId,
+                    UserName = p.Users != null ? p.Users.Username : "N/A"
+                })
                 .ToListAsync();
 
             return Ok(profiles);
