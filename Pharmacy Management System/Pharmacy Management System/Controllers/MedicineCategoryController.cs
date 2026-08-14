@@ -1,105 +1,178 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Pharmacy_Management_System.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Pharmacy_Management_System.Controllers
 {
     [ApiController]
-    [Route("MedicineCategory")]
+    [Route("api/[controller]")]
+    [Authorize]
     public class MedicineCategoryController : ControllerBase
     {
-        private ProjectContext context;
+        private readonly ProjectContext _context;
 
-        public MedicineCategoryController(ProjectContext _context)
+        public MedicineCategoryController(ProjectContext context)
         {
-            context = _context;
+            _context = context;
         }
-        [HttpPost("AddMedicineCategory")]
-        public IActionResult AddMedicineCategory(MedicineCategory medicineCategory)
-        {
 
-            context.MedicineCategories.Add(medicineCategory);
-            context.SaveChanges();
+        // Add a new medicine category (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpPost("AddMedicineCategory")]
+        public IActionResult AddMedicineCategory([FromBody] MedicineCategory medicineCategory)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _context.MedicineCategories.Add(medicineCategory);
+            _context.SaveChanges();
             return Ok(medicineCategory.MedicineCategoryId);
         }
-        [HttpDelete("RemoveMedicineCategory")]
-        public IActionResult RemoveMedicineCategory(int medicineCategoryId)
-        {
-            var medicineCategory = context.MedicineCategories.FirstOrDefault(mc => mc.MedicineCategoryId == medicineCategoryId);
-            if (medicineCategory != null)
-            {
-                context.MedicineCategories.Remove(medicineCategory);
-                context.SaveChanges();
-                return Ok("Medicine category removed successfully.");
-            }
-            return NotFound("Medicine category not found.");
-        }
-        //updates
-        [HttpPut("UpdateMedicineCategory")]
-        public IActionResult UpdateMedicineCategory(MedicineCategory medicineCategory)
-        {
-            var existingMedicineCategory = context.MedicineCategories.FirstOrDefault(mc => mc.MedicineCategoryId == medicineCategory.MedicineCategoryId);
-            if (existingMedicineCategory != null)
-            {
-                existingMedicineCategory.MedicineCategoryName = medicineCategory.MedicineCategoryName;
-                existingMedicineCategory.MedicineCategoryDescription = medicineCategory.MedicineCategoryDescription;
-                context.SaveChanges();
-                return Ok("Medicine category updated successfully.");
-            }
-            return NotFound("Medicine category not found.");
-        }
-        [HttpPatch("UpdateMedicineCategoryDescription")]
-        public IActionResult UpdateMedicineCategoryDescription(int medicineCategoryId, string newDescription)
-        {
-            var existingMedicineCategory = context.MedicineCategories.FirstOrDefault(mc => mc.MedicineCategoryId == medicineCategoryId);
-            if (existingMedicineCategory != null)
-            {
-                existingMedicineCategory.MedicineCategoryDescription = newDescription;
-                context.SaveChanges();
-                return Ok("Medicine category description updated successfully.");
-            }
-            return NotFound("Medicine category not found.");
-        }
-        [HttpPatch("UpdateMedicineCategoryName")]
-        public IActionResult UpdateMedicineCategoryName(int medicineCategoryId, string newName)
-        {
-            var existingMedicineCategory = context.MedicineCategories.FirstOrDefault(mc => mc.MedicineCategoryId == medicineCategoryId);
-            if (existingMedicineCategory != null)
-            {
-                existingMedicineCategory.MedicineCategoryName = newName;
-                context.SaveChanges();
-                return Ok("Medicine category name updated successfully.");
-            }
-            return NotFound("Medicine category not found.");
-        }
-        //getters
 
-        [HttpGet("GetMedicineCategoryById")]
-        public IActionResult GetMedicineCategoryById(int medicineCategoryId)
+        // Delete a medicine category (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpDelete("RemoveMedicineCategory/{id}")]
+        public IActionResult RemoveMedicineCategory(int id)
         {
-            var medicineCategory = context.MedicineCategories.FirstOrDefault(mc => mc.MedicineCategoryId == medicineCategoryId);
+            var medicineCategory = _context.MedicineCategories
+                .FirstOrDefault(mc => mc.MedicineCategoryId == id);
+
             if (medicineCategory == null)
             {
                 return NotFound("Medicine category not found.");
             }
+
+            _context.MedicineCategories.Remove(medicineCategory);
+            _context.SaveChanges();
+            return Ok("Medicine category removed successfully.");
+        }
+
+        // Update entire medicine category (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpPut("UpdateMedicineCategory/{id}")]
+        public IActionResult UpdateMedicineCategory(int id, [FromBody] MedicineCategory medicineCategory)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var existingMedicineCategory = _context.MedicineCategories
+                .FirstOrDefault(mc => mc.MedicineCategoryId == id);
+
+            if (existingMedicineCategory == null)
+            {
+                return NotFound("Medicine category not found.");
+            }
+
+            existingMedicineCategory.MedicineCategoryName = medicineCategory.MedicineCategoryName;
+            existingMedicineCategory.MedicineCategoryDescription = medicineCategory.MedicineCategoryDescription;
+
+            _context.SaveChanges();
+            return Ok("Medicine category updated successfully.");
+        }
+
+        // Update description only (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpPatch("UpdateMedicineCategoryDescription/{id}")]
+        public IActionResult UpdateMedicineCategoryDescription(int id, [FromBody] string newDescription)
+        {
+            var existingMedicineCategory = _context.MedicineCategories
+                .FirstOrDefault(mc => mc.MedicineCategoryId == id);
+
+            if (existingMedicineCategory == null)
+            {
+                return NotFound("Medicine category not found.");
+            }
+
+            existingMedicineCategory.MedicineCategoryDescription = newDescription;
+            _context.SaveChanges();
+            return Ok("Medicine category description updated successfully.");
+        }
+
+        // Update name only (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpPatch("UpdateMedicineCategoryName/{id}")]
+        public IActionResult UpdateMedicineCategoryName(int id, [FromBody] string newName)
+        {
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                return BadRequest("Category name cannot be empty.");
+            }
+
+            var existingMedicineCategory = _context.MedicineCategories
+                .FirstOrDefault(mc => mc.MedicineCategoryId == id);
+
+            if (existingMedicineCategory == null)
+            {
+                return NotFound("Medicine category not found.");
+            }
+
+            existingMedicineCategory.MedicineCategoryName = newName;
+            _context.SaveChanges();
+            return Ok("Medicine category name updated successfully.");
+        }
+
+        // Get single category by ID (Public access)
+        [AllowAnonymous]
+        [HttpGet("GetMedicineCategoryById/{id}")]
+        public IActionResult GetMedicineCategoryById(int id)
+        {
+            var medicineCategory = _context.MedicineCategories
+                .FirstOrDefault(mc => mc.MedicineCategoryId == id);
+
+            if (medicineCategory == null)
+            {
+                return NotFound("Medicine category not found.");
+            }
+
             return Ok(medicineCategory);
         }
+
+        // Get all categories (Public access)
+        [AllowAnonymous]
         [HttpGet("GetAllMedicineCategories")]
         public IActionResult GetAllMedicineCategories()
         {
-            return Ok(context.MedicineCategories.ToList());
+            List<MedicineCategory> categories = _context.MedicineCategories.ToList();
+            return Ok(categories);
         }
-        
+
+        // Search categories by name (Public access)
+        [AllowAnonymous]
         [HttpGet("GetMedicineCategoriesByName")]
-        public IActionResult GetMedicineCategoriesByName(string name)
+        public IActionResult GetMedicineCategoriesByName([FromQuery] string name)
         {
-            var medicineCategories = context.MedicineCategories.Where(mc => mc.MedicineCategoryName.Contains(name)).ToList();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return BadRequest("Name parameter cannot be empty.");
+            }
+
+            List<MedicineCategory> medicineCategories = _context.MedicineCategories
+                .Where(mc => mc.MedicineCategoryName.ToLower().Contains(name.ToLower()))
+                .ToList();
+
             return Ok(medicineCategories);
         }
 
+        // Search categories by description (Public access)
+        [AllowAnonymous]
         [HttpGet("GetMedicineCategoriesByDescription")]
-        public IActionResult GetMedicineCategoriesByDescription(string description)
+        public IActionResult GetMedicineCategoriesByDescription([FromQuery] string description)
         {
-            var medicineCategories = context.MedicineCategories.Where(mc => mc.MedicineCategoryDescription.Contains(description)).ToList();
+            if (string.IsNullOrWhiteSpace(description))
+            {
+                return BadRequest("Description parameter cannot be empty.");
+            }
+
+            List<MedicineCategory> medicineCategories = _context.MedicineCategories
+                .Where(mc => mc.MedicineCategoryDescription.ToLower().Contains(description.ToLower()))
+                .ToList();
+
             return Ok(medicineCategories);
         }
     }
