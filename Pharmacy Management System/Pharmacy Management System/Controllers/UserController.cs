@@ -23,6 +23,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Register a new user
+        [AllowAnonymous]
         [HttpPost("register")]
         public IActionResult Register(User U)
         {
@@ -178,6 +179,7 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Login endpoint with BCrypt password verification
+        [AllowAnonymous]
         [HttpPost("login")]
         public IActionResult Login([FromBody] User loginData)
         {

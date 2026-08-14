@@ -1,4 +1,5 @@
-﻿
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
@@ -6,9 +7,9 @@ using Pharmacy_Management_System.Models;
 namespace Pharmacy_Management_System.Controllers
 {
     // Developer 4 - Amal. Closes issue #34.
-    // [Authorize] goes here once the JWT self-study task is merged.
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class OrderController : ControllerBase
     {
         private readonly ProjectContext _context;
@@ -18,11 +19,19 @@ namespace Pharmacy_Management_System.Controllers
             _context = context;
         }
 
-
         // CASE 1 - POST: create a new order with its order items.
         [HttpPost("CreateOrder")]
         public async Task<ActionResult<Order>> CreateOrder(Order order)
         {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+
+            order.UserId = int.Parse(userIdClaim);
+
+            ModelState.Remove("UserId");
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -36,7 +45,7 @@ namespace Pharmacy_Management_System.Controllers
             var userExists = await _context.Users.AnyAsync(u => u.UserId == order.UserId);
             if (!userExists)
             {
-                return BadRequest("User " + order.UserId + " does not exist.");
+                return BadRequest($"User {order.UserId} does not exist.");
             }
 
             foreach (var item in order.OrderItems)
@@ -46,7 +55,7 @@ namespace Pharmacy_Management_System.Controllers
 
                 if (!medicineExists)
                 {
-                    return BadRequest("Medicine " + item.MedicineId + " does not exist.");
+                    return BadRequest($"Medicine {item.MedicineId} does not exist.");
                 }
 
                 if (item.Quantity <= 0)
@@ -64,14 +73,11 @@ namespace Pharmacy_Management_System.Controllers
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            // TODO (self-study): send the order confirmation email here
-            // once the shared email service is merged.
-
             return CreatedAtAction(nameof(GetOrderById), new { id = order.OrderId }, order);
         }
 
-
-        // CASE 2 - PUT: update an existing order.
+        // CASE 2 - PUT: update an existing order (Admin / Pharmacist).
+        [Authorize(Roles = "1,2")]
         [HttpPut("UpdateOrder")]
         public async Task<IActionResult> UpdateOrder(int id, Order updated)
         {
@@ -108,8 +114,8 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(order);
         }
 
-
-        // CASE 3 - PATCH: a distinct update that only changes the order status.
+        // CASE 3 - PATCH: update order status (Admin / Pharmacist).
+        [Authorize(Roles = "1,2")]
         [HttpPatch("UpdateOrderStatus")]
         public async Task<IActionResult> UpdateOrderStatus(int id, string status)
         {
@@ -138,8 +144,8 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(order);
         }
 
-
-        // CASE 4 - DELETE: delete an order and its items.
+        // CASE 4 - DELETE: delete an order (Admin / Pharmacist).
+        [Authorize(Roles = "1,2")]
         [HttpDelete("DeleteOrder")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
@@ -159,8 +165,8 @@ namespace Pharmacy_Management_System.Controllers
             return NoContent();
         }
 
-
-        // CASE 5 - GET (list): all orders, including OrderItems and User via Include().
+        // CASE 5 - GET (list): all orders (Admin / Pharmacist).
+        [Authorize(Roles = "1,2")]
         [HttpGet("GetAllOrders")]
         public async Task<ActionResult<IEnumerable<Order>>> GetAllOrders()
         {
@@ -173,6 +179,26 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(orders);
         }
 
+        // Get logged-in user's orders
+        [HttpGet("MyOrders")]
+        public async Task<ActionResult<IEnumerable<Order>>> GetMyOrders()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized();
+            }
+
+            int userId = int.Parse(userIdClaim);
+
+            var orders = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.Medicine)
+                .Where(o => o.UserId == userId)
+                .ToListAsync();
+
+            return Ok(orders);
+        }
 
         // CASE 6 - GET (find): a single order by id.
         [HttpGet("GetOrderById")]
@@ -192,8 +218,8 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(order);
         }
 
-
-        // CASE 7 - GET (filter): filter orders using LINQ Where().
+        // CASE 7 - GET (filter): filter orders using LINQ Where() (Admin / Pharmacist).
+        [Authorize(Roles = "1,2")]
         [HttpGet("FilterOrders")]
         public async Task<ActionResult<IEnumerable<Order>>> FilterOrders(
             string? status, int? userId, DateTime? fromDate, DateTime? toDate, string? username)
@@ -223,7 +249,6 @@ namespace Pharmacy_Management_System.Controllers
                 query = query.Where(o => o.OrderDate <= toDate.Value);
             }
 
-            // Filters on a property that lives in the related User table.
             if (!string.IsNullOrWhiteSpace(username))
             {
                 query = query.Where(o => o.User!.Username.Contains(username));
@@ -233,8 +258,8 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(results);
         }
 
-
-        // CASE 8 - GET (sort + aggregate): newest first, with sales totals.
+        // CASE 8 - GET (sort + aggregate): sales summary (Admin / Pharmacist).
+        [Authorize(Roles = "1,2")]
         [HttpGet("sales-summary")]
         public async Task<IActionResult> GetSalesSummary()
         {
