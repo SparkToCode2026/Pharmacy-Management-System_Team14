@@ -7,9 +7,9 @@ namespace Pharmacy_Management_System.Models
     public class CustomerProfile
     {
         [Key]
-        [JsonIgnore]
+        
         public int CustomerId { get; set; }
-        [Required, Phone]
+        [Required]
         public int CustomerPhone { get; set; } 
         [Required]
         public string CustomerAddress { get; set; }
