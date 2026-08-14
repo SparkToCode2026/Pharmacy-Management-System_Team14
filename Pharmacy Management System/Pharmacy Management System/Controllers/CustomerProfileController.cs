@@ -1,109 +1,188 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
 
 namespace Pharmacy_Management_System.Controllers
 {
     [ApiController]
-    [Route("CustomerProfile")]
+    [Route("api/[controller]")]
+    [Authorize]
     public class CustomerProfileController : ControllerBase
     {
-        private ProjectContext context;
+        private readonly ProjectContext _context;
 
-        public CustomerProfileController(ProjectContext _context)
+        public CustomerProfileController(ProjectContext context)
         {
-            context = _context;
+            _context = context;
         }
 
+        // Add profile for the currently authenticated user
         [HttpPost("AddCustomerProfile")]
-        public IActionResult AddCustomerProfile(CustomerProfile cp)
+        public async Task<IActionResult> AddCustomerProfile([FromBody] CustomerProfile cp)
         {
-            context.CustomerProfiles.Add(cp);
-            context.SaveChanges();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+
+            cp.UserId = int.Parse(userIdClaim);
+
+            ModelState.Remove("UserId");
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var profileExists = await _context.CustomerProfiles.AnyAsync(p => p.UserId == cp.UserId);
+            if (profileExists)
+            {
+                return BadRequest("A profile already exists for this user.");
+            }
+
+            _context.CustomerProfiles.Add(cp);
+            await _context.SaveChangesAsync();
+
             return Ok(cp.CustomerId);
         }
 
-        [HttpPut("UpdateAllCustomerProfile")]
-        public IActionResult UpdateAllCustomerProfile(int id, CustomerProfile newProfile)
+        // Update profile
+        [HttpPut("UpdateAllCustomerProfile/{id}")]
+        public async Task<IActionResult> UpdateAllCustomerProfile(int id, [FromBody] CustomerProfile newProfile)
         {
-            CustomerProfile p = context.CustomerProfiles.FirstOrDefault(p => p.CustomerId == id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var p = await _context.CustomerProfiles.FirstOrDefaultAsync(profile => profile.CustomerId == id);
             if (p == null)
             {
                 return NotFound("Customer Profile not found.");
             }
-            else
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userRole != "1" && userRole != "2" && p.UserId.ToString() != userIdClaim)
             {
-                p.CustomerPhone = newProfile.CustomerPhone;
-                p.CustomerAddress = newProfile.CustomerAddress;
-                p.DateOfBirth = newProfile.DateOfBirth;
-                context.SaveChanges();
-                return Ok("Customer Profile updated successfully.");
+                return Forbid();
             }
+
+            p.CustomerPhone = newProfile.CustomerPhone;
+            p.CustomerAddress = newProfile.CustomerAddress;
+            p.DateOfBirth = newProfile.DateOfBirth;
+
+            await _context.SaveChangesAsync();
+            return Ok("Customer Profile updated successfully.");
         }
 
-        [HttpPatch("UpdateCustomerPhone")]
-        public IActionResult UpdateCustomerPhone(int id, int newPhone)
+        // Update phone number only
+        [HttpPatch("UpdateCustomerPhone/{id}")]
+        public async Task<IActionResult> UpdateCustomerPhone(int id, [FromBody] int newPhone)
         {
-            CustomerProfile p = context.CustomerProfiles.FirstOrDefault(p => p.CustomerId == id);
+            var p = await _context.CustomerProfiles.FirstOrDefaultAsync(profile => profile.CustomerId == id);
             if (p == null)
             {
                 return NotFound("Customer Profile not found.");
             }
-            else
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userRole != "1" && userRole != "2" && p.UserId.ToString() != userIdClaim)
             {
-                p.CustomerPhone = newPhone;
-                context.SaveChanges();
-                return Ok("Customer phone updated successfully.");
+                return Forbid();
             }
+
+            p.CustomerPhone = newPhone;
+            await _context.SaveChangesAsync();
+
+            return Ok("Customer phone updated successfully.");
         }
 
-        [HttpDelete("DeleteCustomerProfile")]
-        public IActionResult DeleteCustomerProfile(int id)
+        // Delete profile
+        [HttpDelete("DeleteCustomerProfile/{id}")]
+        public async Task<IActionResult> DeleteCustomerProfile(int id)
         {
-            CustomerProfile p = context.CustomerProfiles.FirstOrDefault(p => p.CustomerId == id);
+            var p = await _context.CustomerProfiles.FirstOrDefaultAsync(profile => profile.CustomerId == id);
             if (p == null)
             {
                 return NotFound("Customer Profile not found.");
             }
-            context.CustomerProfiles.Remove(p);
-            context.SaveChanges();
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userRole != "1" && userRole != "2" && p.UserId.ToString() != userIdClaim)
+            {
+                return Forbid();
+            }
+
+            _context.CustomerProfiles.Remove(p);
+            await _context.SaveChangesAsync();
+
             return Ok("Customer profile removed successfully.");
         }
 
-        //Get all customer profiles
+        // Get all customer profiles (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
         [HttpGet("GetAllCustomerProfiles")]
-        public IActionResult GetAllCustomerProfiles()
+        public async Task<IActionResult> GetAllCustomerProfiles()
         {
-            List<CustomerProfile> p = context.CustomerProfiles.ToList();
-            return Ok(p);
+            var profiles = await _context.CustomerProfiles.ToListAsync();
+            return Ok(profiles);
         }
 
-        // Get a single customer profile by id
-        [HttpGet("GetCustomerProfile")]
-        public IActionResult GetCustomerProfile(int id)
+        // Get single customer profile by id
+        [HttpGet("GetCustomerProfile/{id}")]
+        public async Task<IActionResult> GetCustomerProfile(int id)
         {
-            CustomerProfile p = context.CustomerProfiles.FirstOrDefault(p => p.CustomerId == id);
+            var p = await _context.CustomerProfiles
+                .FirstOrDefaultAsync(profile => profile.CustomerId == id);
+
             if (p == null)
             {
                 return NotFound("Customer Profile not found.");
             }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userRole != "1" && userRole != "2" && p.UserId.ToString() != userIdClaim)
+            {
+                return Forbid();
+            }
+
             return Ok(p);
         }
 
-        // Filter customer profiles using LINQ (Where)
+        // Filter profiles by address (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
         [HttpGet("GetByAddress")]
-        public IActionResult GetByAddress(string Address)
+        public async Task<IActionResult> GetByAddress([FromQuery] string address)
         {
-            List<CustomerProfile> p = context.CustomerProfiles.Where(p => p.CustomerAddress == (Address)).ToList();
-            return Ok(p);
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                return BadRequest("Address search parameter cannot be empty.");
+            }
+
+            var profiles = await _context.CustomerProfiles
+                .Where(p => p.CustomerAddress.ToLower().Contains(address.ToLower()))
+                .ToListAsync();
+
+            return Ok(profiles);
         }
 
-        // Count the number of Profiles 
+        // Count total customer profiles (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
         [HttpGet("GetTotalProfiles")]
-        public IActionResult GetTotalProfiles()
+        public async Task<IActionResult> GetTotalProfiles()
         {
-            int total = context.CustomerProfiles.Count();
-            return Ok("Total customer profiles: " + total);
+            int total = await _context.CustomerProfiles.CountAsync();
+            return Ok(new { TotalCustomerProfiles = total });
         }
-
     }
 }
