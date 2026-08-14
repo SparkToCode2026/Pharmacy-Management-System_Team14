@@ -224,7 +224,7 @@ namespace Pharmacy_Management_System.Controllers
                 TotalRevenue = items.Sum(i => i.Quantity * i.UnitPrice),
 
                 MostOrderedMedicines = items
-                    .GroupBy(i => i.Medicine != null ? i.Medicine.Name : "Unknown")
+                    .GroupBy(i => i.Medicine != null ? i.Medicine.MedicineName : "Unknown")
                     .Select(g => new
                     {
                         MedicineName = g.Key,
