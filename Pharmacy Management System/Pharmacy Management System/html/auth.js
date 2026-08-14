@@ -50,9 +50,23 @@ loginForm.addEventListener("submit", async (e) => {
     });
 
     if (response.ok) {
-      const user = await response.json();
+      const responseData = await response.json();
+
+      // Store JWT Token if returned by the backend
+      if (responseData.token) {
+        localStorage.setItem("token", responseData.token);
+      } else if (typeof responseData === "string") {
+        localStorage.setItem("token", responseData);
+      }
+
+      // Store user info
+      const user = responseData.user || responseData;
       localStorage.setItem("currentUser", JSON.stringify(user));
-      showAlert(`Welcome back, ${user.username}! Redirecting...`, "success");
+
+      showAlert(
+        `Welcome back, ${user.username || "User"}! Redirecting...`,
+        "success",
+      );
 
       setTimeout(() => {
         window.location.href = "index.html";
