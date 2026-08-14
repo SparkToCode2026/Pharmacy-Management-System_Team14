@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Pharmacy_Management_System.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 namespace Pharmacy_Management_System.Controllers
 {
     [ApiController]
@@ -8,11 +12,12 @@ namespace Pharmacy_Management_System.Controllers
     public class UserController : ControllerBase
     {
         private ProjectContext _context;
-        public UserController(ProjectContext context)
+        public UserController(ProjectContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
-
+        private readonly IConfiguration _configuration;
 
 
         // Register a new user
@@ -27,7 +32,7 @@ namespace Pharmacy_Management_System.Controllers
             }
             if (U.RoleId == null || U.RoleId == 0)
             {
-                U.RoleId = 3; 
+                U.RoleId = 3;
             }
             // Hash the password before saving it to the database
             U.Password = BCrypt.Net.BCrypt.HashPassword(U.Password);
@@ -86,7 +91,7 @@ namespace Pharmacy_Management_System.Controllers
             }
             // Hash the new password before saving it to the database
             user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            
+
             _context.SaveChanges();
             return Ok(user);
         }
@@ -122,7 +127,8 @@ namespace Pharmacy_Management_System.Controllers
 
         // Get a specific user by ID along with their related entity
         [HttpGet("GetUserById")]
-        public IActionResult getUser(int id) {
+        public IActionResult getUser(int id)
+        {
             // Retrieve the user by ID including their related entity
             var user = _context.User
                                 .Include(u => u.CustomerProfile)
@@ -150,7 +156,7 @@ namespace Pharmacy_Management_System.Controllers
                 query = query.Where(u => u.Username.Contains(search) || u.Email.Contains(search));
             }
 
-            
+
             var users = query.ToList();
             return Ok(users);
         }
@@ -189,7 +195,40 @@ namespace Pharmacy_Management_System.Controllers
                 return BadRequest("Invalid username or password.");
             }
 
-            return Ok(user);
+            var token = GenerateJwtToken(user);
+
+            return Ok(new
+            {
+                Token = token,
+                UserId = user.UserId,
+                Role = user.Role
+            });
+
+        }
+        private string GenerateJwtToken(User user)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Role, user.RoleId?.ToString() ?? "3")
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(7),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
+    
+
+
