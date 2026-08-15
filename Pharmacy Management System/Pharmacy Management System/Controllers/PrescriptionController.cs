@@ -47,6 +47,7 @@ namespace Pharmacy_Management_System.Controllers
             );
         }
 
+        // =====================================================
         // 2. PUT: Update Prescription information
         // Update all prescription details
         [Authorize(Roles = "1,2")]
@@ -84,11 +85,11 @@ namespace Pharmacy_Management_System.Controllers
             // Save the updated data
             _context.SaveChanges();
 
-            return NoContent();
+            return Ok(existingPrescription);
         }
 
-        // 3. PUT: Second update case
-        // Update prescription status only
+        // =====================================================
+        // 3. PATCH: Update prescription status only
         [Authorize(Roles = "1,2")]
         [HttpPatch("UpdatePrescriptionStatus/{id}")]
         public IActionResult UpdatePrescriptionStatus(int id, [FromBody] string status)
@@ -113,7 +114,7 @@ namespace Pharmacy_Management_System.Controllers
             // Save changes
             _context.SaveChanges();
 
-            return NoContent();
+            return Ok(prescription);
         }
 
         // =====================================================
@@ -137,36 +138,33 @@ namespace Pharmacy_Management_System.Controllers
             // Save delete operation
             _context.SaveChanges();
 
-            return NoContent();
+            return Ok("Prescription deleted successfully.");
         }
 
+        // =====================================================
         // 5. GET: Get all prescriptions
-        // Include related User and Medicines data
         [Authorize(Roles = "1,2")]
         [HttpGet("GetAllPrescriptions")]
         public IActionResult GetPrescriptions()
         {
             List<Prescription> prescriptions = _context.Prescriptions
-                // Include related User information
                 .Include(x => x.User)
-                // Include related Medicines information
                 .Include(x => x.Medicines)
                 .ToList();
 
             return Ok(prescriptions);
         }
 
+        // =====================================================
         // 6. GET: Find prescription by Id
         [HttpGet("GetPrescriptionById/{id}")]
         public IActionResult GetPrescriptionById(int id)
         {
-            // Search for prescription and include related data
             var prescription = _context.Prescriptions
                 .Include(x => x.User)
                 .Include(x => x.Medicines)
                 .FirstOrDefault(x => x.PrescriptionId == id);
 
-            // Check if prescription exists
             if (prescription == null)
             {
                 return NotFound($"Prescription with ID {id} was not found.");
@@ -175,8 +173,8 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(prescription);
         }
 
-        // 7. GET: Filter prescriptions using LINQ
-        // Filter by prescription status
+        // =====================================================
+        // 7. GET: Filter prescriptions by status
         [Authorize(Roles = "1,2")]
         [HttpGet("FilterPrescription")]
         public IActionResult FilterPrescription([FromQuery] string status)
@@ -187,10 +185,8 @@ namespace Pharmacy_Management_System.Controllers
             }
 
             var prescriptions = _context.Prescriptions
-                // Load related entities
                 .Include(x => x.User)
                 .Include(x => x.Medicines)
-                // Filter records by prescription status
                 .Where(x => x.PrescriptionStatus.ToLower() == status.ToLower())
                 .ToList();
 
@@ -198,10 +194,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         // =====================================================
-        // 8. GET: Sort Prescriptions
-        // Sorts prescriptions by date from newest to oldest.
-        // Uses LINQ OrderByDescending().
-        // =====================================================
+        // 8. GET: Sort Prescriptions by date
         [Authorize(Roles = "1,2")]
         [HttpGet("sort")]
         public IActionResult SortPrescriptions()
@@ -209,7 +202,6 @@ namespace Pharmacy_Management_System.Controllers
             var prescriptions = _context.Prescriptions
                 .Include(x => x.User)
                 .Include(x => x.Medicines)
-                // Sort prescriptions by prescription date
                 .OrderByDescending(x => x.PrescriptionDate)
                 .ToList();
 
