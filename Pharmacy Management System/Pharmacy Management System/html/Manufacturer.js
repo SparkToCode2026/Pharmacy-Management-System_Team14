@@ -1,34 +1,43 @@
-const API_URL = "https://localhost:7293/Manufacturer";
+const API_URL = "https://localhost:7293/api/Manufacturer";
 let manufacturersList = [];
 let isAscending = true;
 
+function getAuthToken() {
+  return localStorage.getItem("token");
+}
+
+function checkAuth() {
+  const token = getAuthToken();
+  if (!token) {
+    window.location.href = "login.html";
+    return false;
+  }
+  return token;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  if (!checkAuth()) return;
+
   loadManufacturers();
 
-  // Sort Button Listener
   document
     .getElementById("sortBtn")
     ?.addEventListener("click", sortManufacturersById);
 
-  // Refresh Button Listener
   document
     .getElementById("refreshBtn")
     ?.addEventListener("click", loadManufacturers);
 
-  // Search Button Listener
   document.getElementById("searchBtn")?.addEventListener("click", handleSearch);
 
-  // Allow pressing Enter in search box
   document.getElementById("searchInput")?.addEventListener("keypress", (e) => {
     if (e.key === "Enter") handleSearch();
   });
 
-  // Optional real-time filtering as you type
   document
     .getElementById("searchInput")
     ?.addEventListener("input", handleSearch);
 
-  // Add Manufacturer Submit
   document
     .getElementById("addManufacturerForm")
     ?.addEventListener("submit", async (e) => {
@@ -48,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-  // Edit Manufacturer Submit
   document
     .getElementById("editManufacturerForm")
     ?.addEventListener("submit", async (e) => {
@@ -65,11 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       if (
-        await sendRequest(
-          `${API_URL}/UpdateManufacturer?id=${id}`,
-          "PUT",
-          payload,
-        )
+        await sendRequest(`${API_URL}/UpdateManufacturer/${id}`, "PUT", payload)
       ) {
         const modalEl = document.getElementById("editManufacturerModal");
         const modalInstance =
@@ -80,7 +84,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// Search function
 function handleSearch() {
   const query =
     document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
@@ -93,7 +96,6 @@ function handleSearch() {
   renderTable(filtered);
 }
 
-// Sort Function
 function sortManufacturersById() {
   manufacturersList.sort((a, b) => {
     return isAscending
@@ -110,16 +112,31 @@ function sortManufacturersById() {
       : "Sort by ID (Desc)";
   }
 
-  handleSearch(); // Render sorted list while keeping current search filter active
+  handleSearch();
 }
 
-// API Helper
 async function sendRequest(url, method, body = null) {
+  const token = checkAuth();
+  if (!token) return false;
+
   try {
-    const options = { method, headers: { "Content-Type": "application/json" } };
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+
+    const options = { method, headers };
     if (body) options.body = JSON.stringify(body);
 
     const res = await fetch(url, options);
+
+    if (res.status === 401 || res.status === 403) {
+      alert("Session expired or unauthorized. Please log in again.");
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+      return false;
+    }
+
     if (!res.ok) {
       const errorText = await res.text();
       throw new Error(errorText || "Action failed");
@@ -131,10 +148,24 @@ async function sendRequest(url, method, body = null) {
   }
 }
 
-// Load Manufacturers
 async function loadManufacturers() {
+  const token = checkAuth();
+  if (!token) return;
+
   try {
-    const res = await fetch(`${API_URL}/GetAllManufacturers`);
+    const res = await fetch(`${API_URL}/GetAllManufacturers`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.status === 401 || res.status === 403) {
+      alert("Session expired or unauthorized. Please log in again.");
+      localStorage.removeItem("token");
+      window.location.href = "login.html";
+      return;
+    }
+
     if (!res.ok) throw new Error("Failed to load manufacturers");
     manufacturersList = await res.json();
     renderTable(manufacturersList);
@@ -143,7 +174,6 @@ async function loadManufacturers() {
   }
 }
 
-// Render Table - Guaranteed 6 Columns
 function renderTable(data) {
   const tbody = document.getElementById("manufacturersTableBody");
   if (!tbody) return;
@@ -179,7 +209,6 @@ function renderTable(data) {
     .join("");
 }
 
-// Open Details Modal
 function openDetailsModal(id) {
   const item = manufacturersList.find((m) => m.manufacturerId === id);
   if (!item) return;
@@ -195,7 +224,6 @@ function openDetailsModal(id) {
     item.licenseNumber || "N/A";
 }
 
-// Open Edit Modal
 function openEditModal(id) {
   const item = manufacturersList.find((m) => m.manufacturerId === id);
   if (!item) return;
@@ -211,16 +239,14 @@ function openEditModal(id) {
     item.licenseNumber || "";
 }
 
-// Delete Manufacturer
 async function deleteManufacturer(id) {
   if (confirm("Are you sure you want to delete this manufacturer?")) {
-    if (await sendRequest(`${API_URL}/DeleteManufacturer?id=${id}`, "DELETE")) {
+    if (await sendRequest(`${API_URL}/DeleteManufacturer/${id}`, "DELETE")) {
       loadManufacturers();
     }
   }
 }
 
-// Attach functions globally so HTML inline calls don't trigger ReferenceErrors
 window.openDetailsModal = openDetailsModal;
 window.openEditModal = openEditModal;
 window.deleteManufacturer = deleteManufacturer;

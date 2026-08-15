@@ -112,8 +112,15 @@ namespace Pharmacy_Management_System.Controllers
         [HttpGet("GetAllManufacturers")]
         public IActionResult GetAllManufacturer()
         {
-            List<Manufacturer> manufacturers = _context.Manufacturer
-                .Include(m => m.Medicines)
+            var manufacturers = _context.Manufacturer
+                .Select(m => new
+                {
+                    m.ManufacturerId,
+                    m.ManufacturerName,
+                    m.LicenseNumber,
+                    m.ContactNumber,
+                    m.ContactEmail
+                })
                 .ToList();
 
             return Ok(manufacturers);
@@ -125,7 +132,14 @@ namespace Pharmacy_Management_System.Controllers
         public IActionResult GetManufacturer(int id)
         {
             var manu = _context.Manufacturer
-                .Include(m => m.Medicines)
+                .Select(m => new
+                {
+                    m.ManufacturerId,
+                    m.ManufacturerName,
+                    m.LicenseNumber,
+                    m.ContactNumber,
+                    m.ContactEmail
+                })
                 .FirstOrDefault(m => m.ManufacturerId == id);
 
             if (manu == null)
@@ -141,16 +155,22 @@ namespace Pharmacy_Management_System.Controllers
         [HttpGet("SearchManufacturer")]
         public IActionResult SearchManufacturer([FromQuery] string? name)
         {
-            var query = _context.Manufacturer
-                .Include(m => m.Medicines)
-                .AsQueryable();
+            var query = _context.Manufacturer.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(name))
             {
                 query = query.Where(m => m.ManufacturerName.ToLower().Contains(name.ToLower()));
             }
 
-            List<Manufacturer> manufacturers = query.ToList();
+            var manufacturers = query.Select(m => new
+            {
+                m.ManufacturerId,
+                m.ManufacturerName,
+                m.LicenseNumber,
+                m.ContactNumber,
+                m.ContactEmail
+            }).ToList();
+
             return Ok(manufacturers);
         }
 
