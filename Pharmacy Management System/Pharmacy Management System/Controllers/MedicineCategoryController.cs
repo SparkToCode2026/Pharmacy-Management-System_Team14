@@ -123,6 +123,12 @@ namespace Pharmacy_Management_System.Controllers
         public IActionResult GetMedicineCategoryById(int id)
         {
             var medicineCategory = _context.MedicineCategories
+                .Select(c => new
+                {
+                    c.MedicineCategoryId,
+                    c.MedicineCategoryName,
+                    c.MedicineCategoryDescription
+                })
                 .FirstOrDefault(mc => mc.MedicineCategoryId == id);
 
             if (medicineCategory == null)
@@ -138,7 +144,15 @@ namespace Pharmacy_Management_System.Controllers
         [HttpGet("GetAllMedicineCategories")]
         public IActionResult GetAllMedicineCategories()
         {
-            List<MedicineCategory> categories = _context.MedicineCategories.ToList();
+            var categories = _context.MedicineCategories
+                .Select(c => new
+                {
+                    c.MedicineCategoryId,
+                    c.MedicineCategoryName,
+                    c.MedicineCategoryDescription
+                })
+                .ToList();
+
             return Ok(categories);
         }
 
@@ -152,8 +166,14 @@ namespace Pharmacy_Management_System.Controllers
                 return BadRequest("Name parameter cannot be empty.");
             }
 
-            List<MedicineCategory> medicineCategories = _context.MedicineCategories
+            var medicineCategories = _context.MedicineCategories
                 .Where(mc => mc.MedicineCategoryName.ToLower().Contains(name.ToLower()))
+                .Select(c => new
+                {
+                    c.MedicineCategoryId,
+                    c.MedicineCategoryName,
+                    c.MedicineCategoryDescription
+                })
                 .ToList();
 
             return Ok(medicineCategories);
@@ -169,8 +189,14 @@ namespace Pharmacy_Management_System.Controllers
                 return BadRequest("Description parameter cannot be empty.");
             }
 
-            List<MedicineCategory> medicineCategories = _context.MedicineCategories
+            var medicineCategories = _context.MedicineCategories
                 .Where(mc => mc.MedicineCategoryDescription.ToLower().Contains(description.ToLower()))
+                .Select(c => new
+                {
+                    c.MedicineCategoryId,
+                    c.MedicineCategoryName,
+                    c.MedicineCategoryDescription
+                })
                 .ToList();
 
             return Ok(medicineCategories);
