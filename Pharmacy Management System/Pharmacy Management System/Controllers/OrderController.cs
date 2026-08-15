@@ -1,8 +1,9 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
+using Pharmacy_Management_System.Services;
+using System.Security.Claims;
 
 namespace Pharmacy_Management_System.Controllers
 {
@@ -13,10 +14,13 @@ namespace Pharmacy_Management_System.Controllers
     public class OrderController : ControllerBase
     {
         private readonly ProjectContext _context;
+        private readonly IEmailService _emailService;
 
-        public OrderController(ProjectContext context)
+
+        public OrderController(ProjectContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         // CASE 1 - POST: create a new order with its order items.
@@ -72,6 +76,25 @@ namespace Pharmacy_Management_System.Controllers
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == order.UserId);
+            if (user != null && !string.IsNullOrWhiteSpace(user.Email))
+            {
+                var emailBody =
+                    $"Hello {user.Username},\n\n" +
+                    $"Thank you for your order.\n\n" +
+                    $"Order Number: {order.OrderId}\n" +
+                    $"Order Date: {order.OrderDate:g}\n" +
+                    $"Total Amount: {order.TotalAmount:F2} $\n" +
+                    $"Status: {order.Status}\n\n" +
+                    $"Thank you for choosing our pharmacy.";
+                await _emailService.SendEmailAsync(user.Email, $"Order Confirmation - Order #{order.OrderId}", emailBody);
+
+
+
+            }
+
+
 
             return CreatedAtAction(nameof(GetOrderById), new { id = order.OrderId }, order);
         }
