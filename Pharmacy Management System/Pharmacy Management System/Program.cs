@@ -1,8 +1,10 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Pharmacy_Management_System.Models;
+using Pharmacy_Management_System.Services;
+using System.Text;
 
 namespace Pharmacy_Management_System
 {
@@ -18,6 +20,11 @@ namespace Pharmacy_Management_System
             // Add Database Context
             builder.Services.AddDbContext<ProjectContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            //for the email service
+            builder.Services.Configure<EmailSettings>(
+            builder.Configuration.GetSection("EmailSettings"));
+
+            builder.Services.AddScoped<IEmailService, EmailService>();
 
             // 2. Register CORS Service
             builder.Services.AddCors(options =>
