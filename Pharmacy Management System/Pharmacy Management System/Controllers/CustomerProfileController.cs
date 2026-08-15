@@ -30,7 +30,6 @@ namespace Pharmacy_Management_System.Controllers
 
             cp.UserId = int.Parse(userIdClaim);
 
-            // Clear EF Core navigation property validation errors
             ModelState.Remove("UserId");
             ModelState.Remove("User");
             if (!ModelState.IsValid)
@@ -50,7 +49,39 @@ namespace Pharmacy_Management_System.Controllers
             return Ok(cp.CustomerId);
         }
 
-        // Update profile (Matches PUT api/CustomerProfile/UpdateCustomerProfile/{id})
+        // GET current logged-in user's profile
+        [HttpGet("GetMyProfile")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized("User ID not found in token.");
+            }
+
+            int userId = int.Parse(userIdClaim);
+
+            var p = await _context.CustomerProfiles
+                .Include(p => p.Users)
+                .FirstOrDefaultAsync(profile => profile.UserId == userId);
+
+            if (p == null)
+            {
+                return NotFound("Profile not found.");
+            }
+
+            return Ok(new
+            {
+                p.CustomerId,
+                p.CustomerPhone,
+                p.CustomerAddress,
+                p.DateOfBirth,
+                p.UserId,
+                UserName = p.Users != null ? p.Users.Username : "N/A"
+            });
+        }
+
+        // Update profile
         [HttpPut("UpdateCustomerProfile/{id}")]
         public async Task<IActionResult> UpdateCustomerProfile(int id, [FromBody] CustomerProfile newProfile)
         {
@@ -130,7 +161,7 @@ namespace Pharmacy_Management_System.Controllers
             return Ok("Customer profile removed successfully.");
         }
 
-        // Get all customer profiles with User included (Admin / Pharmacist only)
+        // Get all customer profiles (Admin / Pharmacist only)
         [Authorize(Roles = "1,2")]
         [HttpGet("GetAllCustomerProfiles")]
         public async Task<IActionResult> GetAllCustomerProfiles()

@@ -217,44 +217,53 @@ function clearUserIdFilter() {
 }
 
 // 4. ADD CUSTOMER PROFILE
-document.getElementById("ProfileForm")?.addEventListener("submit", (e) => {
-  e.preventDefault();
+document
+  .getElementById("ProfileForm")
+  ?.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  const phoneInput = document
-    .getElementById("customerPhone")
-    .value.replace(/\D/g, "");
+    const phoneInput = document
+      .getElementById("customerPhone")
+      .value.replace(/\D/g, "");
 
-  const newProfile = {
-    customerPhone: parseInt(phoneInput, 10) || 0,
-    customerAddress: document.getElementById("customerAddress").value.trim(),
-    dateOfBirth: document.getElementById("DateOfBirth").value,
-  };
+    const newProfile = {
+      customerPhone: parseInt(phoneInput, 10) || 0,
+      customerAddress: document.getElementById("customerAddress").value.trim(),
+      dateOfBirth: document.getElementById("DateOfBirth").value,
+    };
 
-  fetch(`${API}/AddCustomerProfile`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(newProfile),
-  })
-    .then(async (res) => {
+    try {
+      const res = await fetch(`${API}/AddCustomerProfile`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(newProfile),
+      });
+
       if (res.ok) {
         alert("Profile created successfully!");
         document.getElementById("ProfileForm").reset();
 
-        // Reload current user's profile card
+        // Refetch current user's profile to switch UI view
         await loadMyProfile();
 
-        // Refresh list if user has admin view
+        // Refresh table list if logged-in user is Admin / Pharmacist
         const role = getUserRole();
-        if (role === "1" || role === "2" || role === "Admin") {
+        if (
+          role === "1" ||
+          role === "2" ||
+          role === "Admin" ||
+          role === "Pharmacist"
+        ) {
           getAllProfiles();
         }
       } else {
         const txt = await res.text();
         alert("Failed to add profile: " + txt);
       }
-    })
-    .catch((err) => console.error("Error adding Profile:", err));
-});
+    } catch (err) {
+      console.error("Error adding Profile:", err);
+    }
+  });
 
 // 5. UPDATE CUSTOMER PROFILE
 document.getElementById("editProfileForm")?.addEventListener("submit", (e) => {
