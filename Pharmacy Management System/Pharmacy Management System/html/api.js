@@ -644,18 +644,27 @@ async function apiGetRevenue() {
   return apiRequest(`${PAYMENT_API}/GetRevenue`);
 }
 
+async function apiGetPaymentByOrderId(orderId) {
+  return apiRequest(`${PAYMENT_API}/GetPaymentByOrderId?orderId=${orderId}`);
+}
+
 // Aliases
 const getPayments = apiGetPayments;
 const getPaymentById = apiGetPaymentById;
 const createPayment = apiCreatePayment;
 const updatePayment = apiUpdatePayment;
 const deletePayment = apiDeletePayment;
+const getPaymentByOrderId = apiGetPaymentByOrderId;
 
 // ============================================================
 // 11. Prescription APIs
 // ============================================================
 async function apiGetPrescriptions() {
   return apiRequest(`${PRESCRIPTION_API}/GetAllPrescriptions`);
+}
+
+async function apiGetMyPrescriptions() {
+  return apiRequest(`${PRESCRIPTION_API}/GetMyPrescriptions`);
 }
 
 async function apiGetPrescriptionById(id) {
@@ -699,6 +708,7 @@ async function apiSortPrescriptions() {
 
 // Aliases
 const getPrescriptions = apiGetPrescriptions;
+const getMyPrescriptions = apiGetMyPrescriptions;
 const getPrescriptionById = apiGetPrescriptionById;
 const createPrescription = apiCreatePrescription;
 const updatePrescription = apiUpdatePrescription;

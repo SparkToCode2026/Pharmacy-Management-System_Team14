@@ -37,12 +37,22 @@ async function loadUserPrescriptions() {
     const currentUserId = getCurrentUserId();
     const role = getUserRole();
 
-    const data = await apiGetPrescriptions();
-    let all = data || [];
-
-    // If regular customer, filter by user ID
-    if (role === "user" && currentUserId) {
-      all = all.filter((p) => (p.userId ?? p.UserId) === currentUserId);
+    let all = [];
+    try {
+      // Regular users use GetMyPrescriptions (server-filtered by JWT)
+      // Admin/Pharmacist use GetAllPrescriptions
+      if (role === "admin" || role === "pharmacist") {
+        all = await apiGetPrescriptions();
+      } else {
+        all = await apiGetMyPrescriptions();
+      }
+    } catch (err) {
+      // Fallback: try the other endpoint
+      try {
+        all = await apiGetMyPrescriptions();
+      } catch {
+        all = [];
+      }
     }
 
     userPrescriptions = all;

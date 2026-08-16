@@ -198,7 +198,10 @@ async function handlePlaceOrder() {
 
   try {
     const created = await createOrder(orderPayload);
-    alert(`🎉 Order placed successfully! Order #${created.orderId ?? created.OrderId ?? ""}`);
+    const orderId = created.orderId ?? created.OrderId;
+    const finalAmount = created.totalAmount ?? created.TotalAmount ?? totalAmount;
+
+    alert(`🎉 Order #${orderId} placed successfully! Redirecting to payment checkout...`);
 
     // Clear cart
     cart = [];
@@ -208,8 +211,8 @@ async function handlePlaceOrder() {
     const modal = bootstrap.Modal.getInstance(modalEl);
     modal?.hide();
 
-    // Redirect to user's orders page
-    window.location.href = "user-orders.html";
+    // Redirect to payment checkout with autofilled order data
+    window.location.href = `payment.html?orderId=${orderId}&amount=${finalAmount}`;
   } catch (error) {
     console.error("Order placement failed:", error);
     alert(`Failed to place order: ${error.message}`);

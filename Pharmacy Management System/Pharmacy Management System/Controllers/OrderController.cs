@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
@@ -54,10 +54,10 @@ namespace Pharmacy_Management_System.Controllers
 
             foreach (var item in order.OrderItems)
             {
-                var medicineExists = await _context.Medicines
-                    .AnyAsync(m => m.MedicineId == item.MedicineId);
+                var medicine = await _context.Medicines
+                    .FirstOrDefaultAsync(m => m.MedicineId == item.MedicineId);
 
-                if (!medicineExists)
+                if (medicine == null)
                 {
                     return BadRequest($"Medicine {item.MedicineId} does not exist.");
                 }
@@ -67,7 +67,40 @@ namespace Pharmacy_Management_System.Controllers
                     return BadRequest("Quantity must be greater than 0.");
                 }
 
+                if (item.UnitPrice <= 0)
+                {
+                    item.UnitPrice = (decimal)medicine.MedicinePrice;
+                }
+
                 item.RecalculateSubtotal();
+
+                // Deduct stock for this medicine at the order's branch
+                var stock = await _context.StockLevel
+                    .FirstOrDefaultAsync(s => s.MedicineId == item.MedicineId && s.BranchId == order.BranchId);
+
+                if (stock != null)
+                {
+                    if (stock.CurrentQuantity < item.Quantity)
+                    {
+                        return BadRequest($"Insufficient stock for '{medicine.MedicineName}' at the selected branch. Available: {stock.CurrentQuantity}, Requested: {item.Quantity}.");
+                    }
+                    stock.CurrentQuantity -= item.Quantity;
+                }
+                else
+                {
+                    // Fallback to any branch stock record for this medicine
+                    var anyStock = await _context.StockLevel
+                        .FirstOrDefaultAsync(s => s.MedicineId == item.MedicineId);
+
+                    if (anyStock != null)
+                    {
+                        if (anyStock.CurrentQuantity < item.Quantity)
+                        {
+                            return BadRequest($"Insufficient stock for '{medicine.MedicineName}'. Available: {anyStock.CurrentQuantity}, Requested: {item.Quantity}.");
+                        }
+                        anyStock.CurrentQuantity -= item.Quantity;
+                    }
+                }
             }
 
             order.OrderDate = DateTime.Now;
@@ -149,7 +182,9 @@ namespace Pharmacy_Management_System.Controllers
                 return BadRequest("Status must be one of: " + string.Join(", ", allowed));
             }
 
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
 
             if (order == null)
             {
@@ -159,6 +194,33 @@ namespace Pharmacy_Management_System.Controllers
             if (order.Status == "Completed")
             {
                 return BadRequest("A completed order cannot change status.");
+            }
+
+            // Restore stock if order is being cancelled
+            if (order.Status != "Cancelled" && status == "Cancelled" && order.OrderItems != null)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    var stock = await _context.StockLevel
+                        .FirstOrDefaultAsync(s => s.MedicineId == item.MedicineId && s.BranchId == order.BranchId);
+                    if (stock != null)
+                    {
+                        stock.CurrentQuantity += item.Quantity;
+                    }
+                }
+            }
+            // Re-deduct stock if order is un-cancelled
+            else if (order.Status == "Cancelled" && status != "Cancelled" && order.OrderItems != null)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    var stock = await _context.StockLevel
+                        .FirstOrDefaultAsync(s => s.MedicineId == item.MedicineId && s.BranchId == order.BranchId);
+                    if (stock != null)
+                    {
+                        stock.CurrentQuantity = Math.Max(0, stock.CurrentQuantity - item.Quantity);
+                    }
+                }
             }
 
             order.Status = status;
@@ -179,6 +241,20 @@ namespace Pharmacy_Management_System.Controllers
             if (order == null)
             {
                 return NotFound("Order " + id + " was not found.");
+            }
+
+            // Restore stock if order was active when deleted
+            if (order.Status != "Cancelled" && order.OrderItems != null)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    var stock = await _context.StockLevel
+                        .FirstOrDefaultAsync(s => s.MedicineId == item.MedicineId && s.BranchId == order.BranchId);
+                    if (stock != null)
+                    {
+                        stock.CurrentQuantity += item.Quantity;
+                    }
+                }
             }
 
             _context.OrderItems.RemoveRange(order.OrderItems);

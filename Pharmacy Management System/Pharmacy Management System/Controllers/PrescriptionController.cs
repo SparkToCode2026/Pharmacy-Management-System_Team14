@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
@@ -142,7 +142,7 @@ namespace Pharmacy_Management_System.Controllers
         }
 
         // =====================================================
-        // 5. GET: Get all prescriptions
+        // 5. GET: Get all prescriptions (Admin / Pharmacist only)
         [Authorize(Roles = "1,2")]
         [HttpGet("GetAllPrescriptions")]
         public IActionResult GetPrescriptions()
@@ -150,6 +150,28 @@ namespace Pharmacy_Management_System.Controllers
             List<Prescription> prescriptions = _context.Prescriptions
                 .Include(x => x.User)
                 .Include(x => x.Medicines)
+                .ToList();
+
+            return Ok(prescriptions);
+        }
+
+        // 5b. GET: Get my prescriptions (any authenticated user)
+        [HttpGet("GetMyPrescriptions")]
+        public IActionResult GetMyPrescriptions()
+        {
+            var userIdClaim = User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("nameid")?.Value
+                ?? User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("Could not determine user identity.");
+            }
+
+            var prescriptions = _context.Prescriptions
+                .Include(x => x.Medicines)
+                .Where(x => x.UserId == userId)
                 .ToList();
 
             return Ok(prescriptions);

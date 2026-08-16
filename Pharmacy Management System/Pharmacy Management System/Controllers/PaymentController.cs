@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
@@ -28,13 +28,25 @@ namespace Pharmacy_Management_System.Controllers
                 return BadRequest(ModelState);
             }
 
-            bool orderAlreadyPaid = _context.Payment.Any(p => p.OrderId == payment.OrderId);
+            bool orderAlreadyPaid = _context.Payment.Any(p => p.OrderId == payment.OrderId
+                && p.PaymentStatus == PaymentStatus.Completed);
             if (orderAlreadyPaid)
             {
-                return BadRequest("This order already has a payment.");
+                return BadRequest("This order already has a completed payment.");
             }
 
             _context.Payment.Add(payment);
+
+            // If payment is Completed, automatically mark the order as Completed
+            if (payment.PaymentStatus == PaymentStatus.Completed)
+            {
+                var order = _context.Orders.FirstOrDefault(o => o.OrderId == payment.OrderId);
+                if (order != null && order.Status != "Completed")
+                {
+                    order.Status = "Completed";
+                }
+            }
+
             _context.SaveChanges();
 
             return Ok(payment);
@@ -121,6 +133,21 @@ namespace Pharmacy_Management_System.Controllers
             if (pay == null)
             {
                 return NotFound($"Payment with ID {id} was not found.");
+            }
+
+            return Ok(pay);
+        }
+
+        // Get payment by Order ID (all authenticated users — used to check if order is paid)
+        [HttpGet("GetPaymentByOrderId")]
+        public IActionResult GetPaymentByOrderId(int orderId)
+        {
+            var pay = _context.Payment
+                .FirstOrDefault(p => p.OrderId == orderId);
+
+            if (pay == null)
+            {
+                return NotFound($"No payment found for order {orderId}.");
             }
 
             return Ok(pay);

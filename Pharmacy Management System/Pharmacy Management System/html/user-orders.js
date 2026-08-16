@@ -53,6 +53,26 @@ async function loadUserOrders() {
       return;
     }
 
+    // Check which orders already have a completed payment (parallel fetch)
+    const paidOrderIds = new Set();
+    await Promise.all(
+      userOrders.map(async (order) => {
+        const oid = order.orderId ?? order.OrderId;
+        try {
+          const payment = await getPaymentByOrderId(oid);
+          const pStatus = payment
+            ? (payment.paymentStatus ?? payment.PaymentStatus)
+            : null;
+          // 1 = Completed enum integer
+          if (pStatus === 1 || pStatus === "Completed") {
+            paidOrderIds.add(oid);
+          }
+        } catch {
+          // 404 = no payment yet, ignore
+        }
+      }),
+    );
+
     tbody.innerHTML = "";
     userOrders.forEach((order) => {
       const orderId = order.orderId ?? order.OrderId;
@@ -80,17 +100,27 @@ async function loadUserOrders() {
               ? "bg-danger"
               : "bg-info";
 
+      const alreadyPaid = paidOrderIds.has(orderId);
+      const isCancelled = status === "Cancelled";
+
+      // Show Paid badge if payment exists, Pay button if not yet paid and not cancelled
+      const paySection = alreadyPaid
+        ? `<span class="badge bg-success ms-1 px-2 py-1">✓ Paid</span>`
+        : !isCancelled && status !== "Completed"
+          ? `<a href="payment.html?orderId=${orderId}&amount=${totalAmount}" class="btn btn-sm btn-success ms-1">💳 Pay</a>`
+          : ``;
+
       tbody.innerHTML += `
         <tr>
           <td class="fw-bold">#${orderId}</td>
           <td>${orderDate}</td>
           <td>${branchName}</td>
-          <td class="fw-semibold text-success">$${totalAmount}</td>
+          <td class="fw-bold text-success fs-6">$${totalAmount}</td>
           <td><span class="badge ${statusBadge}">${status}</span></td>
-          <td class="text-center">
+          <td class="text-center text-nowrap">
             <button class="btn btn-sm btn-primary" onclick="viewOrderDetails(${orderId})">
               View Items
-            </button>
+            </button>${paySection}
           </td>
         </tr>
       `;
@@ -241,9 +271,8 @@ document
 
     try {
       const created = await createOrder(payload);
-      alert(
-        `🎉 Order placed successfully! Order #${created.orderId ?? created.OrderId ?? ""}`,
-      );
+      const orderId = created.orderId ?? created.OrderId;
+      const finalAmount = created.totalAmount ?? created.TotalAmount ?? totalAmount;
 
       // Reset modal state
       modalOrderItems = [];
@@ -254,8 +283,10 @@ document
       const modal = bootstrap.Modal.getInstance(modalEl);
       modal?.hide();
 
-      // Refresh list
-      loadUserOrders();
+      alert(`🎉 Order #${orderId} placed! Redirecting to payment checkout...`);
+
+      // Redirect to payment with autofilled order data
+      window.location.href = `payment.html?orderId=${orderId}&amount=${finalAmount}`;
     } catch (err) {
       alert(`Could not place order: ${err.message}`);
     } finally {
