@@ -1,6 +1,6 @@
 // ============================================================
 // user-orders.js
-// Logic for User Orders View using api.js
+// Logic for User Orders View & Placing New Orders
 // ============================================================
 
 function checkAccess() {
@@ -15,16 +15,28 @@ function checkAccess() {
 let userOrders = [];
 let branchesCache = [];
 let medicinesCache = [];
+let modalOrderItems = []; // Array of { medicineId, medicineName, quantity, unitPrice }
 
-// Load user's orders
+// 1. Load user's orders history
 async function loadUserOrders() {
   try {
     const tbody = document.getElementById("ordersTableBody");
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Loading your orders...</td></tr>';
+      tbody.innerHTML =
+        '<tr><td colspan="6" class="text-center text-muted py-4">Loading your orders...</td></tr>';
     }
 
-    // Attempt getMyOrders first; fallback to getAllOrders if admin
+    // Cache branches & medicines for names lookup
+    try {
+      branchesCache = (await getBranches()) || [];
+      medicinesCache = (await getMedicines()) || [];
+    } catch (e) {
+      console.warn("Error caching branches/medicines:", e);
+    }
+
+    populateModalDropdowns();
+
+    // Fetch user's orders
     let orders = [];
     try {
       orders = await getMyOrders();
@@ -35,29 +47,29 @@ async function loadUserOrders() {
     userOrders = orders || [];
     if (!userOrders || userOrders.length === 0) {
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">You have not placed any orders yet.</td></tr>';
+        tbody.innerHTML =
+          '<tr><td colspan="6" class="text-center text-muted py-4">You have not placed any orders yet.</td></tr>';
       }
       return;
-    }
-
-    try {
-      branchesCache = (await getBranches()) || [];
-      medicinesCache = (await getMedicines()) || [];
-    } catch (e) {
-      console.warn("Error caching branches/medicines:", e);
     }
 
     tbody.innerHTML = "";
     userOrders.forEach((order) => {
       const orderId = order.orderId ?? order.OrderId;
       const rawDate = order.orderDate ?? order.OrderDate;
-      const orderDate = rawDate ? new Date(rawDate).toLocaleDateString() : "—";
-      const totalAmount = Number(order.totalAmount ?? order.TotalAmount ?? 0).toFixed(2);
+      const orderDate = rawDate ? new Date(rawDate).toLocaleString() : "—";
+      const totalAmount = Number(
+        order.totalAmount ?? order.TotalAmount ?? 0,
+      ).toFixed(2);
       const status = order.status ?? order.Status ?? "Pending";
       const branchId = order.branchId ?? order.BranchId;
 
-      const branch = branchesCache.find((b) => (b.branchId ?? b.BranchId) === branchId);
-      const branchName = branch ? (branch.branchName ?? branch.BranchName) : `Branch #${branchId}`;
+      const branch = branchesCache.find(
+        (b) => (b.branchId ?? b.BranchId) === branchId,
+      );
+      const branchName = branch
+        ? branch.branchName ?? branch.BranchName
+        : `Branch #${branchId}`;
 
       const statusBadge =
         status === "Completed"
@@ -75,7 +87,7 @@ async function loadUserOrders() {
           <td>${branchName}</td>
           <td class="fw-semibold text-success">$${totalAmount}</td>
           <td><span class="badge ${statusBadge}">${status}</span></td>
-          <td>
+          <td class="text-center">
             <button class="btn btn-sm btn-primary" onclick="viewOrderDetails(${orderId})">
               View Items
             </button>
@@ -92,7 +104,169 @@ async function loadUserOrders() {
   }
 }
 
-// View order details modal
+// 2. Populate Dropdowns in Place Order Modal
+function populateModalDropdowns() {
+  const branchSelect = document.getElementById("modalOrderBranch");
+  const medSelect = document.getElementById("modalItemMedicine");
+
+  if (branchSelect) {
+    branchSelect.innerHTML =
+      '<option value="">— Select branch —</option>' +
+      branchesCache
+        .map((b) => {
+          const id = b.branchId ?? b.BranchId;
+          const name = b.branchName ?? b.BranchName ?? `Branch #${id}`;
+          const city = b.branchCity ?? b.BranchCity ?? "";
+          return `<option value="${id}">${name} ${city ? `(${city})` : ""}</option>`;
+        })
+        .join("");
+  }
+
+  if (medSelect) {
+    medSelect.innerHTML =
+      '<option value="">— Select medicine —</option>' +
+      medicinesCache
+        .map((m) => {
+          const id = m.medicineId ?? m.MedicineId;
+          const name = m.medicineName ?? m.MedicineName;
+          const price = Number(
+            m.medicinePrice ?? m.MedicinePrice ?? m.price ?? 0,
+          ).toFixed(2);
+          return `<option value="${id}" data-price="${price}">${name} ($${price})</option>`;
+        })
+        .join("");
+  }
+}
+
+// 3. Line Items Builder in Modal
+document.getElementById("modalAddItemBtn")?.addEventListener("click", () => {
+  const select = document.getElementById("modalItemMedicine");
+  const medId = parseInt(select.value);
+  const qty = parseInt(document.getElementById("modalItemQty").value);
+  const selectedOption = select.options[select.selectedIndex];
+  const price = parseFloat(selectedOption?.getAttribute("data-price") || 0);
+
+  if (!medId) return alert("Please select a medicine.");
+  if (!qty || qty <= 0) return alert("Quantity must be at least 1.");
+
+  const medName = selectedOption.text.split(" ($")[0];
+
+  const existing = modalOrderItems.find((it) => it.medicineId === medId);
+  if (existing) {
+    existing.quantity += qty;
+  } else {
+    modalOrderItems.push({
+      medicineId: medId,
+      medicineName: medName,
+      quantity: qty,
+      unitPrice: price,
+    });
+  }
+
+  renderModalItems();
+  document.getElementById("modalItemQty").value = 1;
+});
+
+function renderModalItems() {
+  const body = document.getElementById("modalItemsBody");
+  const totalCell = document.getElementById("modalItemsTotal");
+  if (!body) return;
+
+  if (modalOrderItems.length === 0) {
+    body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-2">No items added to this order yet.</td></tr>`;
+    if (totalCell) totalCell.textContent = "$0.00";
+    return;
+  }
+
+  let total = 0;
+  body.innerHTML = modalOrderItems
+    .map((it, i) => {
+      const sub = it.quantity * it.unitPrice;
+      total += sub;
+      return `
+      <tr>
+        <td class="fw-semibold">${it.medicineName}</td>
+        <td>${it.quantity}</td>
+        <td>$${it.unitPrice.toFixed(2)}</td>
+        <td>$${sub.toFixed(2)}</td>
+        <td class="text-center">
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeModalItem(${i})">×</button>
+        </td>
+      </tr>`;
+    })
+    .join("");
+
+  if (totalCell) totalCell.textContent = `$${total.toFixed(2)}`;
+}
+
+function removeModalItem(index) {
+  modalOrderItems.splice(index, 1);
+  renderModalItems();
+}
+
+// 4. Submit Order from Modal
+document
+  .getElementById("submitUserOrderBtn")
+  ?.addEventListener("click", async () => {
+    const branchId = parseInt(
+      document.getElementById("modalOrderBranch").value,
+    );
+
+    if (!branchId) return alert("Please select a branch.");
+    if (modalOrderItems.length === 0)
+      return alert("Please add at least one medicine to the order.");
+
+    const totalAmount = modalOrderItems.reduce(
+      (sum, it) => sum + it.quantity * it.unitPrice,
+      0,
+    );
+
+    const payload = {
+      BranchId: branchId,
+      OrderDate: new Date().toISOString(),
+      TotalAmount: totalAmount,
+      Status: "Pending",
+      OrderItems: modalOrderItems.map((it) => ({
+        MedicineId: it.medicineId,
+        Quantity: it.quantity,
+        UnitPrice: it.unitPrice,
+      })),
+    };
+
+    const submitBtn = document.getElementById("submitUserOrderBtn");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Placing Order...";
+    }
+
+    try {
+      const created = await createOrder(payload);
+      alert(
+        `🎉 Order placed successfully! Order #${created.orderId ?? created.OrderId ?? ""}`,
+      );
+
+      // Reset modal state
+      modalOrderItems = [];
+      renderModalItems();
+      document.getElementById("modalOrderBranch").value = "";
+
+      const modalEl = document.getElementById("placeOrderModal");
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal?.hide();
+
+      // Refresh list
+      loadUserOrders();
+    } catch (err) {
+      alert(`Could not place order: ${err.message}`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "✓ Submit Order";
+      }
+    }
+  });
+
+// 5. View Order Details Modal
 async function viewOrderDetails(orderId) {
   try {
     const order = userOrders.find((o) => (o.orderId ?? o.OrderId) === orderId);
@@ -115,23 +289,27 @@ async function viewOrderDetails(orderId) {
     if (items && items.length > 0) {
       items.forEach((item) => {
         const medId = item.medicineId ?? item.MedicineId;
-        const med = medicinesCache.find((m) => (m.medicineId ?? m.MedicineId) === medId);
+        const med = medicinesCache.find(
+          (m) => (m.medicineId ?? m.MedicineId) === medId,
+        );
         const medName = med
-          ? (med.medicineName ?? med.MedicineName)
+          ? med.medicineName ?? med.MedicineName
           : item.medicine
-            ? (item.medicine.medicineName ?? item.medicine.MedicineName)
+            ? item.medicine.medicineName ?? item.medicine.MedicineName
             : `Medicine #${medId}`;
 
         const qty = item.quantity ?? item.Quantity ?? 0;
         const price = Number(item.unitPrice ?? item.UnitPrice ?? 0).toFixed(2);
-        const subtotal = Number(item.subtotal ?? item.Subtotal ?? price * qty).toFixed(2);
+        const subtotal = Number(
+          item.subtotal ?? item.Subtotal ?? price * qty,
+        ).toFixed(2);
 
         itemsHtml += `
           <tr>
             <td class="fw-semibold">${medName}</td>
             <td>${qty}</td>
             <td>$${price}</td>
-            <td class="fw-bold">$${subtotal}</td>
+            <td class="fw-bold text-success">$${subtotal}</td>
           </tr>
         `;
       });
@@ -141,7 +319,9 @@ async function viewOrderDetails(orderId) {
 
     const rawDate = order.orderDate ?? order.OrderDate;
     const orderDate = rawDate ? new Date(rawDate).toLocaleString() : "—";
-    const totalAmount = Number(order.totalAmount ?? order.TotalAmount ?? 0).toFixed(2);
+    const totalAmount = Number(
+      order.totalAmount ?? order.TotalAmount ?? 0,
+    ).toFixed(2);
     const status = order.status ?? order.Status ?? "Pending";
 
     const content = `

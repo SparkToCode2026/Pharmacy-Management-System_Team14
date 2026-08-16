@@ -71,6 +71,7 @@ namespace Pharmacy_Management_System
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             });
 
             builder.Services.AddEndpointsApiExplorer();
@@ -112,8 +113,10 @@ namespace Pharmacy_Management_System
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
-            app.UseHttpsRedirection();
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
             // Enable CORS Middleware (Must be before UseAuthentication & UseAuthorization)
             app.UseCors(allowAllOrigins);

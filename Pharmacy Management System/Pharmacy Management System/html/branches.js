@@ -24,8 +24,8 @@ async function getAllBranches() {
   }
 }
 
-// 2. GET BRANCH BY ID
-async function getBranch(id) {
+// 2. GET BRANCH BY ID / VIEW DETAILS
+async function viewBranch(id) {
   try {
     const b = await getBranchById(id);
     const body = document.getElementById("viewBranchBody");
@@ -212,7 +212,7 @@ function renderBranchesTable(branches) {
             <td>${city}</td>
             <td>${phone}</td>
             <td class="text-center text-nowrap">
-              <button onclick="getBranch(${id})" class="btn btn-sm btn-info text-white me-1">View</button>
+              <button onclick="viewBranch(${id})" class="btn btn-sm btn-info text-white me-1">View</button>
               <button onclick="openEditModal(${id})" class="btn btn-sm btn-warning me-1">Edit</button>
               <button onclick="promptUpdateBranchName(${id}, '${escapeHtml(name)}')" class="btn btn-sm btn-outline-secondary me-1">Rename</button>
               <button onclick="removeBranchAction(${id})" class="btn btn-sm btn-danger">Delete</button>

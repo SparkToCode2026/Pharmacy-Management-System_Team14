@@ -4,7 +4,7 @@
 // All backend communication is routed through these functions.
 // ============================================================
 
-const API_BASE = "https://localhost:7293";
+const API_BASE = "http://localhost:7295";
 
 const USER_API = `${API_BASE}/User`;
 const BRANCH_API = `${API_BASE}/api/Branch`;
@@ -175,7 +175,6 @@ async function apiRemoveBranch(id) {
 // Aliases
 const getBranches = apiGetBranches;
 const getBranchById = apiGetBranchById;
-const getBranch = apiGetBranchById;
 const getBranchesByCity = apiGetBranchesByCity;
 const fetchTotalBranches = apiGetTotalBranches;
 const getTotalBranches = apiGetTotalBranches;

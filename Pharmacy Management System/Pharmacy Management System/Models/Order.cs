@@ -1,4 +1,4 @@
-﻿
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -31,7 +31,6 @@ namespace Pharmacy_Management_System.Models
 
 
         // 1:N Relationship with OrderItem
-        [JsonIgnore]
         public List<OrderItem>? OrderItems { get; set; } = new List<OrderItem>();
 
         // N:1 Relationship with Branch
