@@ -60,6 +60,7 @@
                   id="userPassword"
                   placeholder="Enter password"
                   required
+                  minlength="6"
                 />
               </div>
 
@@ -102,30 +103,42 @@
         <div class="card-body">
           <!-- Search Control -->
           <div class="row mb-3">
-            <div class="col-md-4 ms-auto">
-              <input
-                type="text"
-                id="searchInput"
-                class="form-control"
-                placeholder="Search by username or email..."
-              />
+            <div class="col-md-5 ms-auto">
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="form-control"
+                  placeholder="Search by username or email..."
+                />
+                <button
+                  type="button"
+                  id="clearSearchBtn"
+                  class="btn btn-outline-secondary"
+                  onclick="clearUserSearch()"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
           </div>
 
-          <table class="table table-striped table-hover align-middle">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th class="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody">
-              <!-- Dynamically populated rows -->
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
@@ -235,6 +248,7 @@
                   id="newPasswordInput"
                   placeholder="Enter new password"
                   required
+                  minlength="6"
                 />
               </div>
             </div>
@@ -258,25 +272,10 @@
     <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>
 
-    <!-- Shared Component Loader Script -->
-    <script>
-      fetch("navbar.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("navbar-placeholder").innerHTML = data;
-        })
-        .catch(() => console.log("navbar skipped"));
-
-      fetch("footer.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("footer-placeholder").innerHTML = data;
-        })
-        .catch(() => console.log("footer skipped"));
-    </script>
-
-    <!-- Bootstrap JS & User.js -->
+    <!-- Bootstrap JS, API, User.js & Navbar -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script src="navbar.js"></script>
     <script src="User.js"></script>
   </body>
 </html>

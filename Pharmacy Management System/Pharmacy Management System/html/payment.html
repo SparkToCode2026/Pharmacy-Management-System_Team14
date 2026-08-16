@@ -11,86 +11,90 @@
     <link href="style.css" rel="stylesheet" />
   </head>
   <body>
+    <!-- Dynamic Navigation Bar -->
     <div id="navbar-placeholder"></div>
 
-    <main class="main-content mt-4">
-      <div class="container">
-        <!-- Register New Payment Card -->
-        <div class="card shadow mb-4">
-          <div class="card-header bg-primary text-white">
-            <h3 class="mb-0 fs-4">Register New Payment</h3>
-          </div>
-          <div class="card-body">
-            <form id="paymentForm">
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <label for="paymentAmount" class="form-label">Amount</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    class="form-control"
-                    id="paymentAmount"
-                    placeholder="24.99"
-                    required
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label for="paymentDate" class="form-label"
-                    >Payment Date</label
-                  >
-                  <input
-                    type="date"
-                    class="form-control"
-                    id="paymentDate"
-                    required
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label for="paymentMethod" class="form-label"
-                    >Payment Method</label
-                  >
-                  <select class="form-select" id="paymentMethod">
-                    <option value="Cash">Cash</option>
-                    <option value="CreditCard">Credit Card</option>
-                    <option value="DebitCard">Debit Card</option>
-                    <option value="Insurance">Insurance</option>
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label for="paymentStatus" class="form-label"
-                    >Payment Status</label
-                  >
-                  <select class="form-select" id="paymentStatus">
-                    <option value="Pending">Pending</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Failed">Failed</option>
-                    <option value="Refunded">Refunded</option>
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label for="orderId" class="form-label">Order ID</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="orderId"
-                    placeholder="101"
-                    required
-                  />
-                </div>
-              </div>
-              <button type="submit" class="btn btn-primary mt-4">
-                Add Payment
-              </button>
-            </form>
-          </div>
-        </div>
+    <main class="container my-5">
+      <h2 class="mb-4 text-primary">Payment Management</h2>
 
-        <!-- Payment List Card -->
-        <div class="card shadow mb-5">
-          <div
-            class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
-          >
-            <h3 class="mb-0 fs-4">Payment List</h3>
+      <!-- Register New Payment Card -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">Register New Payment</h5>
+        </div>
+        <div class="card-body">
+          <form id="paymentForm">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="paymentAmount" class="form-label fw-bold">Amount ($) <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  id="paymentAmount"
+                  placeholder="24.99"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label for="paymentDate" class="form-label fw-bold">Payment Date <span class="text-danger">*</span></label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="paymentDate"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label for="orderId" class="form-label fw-bold">Order ID <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="orderId"
+                  placeholder="e.g. 1"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="paymentMethod" class="form-label fw-bold">Payment Method</label>
+                <select class="form-select" id="paymentMethod">
+                  <option value="Cash">Cash</option>
+                  <option value="CreditCard">Credit Card</option>
+                  <option value="DebitCard">Debit Card</option>
+                  <option value="Insurance">Insurance</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="paymentStatus" class="form-label fw-bold">Payment Status</label>
+                <select class="form-select" id="paymentStatus">
+                  <option value="Pending">Pending</option>
+                  <option value="Completed" selected>Completed</option>
+                  <option value="Failed">Failed</option>
+                  <option value="Refunded">Refunded</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success mt-4 px-4">
+              Add Payment
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Payment List Card -->
+      <div class="card shadow-sm mb-5">
+        <div
+          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <h5 class="card-title mb-0">Registered Payments</h5>
+          <div class="d-flex gap-2 align-items-center">
+            <select id="filterStatusSelect" class="form-select form-select-sm" style="width: auto;">
+              <option value="">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Failed">Failed</option>
+              <option value="Refunded">Refunded</option>
+            </select>
             <button
               type="button"
               class="btn btn-light btn-sm"
@@ -99,33 +103,31 @@
               Refresh
             </button>
           </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>Payment ID</th>
-                    <th>Amount</th>
-                    <th>Payment Date</th>
-                    <th>Payment Method</th>
-                    <th>Payment Status</th>
-                    <th>Order ID</th>
-                    <th class="text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="paymentTableBody">
-                  <tr>
-                    <td colspan="7" class="text-center">Loading payments...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th>Payment ID</th>
+                  <th>Amount</th>
+                  <th>Payment Date</th>
+                  <th>Payment Method</th>
+                  <th>Payment Status</th>
+                  <th>Order ID</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="paymentTableBody">
+                <tr>
+                  <td colspan="7" class="text-center">Loading payments...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </main>
-
-    <div id="footer-placeholder"></div>
 
     <!-- Edit Payment Modal -->
     <div
@@ -137,8 +139,8 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <form id="editPaymentForm">
-            <div class="modal-header">
-              <h5 class="modal-title">Edit Payment</h5>
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title fw-bold">Edit Payment</h5>
               <button
                 type="button"
                 class="btn-close"
@@ -149,7 +151,7 @@
             <div class="modal-body">
               <input type="hidden" id="editPaymentId" />
               <div class="mb-3">
-                <label for="editPaymentAmount" class="form-label">Amount</label>
+                <label for="editPaymentAmount" class="form-label fw-bold">Amount ($)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -159,7 +161,7 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="editPaymentDate" class="form-label"
+                <label for="editPaymentDate" class="form-label fw-bold"
                   >Payment Date</label
                 >
                 <input
@@ -170,7 +172,7 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="editPaymentMethod" class="form-label"
+                <label for="editPaymentMethod" class="form-label fw-bold"
                   >Payment Method</label
                 >
                 <select class="form-select" id="editPaymentMethod">
@@ -180,11 +182,22 @@
                   <option value="Insurance">Insurance</option>
                 </select>
               </div>
+              <div class="mb-3">
+                <label for="editPaymentStatus" class="form-label fw-bold"
+                  >Payment Status</label
+                >
+                <select class="form-select" id="editPaymentStatus">
+                  <option value="Pending">Pending</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Failed">Failed</option>
+                  <option value="Refunded">Refunded</option>
+                </select>
+              </div>
             </div>
             <div class="modal-footer">
               <button
                 type="button"
-                class="btn btn-outline-secondary"
+                class="btn btn-secondary"
                 data-bs-dismiss="modal"
               >
                 Cancel
@@ -198,21 +211,12 @@
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      fetch("navbar.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("navbar-placeholder").innerHTML = data;
-        });
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
 
-      fetch("footer.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("footer-placeholder").innerHTML = data;
-        });
-    </script>
-    <script src="Payment.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
     <script src="navbar.js"></script>
+    <script src="payment.js"></script>
   </body>
 </html>

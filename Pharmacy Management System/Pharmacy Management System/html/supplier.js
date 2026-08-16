@@ -1,218 +1,230 @@
-const API = "https://localhost:7293/api/Supplier";
+// ============================================================
+// supplier.js
+// Logic for Supplier Management using api.js
+// ============================================================
 
-// Helper for Auth Headers
-function getAuthHeaders() {
+let currentSuppliers = [];
+
+// Check Access
+function checkAccess() {
   const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
+  if (!token) {
+    window.location.href = "auth.html";
+    return false;
+  }
+  return true;
 }
 
-// ===============================
-// GET ALL SUPPLIERS
-// ===============================
-async function getAllSuppliers() {
+// 1. GET ALL SUPPLIERS
+async function fetchSuppliers() {
   try {
-    const response = await fetch(`${API}/GetSuppliers`, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-    const data = await response.json();
-    displaySuppliers(data);
+    const data = await apiGetSuppliers();
+    currentSuppliers = data || [];
+    renderTable(currentSuppliers);
   } catch (error) {
-    console.error("GET Error:", error);
+    console.error("Error loading suppliers:", error);
+    const tbody = document.getElementById("suppliersTableBody");
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load suppliers: ${error.message}</td></tr>`;
+    }
   }
 }
 
-// ===============================
-// DISPLAY SUPPLIERS TABLE
-// ===============================
-function displaySuppliers(data) {
-  const table = document.getElementById("suppliersTableBody");
-  table.innerHTML = "";
+// Render data to table
+function renderTable(data) {
+  const tbody = document.getElementById("suppliersTableBody");
+  if (!tbody) return;
 
   if (!data || data.length === 0) {
-    table.innerHTML = `<tr><td colspan="6" class="text-center">No suppliers found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No suppliers found.</td></tr>`;
     return;
   }
 
-  data.forEach((s) => {
-    table.innerHTML += `
+  tbody.innerHTML = data
+    .map((item) => {
+      const id = item.supplierId ?? item.SupplierId;
+      const name = item.supplierName ?? item.SupplierName ?? "";
+      const contact = item.supplierContactInfo ?? item.SupplierContactInfo ?? "";
+      const address = item.supplierAddress ?? item.SupplierAddress ?? "";
+
+      return `
         <tr>
-            <td>${s.supplierId}</td>
-            <td>${s.supplierName}</td>
-            <td>${s.supplierPhone}</td>
-            <td>${s.supplierEmail}</td>
-            <td>${s.supplierAddress}</td>
-            <td class="text-center">
-                <button class="btn btn-sm btn-warning me-1" onclick="openEditSupplier(${s.supplierId})">
-                    Edit
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteSupplier(${s.supplierId})">
-                    Delete
-                </button>
-            </td>
+          <td class="fw-bold">${id}</td>
+          <td class="fw-semibold">${name}</td>
+          <td>${contact || "—"}</td>
+          <td>${address || "—"}</td>
+          <td class="text-center text-nowrap">
+            <button class="btn btn-info btn-sm text-white me-1" onclick="openDetailsModal(${id})">Details</button>
+            <button class="btn btn-warning btn-sm me-1" onclick="openEditModal(${id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteSupplierAction(${id})">Delete</button>
+          </td>
         </tr>
-        `;
-  });
+      `;
+    })
+    .join("");
 }
 
-// ===============================
-// SEARCH SUPPLIER BY NAME
-// ===============================
-async function searchSuppliers() {
-  const name = document.getElementById("searchSupplierInput")?.value.trim();
-  if (!name) {
-    getAllSuppliers();
-    return;
-  }
+// 2. CREATE SUPPLIER
+document.getElementById("createForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const newSupplier = {
+    supplierName: document.getElementById("createName").value.trim(),
+    supplierContactInfo: document.getElementById("createContact").value.trim(),
+    supplierAddress: document.getElementById("createAddress").value.trim(),
+  };
 
   try {
-    const response = await fetch(`${API}/search/${encodeURIComponent(name)}`, {
-      headers: getAuthHeaders(),
-    });
+    await apiCreateSupplier(newSupplier);
+    alert("Supplier created successfully!");
 
-    if (response.ok) {
-      const data = await response.json();
-      displaySuppliers(data);
-    } else {
-      console.error("Search failed");
-    }
+    document.getElementById("createForm").reset();
+    const modalEl = document.getElementById("createModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+
+    fetchSuppliers();
   } catch (error) {
-    console.error("Search Error:", error);
+    console.error("Error creating supplier:", error);
+    alert(`Failed to create supplier: ${error.message}`);
   }
-}
+});
 
-// ===============================
-// ADD SUPPLIER
-// ===============================
-document
-  .getElementById("addSupplierForm")
-  ?.addEventListener("submit", async function (e) {
-    e.preventDefault();
+// 3. EDIT FULL SUPPLIER (PUT)
+document.getElementById("editForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const supplier = {
-      supplierName: document.getElementById("supplierName").value,
-      supplierPhone: document.getElementById("supplierPhone").value,
-      supplierEmail: document.getElementById("supplierEmail").value,
-      supplierAddress: document.getElementById("supplierAddress").value,
-    };
-
-    try {
-      const response = await fetch(`${API}/CreateSupplier`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(supplier),
-      });
-
-      if (response.ok) {
-        alert("Supplier Added Successfully");
-        document.getElementById("addSupplierForm").reset();
-        getAllSuppliers();
-      } else {
-        const err = await response.text();
-        alert(`Failed to add supplier: ${err}`);
-      }
-    } catch (error) {
-      console.error("POST Error:", error);
-    }
-  });
-
-// ===============================
-// DELETE SUPPLIER
-// ===============================
-async function deleteSupplier(id) {
-  if (!confirm("Delete Supplier?")) return;
+  const id = parseInt(document.getElementById("editId").value);
+  const updatedSupplier = {
+    supplierId: id,
+    supplierName: document.getElementById("editName").value.trim(),
+    supplierContactInfo: document.getElementById("editContact").value.trim(),
+    supplierAddress: document.getElementById("editAddress").value.trim(),
+  };
 
   try {
-    const response = await fetch(`${API}/DeleteSupplier/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
+    await apiUpdateSupplier(id, updatedSupplier);
+    alert("Supplier updated successfully!");
 
-    if (response.ok) {
-      alert("Supplier Deleted");
-      getAllSuppliers();
-    } else {
-      alert("Failed to delete supplier.");
-    }
+    const modalEl = document.getElementById("editModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+
+    fetchSuppliers();
   } catch (error) {
-    console.error("DELETE Error:", error);
+    console.error("Error updating supplier:", error);
+    alert(`Failed to update supplier: ${error.message}`);
+  }
+});
+
+// 4. DELETE SUPPLIER
+async function deleteSupplierAction(id) {
+  if (!confirm(`Are you sure you want to delete Supplier ID: ${id}?`)) return;
+
+  try {
+    await apiDeleteSupplier(id);
+    alert("Supplier deleted successfully!");
+    fetchSuppliers();
+  } catch (error) {
+    console.error("Error deleting supplier:", error);
+    alert(`Failed to delete supplier: ${error.message}`);
   }
 }
 
-// ===============================
-// OPEN EDIT MODAL
-// ===============================
-async function openEditSupplier(id) {
+// 5. OPEN DETAILS MODAL
+async function openDetailsModal(id) {
   try {
-    const response = await fetch(`${API}/GetSupplierById/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const data = await apiGetSupplierById(id);
+    const idVal = data.supplierId ?? data.SupplierId;
+    const nameVal = data.supplierName ?? data.SupplierName ?? "";
+    const contactVal = data.supplierContactInfo ?? data.SupplierContactInfo ?? "";
+    const addressVal = data.supplierAddress ?? data.SupplierAddress ?? "";
 
-    if (!response.ok) throw new Error("Could not fetch supplier details.");
+    document.getElementById("detailId").innerText = idVal;
+    document.getElementById("detailName").innerText = nameVal;
+    document.getElementById("detailContact").innerText = contactVal || "—";
+    document.getElementById("detailAddress").innerText = addressVal || "—";
 
-    const s = await response.json();
-
-    document.getElementById("editSupplierId").value = s.supplierId;
-    document.getElementById("editSupplierName").value = s.supplierName;
-    document.getElementById("editSupplierPhone").value = s.supplierPhone;
-    document.getElementById("editSupplierEmail").value = s.supplierEmail;
-    document.getElementById("editSupplierAddress").value = s.supplierAddress;
-
-    let modal = new bootstrap.Modal(
-      document.getElementById("editSupplierModal"),
-    );
+    const modal = new bootstrap.Modal(document.getElementById("detailsModal"));
     modal.show();
   } catch (error) {
-    console.error("Fetch Supplier Error:", error);
+    console.error("Error loading supplier details:", error);
+    alert(`Failed to fetch details: ${error.message}`);
   }
 }
 
-// ===============================
-// UPDATE SUPPLIER
-// ===============================
-document
-  .getElementById("editSupplierForm")
-  ?.addEventListener("submit", async function (e) {
-    e.preventDefault();
+// 6. OPEN EDIT MODAL
+async function openEditModal(id) {
+  try {
+    const data = await apiGetSupplierById(id);
+    const idVal = data.supplierId ?? data.SupplierId;
+    const nameVal = data.supplierName ?? data.SupplierName ?? "";
+    const contactVal = data.supplierContactInfo ?? data.SupplierContactInfo ?? "";
+    const addressVal = data.supplierAddress ?? data.SupplierAddress ?? "";
 
-    const id = parseInt(document.getElementById("editSupplierId").value);
+    document.getElementById("editId").value = idVal;
+    document.getElementById("editName").value = nameVal;
+    document.getElementById("editContact").value = contactVal;
+    document.getElementById("editAddress").value = addressVal;
 
-    const supplier = {
-      supplierId: id,
-      supplierName: document.getElementById("editSupplierName").value,
-      supplierPhone: document.getElementById("editSupplierPhone").value,
-      supplierEmail: document.getElementById("editSupplierEmail").value,
-      supplierAddress: document.getElementById("editSupplierAddress").value,
-    };
+    const modal = new bootstrap.Modal(document.getElementById("editModal"));
+    modal.show();
+  } catch (error) {
+    console.error("Error loading supplier for edit:", error);
+    alert(`Failed to load supplier data: ${error.message}`);
+  }
+}
 
-    try {
-      const response = await fetch(`${API}/UpdateSupplier/${id}`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(supplier),
-      });
+// 7. SEARCH SUPPLIERS
+async function handleSearch() {
+  const query = document.getElementById("searchInput").value.trim();
 
-      if (response.ok) {
-        alert("Supplier Updated");
-        const modalEl = document.getElementById("editSupplierModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-        getAllSuppliers();
-      } else {
-        const err = await response.text();
-        alert(`Update failed: ${err}`);
-      }
-    } catch (error) {
-      console.error("PUT Error:", error);
-    }
+  if (!query) {
+    renderTable(currentSuppliers);
+    return;
+  }
+
+  try {
+    const results = await apiSearchSuppliers(query);
+    renderTable(Array.isArray(results) ? results : [results]);
+  } catch {
+    // Client-side fallback
+    const filtered = currentSuppliers.filter((s) => {
+      const name = (s.supplierName ?? s.SupplierName ?? "").toLowerCase();
+      const contact = (s.supplierContactInfo ?? s.SupplierContactInfo ?? "").toLowerCase();
+      const addr = (s.supplierAddress ?? s.SupplierAddress ?? "").toLowerCase();
+      return name.includes(query.toLowerCase()) || contact.includes(query.toLowerCase()) || addr.includes(query.toLowerCase());
+    });
+    renderTable(filtered);
+  }
+}
+
+function clearSupplierSearch() {
+  document.getElementById("searchInput").value = "";
+  renderTable(currentSuppliers);
+}
+
+// 8. SORT BY NAME
+let sortAsc = true;
+function sortSuppliers() {
+  currentSuppliers.sort((a, b) => {
+    const nameA = (a.supplierName ?? a.SupplierName ?? "").toLowerCase();
+    const nameB = (b.supplierName ?? b.SupplierName ?? "").toLowerCase();
+    return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
   });
+  sortAsc = !sortAsc;
+  renderTable(currentSuppliers);
+}
 
-// ===============================
-// LOAD DATA
-// ===============================
-getAllSuppliers();
+// Event Listeners & Initialize
+document.addEventListener("DOMContentLoaded", () => {
+  if (checkAccess()) {
+    fetchSuppliers();
+
+    document.getElementById("searchBtn")?.addEventListener("click", handleSearch);
+    document.getElementById("searchInput")?.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") handleSearch();
+      if (e.target.value === "") renderTable(currentSuppliers);
+    });
+  }
+});

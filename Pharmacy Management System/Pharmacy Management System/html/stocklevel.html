@@ -12,87 +12,89 @@
   </head>
 
   <body>
+    <!-- Dynamic Navigation Bar -->
     <div id="navbar-placeholder"></div>
 
-    <main class="main-content mt-4">
-      <div class="container">
-        <!-- Create Stock Level Card -->
-        <div class="card mb-4 shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h3 class="mb-0 fs-4">Add New Stock Level</h3>
-          </div>
-          <div class="card-body">
-            <form id="stockLevelForm">
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <label for="currentQuantity" class="form-label"
-                    >Current Quantity</label
-                  >
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="currentQuantity"
-                    placeholder="150"
-                    required
-                  />
-                </div>
-                <div class="col-md-4">
-                  <label for="reorderLevel" class="form-label"
-                    >Reorder Level</label
-                  >
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="reorderLevel"
-                    placeholder="20"
-                    required
-                  />
-                </div>
-                <div class="col-md-4">
-                  <label for="lastRestockedDate" class="form-label"
-                    >Last Restocked Date</label
-                  >
-                  <input
-                    type="date"
-                    class="form-control"
-                    id="lastRestockedDate"
-                    required
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label for="medicineId" class="form-label">Medicine ID</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="medicineId"
-                    placeholder="5"
-                    required
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label for="branchId" class="form-label">Branch ID</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    id="branchId"
-                    placeholder="2"
-                    required
-                  />
-                </div>
-              </div>
-              <button type="submit" class="btn btn-primary mt-4">
-                Add Stock Level
-              </button>
-            </form>
-          </div>
-        </div>
+    <main class="container my-5">
+      <h2 class="mb-4 text-primary">Stock & Inventory Management</h2>
 
-        <!-- Stock Level Table Card -->
-        <div class="card mb-5 shadow-sm">
-          <div
-            class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
-          >
-            <h3 class="mb-0 fs-4">Stock Level List</h3>
+      <!-- Create Stock Level Card -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">Add New Stock Record</h5>
+        </div>
+        <div class="card-body">
+          <form id="stockLevelForm">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label for="currentQuantity" class="form-label fw-bold">Current Quantity <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="currentQuantity"
+                  placeholder="e.g. 150"
+                  min="0"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label for="reorderLevel" class="form-label fw-bold">Reorder Alert Level <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="reorderLevel"
+                  placeholder="e.g. 20"
+                  min="1"
+                  required
+                />
+              </div>
+              <div class="col-md-4">
+                <label for="lastRestockedDate" class="form-label fw-bold">Last Restocked Date <span class="text-danger">*</span></label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="lastRestockedDate"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="medicineId" class="form-label fw-bold">Medicine ID <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="medicineId"
+                  placeholder="e.g. 1"
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label for="branchId" class="form-label fw-bold">Branch ID <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="branchId"
+                  placeholder="e.g. 1"
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success mt-4 px-4">
+              Add Stock Record
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Stock Level Table Card -->
+      <div class="card mb-5 shadow-sm">
+        <div
+          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <h5 class="card-title mb-0">Stock Levels by Branch</h5>
+          <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-sm btn-warning text-dark" id="showLowStockBtn" onclick="toggleLowStock()">
+              Show Low Stock Only
+            </button>
             <button
               type="button"
               class="btn btn-light btn-sm"
@@ -101,35 +103,33 @@
               Refresh
             </button>
           </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-hover align-middle">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Current Qty</th>
-                    <th>Reorder Level</th>
-                    <th>Last Restocked Date</th>
-                    <th>Medicine ID</th>
-                    <th>Branch ID</th>
-                    <th class="text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="stockLevelTableBody">
-                  <tr>
-                    <td colspan="7" class="text-center">
-                      Loading stock levels...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Current Qty</th>
+                  <th>Reorder Level</th>
+                  <th>Last Restocked Date</th>
+                  <th>Medicine ID</th>
+                  <th>Branch ID</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="stockLevelTableBody">
+                <tr>
+                  <td colspan="7" class="text-center">
+                    Loading stock levels...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </main>
-
-    <div id="footer-placeholder"></div>
 
     <!-- Edit Stock Level Modal -->
     <div
@@ -142,7 +142,7 @@
         <div class="modal-content">
           <form id="editStockLevelForm">
             <div class="modal-header bg-warning text-dark">
-              <h5 class="modal-title">Edit Stock Level</h5>
+              <h5 class="modal-title fw-bold">Edit Stock Level</h5>
               <button
                 type="button"
                 class="btn-close"
@@ -152,9 +152,7 @@
             <div class="modal-body">
               <input type="hidden" id="editStockLevelId" />
               <div class="mb-3">
-                <label for="editCurrentQuantity" class="form-label"
-                  >Current Quantity</label
-                >
+                <label for="editCurrentQuantity" class="form-label fw-bold">Current Quantity</label>
                 <input
                   type="number"
                   class="form-control"
@@ -163,9 +161,7 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="editReorderLevel" class="form-label"
-                  >Reorder Level</label
-                >
+                <label for="editReorderLevel" class="form-label fw-bold">Reorder Level</label>
                 <input
                   type="number"
                   class="form-control"
@@ -191,21 +187,12 @@
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      fetch("navbar.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("navbar-placeholder").innerHTML = data;
-        });
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
 
-      fetch("footer.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("footer-placeholder").innerHTML = data;
-        });
-    </script>
-    <script src="StockLevel.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
     <script src="navbar.js"></script>
+    <script src="stocklevel.js"></script>
   </body>
 </html>

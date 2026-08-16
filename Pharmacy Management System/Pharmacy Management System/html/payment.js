@@ -1,25 +1,12 @@
-// Payment.js — Logic for Payment Management
+// ============================================================
+// payment.js
+// Logic for Payment Management using api.js
+// ============================================================
 
-const API = "https://localhost:7293/api/Payment";
+const PAYMENT_METHODS = ["Cash", "CreditCard", "DebitCard", "Insurance"];
+const PAYMENT_STATUSES = ["Pending", "Completed", "Failed", "Refunded"];
 
-const PAYMENT_METHOD_LABELS = ["Cash", "CreditCard", "DebitCard", "Insurance"];
-const PAYMENT_STATUS_LABELS = ["Pending", "Completed", "Failed", "Refunded"];
-const PAYMENT_METHOD_MAP = {
-  Cash: 0,
-  CreditCard: 1,
-  DebitCard: 2,
-  Insurance: 3,
-};
-const PAYMENT_STATUS_MAP = { Pending: 0, Completed: 1, Failed: 2, Refunded: 3 };
-
-// Auth Helper
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-}
+let allPayments = [];
 
 // Set Today's Date Default for Payment Input
 function setDefaultDate() {
@@ -30,51 +17,62 @@ function setDefaultDate() {
 }
 
 // 1. GET ALL PAYMENTS
-function loadPayments() {
-  fetch(`${API}/GetAllPayments`, {
-    headers: getAuthHeaders(),
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-      return res.json();
-    })
-    .then((payments) => {
-      const tbody = document.getElementById("paymentTableBody");
-      if (!payments || payments.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center">No records found.</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = payments
-        .map((p) => {
-          const methodLabel =
-            PAYMENT_METHOD_LABELS[p.paymentMethod] ?? p.paymentMethod;
-          const statusLabel =
-            PAYMENT_STATUS_LABELS[p.paymentStatus] ?? p.paymentStatus;
-          const formattedDate = p.paymentDate
-            ? p.paymentDate.split("T")[0]
-            : "";
+async function loadPayments() {
+  try {
+    const payments = await apiGetPayments();
+    allPayments = payments || [];
+    renderPayments(allPayments);
+  } catch (err) {
+    console.error("Load failed:", err);
+    const tbody = document.getElementById("paymentTableBody");
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Failed to load payments: ${err.message}</td></tr>`;
+    }
+  }
+}
 
-          return `
-            <tr>
-                <td>${p.paymentId}</td>
-                <td>$${Number(p.amount).toFixed(2)}</td>
-                <td>${formattedDate}</td>
-                <td>${methodLabel}</td>
-                <td>${statusBadge(statusLabel)}</td>
-                <td>${p.orderId}</td>
-                <td class="text-center text-nowrap">
-                    <button class="btn btn-sm btn-warning me-1" onclick="editPayment(${p.paymentId}, ${p.amount}, '${formattedDate}', '${methodLabel}')">Edit</button>
-                    <button class="btn btn-sm btn-danger" onclick="deletePayment(${p.paymentId})">Delete</button>
-                </td>
-            </tr>`;
-        })
-        .join("");
+function renderPayments(payments) {
+  const tbody = document.getElementById("paymentTableBody");
+  if (!tbody) return;
+
+  if (!payments || payments.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No payment records found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = payments
+    .map((p) => {
+      const id = p.paymentId ?? p.PaymentId;
+      const amount = Number(p.amount ?? p.Amount ?? 0).toFixed(2);
+      const rawDate = p.paymentDate ?? p.PaymentDate;
+      const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString() : "—";
+      const isoDate = rawDate ? rawDate.split("T")[0] : "";
+      const method = formatPaymentEnum(p.paymentMethod ?? p.PaymentMethod, PAYMENT_METHODS);
+      const status = formatPaymentEnum(p.paymentStatus ?? p.PaymentStatus, PAYMENT_STATUSES);
+      const orderId = p.orderId ?? p.OrderId ?? "—";
+
+      return `
+        <tr>
+            <td class="fw-bold">#${id}</td>
+            <td class="fw-semibold text-success">$${amount}</td>
+            <td>${formattedDate}</td>
+            <td>${method}</td>
+            <td>${statusBadge(status)}</td>
+            <td>#${orderId}</td>
+            <td class="text-center text-nowrap">
+                <button class="btn btn-sm btn-warning me-1" onclick="editPayment(${id}, ${amount}, '${isoDate}', '${method}', '${status}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deletePaymentAction(${id})">Delete</button>
+            </td>
+        </tr>`;
     })
-    .catch((err) => {
-      console.error("Load failed:", err);
-      const tbody = document.getElementById("paymentTableBody");
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Failed to load payments from server.</td></tr>`;
-    });
+    .join("");
+}
+
+function formatPaymentEnum(val, list) {
+  if (typeof val === "number") {
+    return list[val] || list[0];
+  }
+  return val || list[0];
 }
 
 function statusBadge(status) {
@@ -88,52 +86,43 @@ function statusBadge(status) {
 }
 
 // 2. CREATE PAYMENT
-document.getElementById("paymentForm")?.addEventListener("submit", (e) => {
+document.getElementById("paymentForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const newPayment = {
     amount: parseFloat(document.getElementById("paymentAmount").value),
     paymentDate: document.getElementById("paymentDate").value,
-    paymentMethod:
-      PAYMENT_METHOD_MAP[document.getElementById("paymentMethod").value],
-    paymentStatus:
-      PAYMENT_STATUS_MAP[document.getElementById("paymentStatus").value],
+    paymentMethod: document.getElementById("paymentMethod").value,
+    paymentStatus: document.getElementById("paymentStatus").value,
     orderId: parseInt(document.getElementById("orderId").value),
   };
 
-  fetch(`${API}/CreatePayment`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(newPayment),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        document.getElementById("paymentForm").reset();
-        setDefaultDate();
-        loadPayments();
-      } else {
-        const msg = await res.text();
-        alert(`Could not add payment: ${msg}`);
-      }
-    })
-    .catch((err) => console.error("Create payment error:", err));
+  try {
+    await apiCreatePayment(newPayment);
+    alert("Payment recorded successfully!");
+    document.getElementById("paymentForm").reset();
+    setDefaultDate();
+    loadPayments();
+  } catch (err) {
+    console.error("Create payment error:", err);
+    alert(`Could not add payment: ${err.message}`);
+  }
 });
 
 // 3. EDIT POPULATE
-function editPayment(id, amount, date, method) {
+function editPayment(id, amount, date, method, status) {
   document.getElementById("editPaymentId").value = id;
   document.getElementById("editPaymentAmount").value = amount;
   document.getElementById("editPaymentDate").value = date;
   document.getElementById("editPaymentMethod").value = method;
+  document.getElementById("editPaymentStatus").value = status;
 
-  const modal = new bootstrap.Modal(
-    document.getElementById("editPaymentModal"),
-  );
+  const modal = new bootstrap.Modal(document.getElementById("editPaymentModal"));
   modal.show();
 }
 
 // 4. UPDATE PAYMENT
-document.getElementById("editPaymentForm")?.addEventListener("submit", (e) => {
+document.getElementById("editPaymentForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const id = document.getElementById("editPaymentId").value;
@@ -141,52 +130,59 @@ document.getElementById("editPaymentForm")?.addEventListener("submit", (e) => {
     paymentId: parseInt(id),
     amount: parseFloat(document.getElementById("editPaymentAmount").value),
     paymentDate: document.getElementById("editPaymentDate").value,
-    paymentMethod:
-      PAYMENT_METHOD_MAP[document.getElementById("editPaymentMethod").value],
+    paymentMethod: document.getElementById("editPaymentMethod").value,
+    paymentStatus: document.getElementById("editPaymentStatus").value,
   };
 
-  fetch(`${API}/UpdatePayment/${id}`, {
-    method: "PUT",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(updatedData),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        const modalEl = document.getElementById("editPaymentModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
-        loadPayments();
-      } else {
-        const msg = await res.text();
-        alert(`Update failed: ${msg}`);
-      }
-    })
-    .catch((err) => console.error("Update payment error:", err));
+  try {
+    await apiUpdatePayment(id, updatedData);
+    alert("Payment updated successfully!");
+    const modalEl = document.getElementById("editPaymentModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+    loadPayments();
+  } catch (err) {
+    console.error("Update payment error:", err);
+    alert(`Update failed: ${err.message}`);
+  }
 });
 
 // 5. DELETE PAYMENT
-function deletePayment(id) {
-  if (confirm("Are you sure you want to delete this payment record?")) {
-    fetch(`${API}/DeletePayment/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    })
-      .then(async (res) => {
-        if (res.ok) {
-          loadPayments();
-        } else {
-          const msg = await res.text();
-          alert(`Delete failed: ${msg}`);
-        }
-      })
-      .catch((err) => console.error("Delete payment error:", err));
+async function deletePaymentAction(id) {
+  if (!confirm("Are you sure you want to delete this payment record?")) return;
+
+  try {
+    await apiDeletePayment(id);
+    alert("Payment deleted successfully!");
+    loadPayments();
+  } catch (err) {
+    console.error("Delete payment error:", err);
+    alert(`Delete failed: ${err.message}`);
   }
 }
 
-// EVENT LISTENERS & INIT
-document
-  .getElementById("refreshPayments")
-  ?.addEventListener("click", loadPayments);
+// 6. FILTER BY STATUS
+document.getElementById("filterStatusSelect")?.addEventListener("change", async (e) => {
+  const status = e.target.value;
+  if (status) {
+    try {
+      const filtered = await apiFilterPaymentsByStatus(status);
+      renderPayments(filtered);
+    } catch {
+      const results = allPayments.filter((p) => {
+        const pStatus = formatPaymentEnum(p.paymentStatus ?? p.PaymentStatus, PAYMENT_STATUSES);
+        return pStatus === status;
+      });
+      renderPayments(results);
+    }
+  } else {
+    renderPayments(allPayments);
+  }
+});
 
-setDefaultDate();
-loadPayments();
+// INITIALIZE
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("refreshPayments")?.addEventListener("click", loadPayments);
+  setDefaultDate();
+  loadPayments();
+});

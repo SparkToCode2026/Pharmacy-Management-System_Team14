@@ -67,6 +67,10 @@ namespace Pharmacy_Management_System
             builder.Services.AddControllers(options =>
             {
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+            })
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
             });
 
             builder.Services.AddEndpointsApiExplorer();

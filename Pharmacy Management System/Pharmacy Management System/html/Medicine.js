@@ -1,667 +1,339 @@
-// ===============================
-// API CONFIGURATION
-// ===============================
-const API_BASE = "https://localhost:7293";
+// ============================================================
+// Medicine.js
+// Logic for Medicine Catalog Management using api.js
+// ============================================================
 
-const MEDICINE_API = `${API_BASE}/api/Medicine`;
-const CATEGORY_API = `${API_BASE}/api/MedicineCategory`;
-const MANUFACTURER_API = `${API_BASE}/api/Manufacturer`;
-const SUPPLIER_API = `${API_BASE}/api/Supplier`;
+let currentMedicines = [];
+let currentCategories = [];
+let currentManufacturers = [];
+let currentSuppliers = [];
+let sortPriceAsc = true;
 
-// Cache maps for lookup IDs -> Names
-let categoriesMap = {};
-let manufacturersMap = {};
-let suppliersMap = {};
-
-let allMedicines = [];
-let isAscending = true;
-
-// Initialize Page
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadAllDropdowns();
-  await loadMedicines();
-
-  const searchInput = document.getElementById("searchInput");
-  if (searchInput) {
-    searchInput.addEventListener("input", filterMedicines);
-  }
-});
-
-// Helper for Authorization Headers
-function getAuthHeaders() {
+// Check Access
+function checkAccess() {
   const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-}
-
-// ===============================
-// DROPDOWN LOADERS
-// ===============================
-async function loadAllDropdowns() {
-  await Promise.all([
-    fetchAndPopulateDropdown(
-      `${CATEGORY_API}/GetAllMedicineCategories`,
-      ["categorySelect", "editCategorySelect"],
-      "medicineCategoryId",
-      "medicineCategoryName",
-      categoriesMap,
-      "Select category...",
-    ),
-    fetchAndPopulateDropdown(
-      `${MANUFACTURER_API}/GetAllManufacturers`,
-      ["manufacturerSelect", "editManufacturerSelect"],
-      "manufacturerId",
-      "manufacturerName",
-      manufacturersMap,
-      "Select manufacturer...",
-    ),
-    fetchAndPopulateDropdown(
-      `${SUPPLIER_API}/GetSuppliers`,
-      ["supplierSelect", "editSupplierSelect"],
-      "supplierId",
-      "supplierName",
-      suppliersMap,
-      "Select supplier...",
-    ),
-  ]);
-}
-
-async function fetchAndPopulateDropdown(
-  url,
-  selectIds,
-  idKey,
-  nameKey,
-  cacheMap,
-  placeholder,
-) {
-  try {
-    const response = await fetch(url, { headers: getAuthHeaders() });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const data = await response.json();
-
-    data.forEach((item) => {
-      cacheMap[item[idKey]] = item[nameKey];
-    });
-
-    selectIds.forEach((selectId) => {
-      const selectEl = document.getElementById(selectId);
-      if (!selectEl) return;
-
-      selectEl.innerHTML = "";
-
-      const placeholderOpt = document.createElement("option");
-      placeholderOpt.value = "";
-      placeholderOpt.textContent = placeholder;
-      placeholderOpt.selected = true;
-      placeholderOpt.disabled = true;
-      selectEl.appendChild(placeholderOpt);
-
-      data.forEach((item) => {
-        const opt = document.createElement("option");
-        opt.value = item[idKey];
-        opt.textContent = item[nameKey];
-        selectEl.appendChild(opt);
-      });
-    });
-  } catch (error) {
-    console.error(`Error loading dropdown from ${url}:`, error);
-  }
-}
-
-// ===============================
-// VALIDATIONS
-// ===============================
-function validateMedicineDates(productionDate, expiryDate) {
-  if (!productionDate || !expiryDate) return true;
-
-  const production = new Date(productionDate);
-  const expiry = new Date(expiryDate);
-
-  if (isNaN(production.getTime()) || isNaN(expiry.getTime())) {
-    alert("Please enter valid production and expiry dates.");
+  if (!token) {
+    window.location.href = "auth.html";
     return false;
   }
-
-  if (production >= expiry) {
-    alert("Expiry date must be after the production date.");
-    return false;
-  }
-
   return true;
 }
 
-function validateMedicinePrice(price) {
-  if (isNaN(price) || price < 0) {
-    alert("Medicine price cannot be negative.");
-    return false;
-  }
-
-  return true;
-}
-
-// ===============================
-// GET ALL & FILTER API CALLS
-// ===============================
-async function loadMedicines() {
+// 1. POPULATE DROPDOWNS
+async function loadDropdowns() {
   try {
-    const response = await fetch(`${MEDICINE_API}/GetAllMedicines`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Failed to load medicines");
+    const [cats, manus, supps] = await Promise.allSettled([
+      apiGetMedicineCategories(),
+      apiGetManufacturers(),
+      apiGetSuppliers(),
+    ]);
 
-    allMedicines = await response.json();
-    renderTable(allMedicines);
+    currentCategories = cats.status === "fulfilled" && cats.value ? cats.value : [];
+    currentManufacturers = manus.status === "fulfilled" && manus.value ? manus.value : [];
+    currentSuppliers = supps.status === "fulfilled" && supps.value ? supps.value : [];
+
+    // Filter dropdown
+    const filterCat = document.getElementById("filterCategory");
+    if (filterCat) {
+      filterCat.innerHTML =
+        '<option value="">All Categories</option>' +
+        currentCategories
+          .map(
+            (c) =>
+              `<option value="${c.medicineCategoryId}">${c.medicineCategoryName || c.MedicineCategoryName}</option>`,
+          )
+          .join("");
+    }
+
+    // Add Form Dropdowns
+    populateSelect("addMedCategory", currentCategories, "medicineCategoryId", "medicineCategoryName");
+    populateSelect("addMedManufacturer", currentManufacturers, "manufacturerId", "manufacturerName");
+    populateSelect("addMedSupplier", currentSuppliers, "supplierId", "supplierName");
+
+    // Edit Form Dropdowns
+    populateSelect("editMedCategory", currentCategories, "medicineCategoryId", "medicineCategoryName");
+    populateSelect("editMedManufacturer", currentManufacturers, "manufacturerId", "manufacturerName");
+    populateSelect("editMedSupplier", currentSuppliers, "supplierId", "supplierName");
   } catch (error) {
-    console.error("GET Error:", error);
+    console.error("Error loading dropdown lists:", error);
   }
 }
 
-async function fetchMedicinesByName(name) {
-  if (!name.trim()) return loadMedicines();
+function populateSelect(selectId, dataList, idKey, nameKey) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+
+  select.innerHTML =
+    '<option value="">-- Select --</option>' +
+    dataList
+      .map((item) => {
+        const id = item[idKey] ?? item[idKey.charAt(0).toUpperCase() + idKey.slice(1)];
+        const name = item[nameKey] ?? item[nameKey.charAt(0).toUpperCase() + nameKey.slice(1)];
+        return `<option value="${id}">${name}</option>`;
+      })
+      .join("");
+}
+
+// 2. GET ALL MEDICINES
+async function fetchMedicines() {
   try {
-    const response = await fetch(
-      `${MEDICINE_API}/GetMedicinesByName?name=${encodeURIComponent(name)}`,
-      { headers: getAuthHeaders() },
-    );
-    if (!response.ok) throw new Error("Failed to search medicines");
-
-    const data = await response.json();
-    renderTable(data);
+    const data = await getMedicines();
+    currentMedicines = data || [];
+    renderTable(currentMedicines);
   } catch (error) {
-    console.error("Search Error:", error);
+    console.error("Error loading medicines:", error);
+    const tbody = document.getElementById("medicinesTableBody");
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load medicines: ${error.message}</td></tr>`;
+    }
   }
 }
 
-async function fetchMedicinesByCategory(categoryId) {
-  try {
-    const response = await fetch(
-      `${MEDICINE_API}/GetMedicinesByCategory/${categoryId}`,
-      { headers: getAuthHeaders() },
-    );
-    if (!response.ok) throw new Error("Failed to filter medicines by category");
-
-    const data = await response.json();
-    renderTable(data);
-  } catch (error) {
-    console.error("Filter Category Error:", error);
-  }
-}
-
-function renderTable(medicines) {
+// Render data to table
+function renderTable(data) {
   const tbody = document.getElementById("medicinesTableBody");
   if (!tbody) return;
-  tbody.innerHTML = "";
 
-  if (!medicines || medicines.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No medicines found.</td></tr>`;
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No medicines found.</td></tr>`;
     return;
   }
 
-  medicines.forEach((m) => {
-    const categoryName =
-      m.medicineCategory?.medicineCategoryName ||
-      categoriesMap[m.medicineCategoryId] ||
-      "N/A";
-    const manufacturerName =
-      m.manufacturer?.manufacturerName ||
-      manufacturersMap[m.manufacturerId] ||
-      "N/A";
-    const supplierName = suppliersMap[m.supplierId] || "N/A";
-    const formattedExpiry = formatDate(m.medicineExpiryDate);
+  tbody.innerHTML = data
+    .map((m) => {
+      const id = m.medicineId ?? m.MedicineId;
+      const name = m.medicineName ?? m.MedicineName ?? "";
+      const price = Number(m.medicinePrice ?? m.MedicinePrice ?? m.price ?? 0).toFixed(2);
+      const catId = m.medicineCategoryId ?? m.MedicineCategoryId;
+      const cat = currentCategories.find((c) => (c.medicineCategoryId ?? c.MedicineCategoryId) === catId);
+      const catName = cat?.medicineCategoryName ?? cat?.MedicineCategoryName ?? "General";
+      const expDate = m.medicineExpiryDate ?? m.MedicineExpiryDate;
+      const formattedExp = expDate ? new Date(expDate).toLocaleDateString() : "—";
 
-    const row = document.createElement("tr");
-
-    const tdId = document.createElement("td");
-    tdId.textContent = m.medicineId;
-    row.appendChild(tdId);
-
-    const tdName = document.createElement("td");
-    tdName.className = "fw-bold";
-    tdName.textContent = m.medicineName;
-    row.appendChild(tdName);
-
-    const tdPrice = document.createElement("td");
-    tdPrice.textContent = `$${parseFloat(m.medicinePrice || 0).toFixed(2)}`;
-    row.appendChild(tdPrice);
-
-    const tdCategory = document.createElement("td");
-    const categoryBadge = document.createElement("span");
-    categoryBadge.className = "badge bg-info text-dark";
-    categoryBadge.textContent = categoryName;
-    tdCategory.appendChild(categoryBadge);
-    row.appendChild(tdCategory);
-
-    const tdManufacturer = document.createElement("td");
-    tdManufacturer.textContent = manufacturerName;
-    row.appendChild(tdManufacturer);
-
-    const tdSupplier = document.createElement("td");
-    tdSupplier.textContent = supplierName;
-    row.appendChild(tdSupplier);
-
-    const tdExpiry = document.createElement("td");
-    tdExpiry.textContent = formattedExpiry;
-    row.appendChild(tdExpiry);
-
-    const tdActions = document.createElement("td");
-    tdActions.className = "text-center";
-
-    const btnDetails = document.createElement("button");
-    btnDetails.className = "btn btn-sm btn-info me-1 text-white";
-    btnDetails.textContent = "Details";
-    btnDetails.onclick = () => getMedicineById(m.medicineId);
-
-    const btnEdit = document.createElement("button");
-    btnEdit.className = "btn btn-sm btn-warning me-1";
-    btnEdit.textContent = "Edit";
-    btnEdit.onclick = () => openEditMedicine(m.medicineId);
-
-    const btnDelete = document.createElement("button");
-    btnDelete.className = "btn btn-sm btn-danger";
-    btnDelete.textContent = "Delete";
-    btnDelete.onclick = () => removeMedicine(m.medicineId);
-
-    tdActions.appendChild(btnDetails);
-    tdActions.appendChild(btnEdit);
-    tdActions.appendChild(btnDelete);
-    row.appendChild(tdActions);
-
-    tbody.appendChild(row);
-  });
+      return `
+        <tr>
+          <td class="fw-bold">${id}</td>
+          <td class="fw-semibold text-primary">${name}</td>
+          <td><strong>$${price}</strong></td>
+          <td><span class="badge bg-secondary">${catName}</span></td>
+          <td>${formattedExp}</td>
+          <td class="text-center text-nowrap">
+            <button class="btn btn-info btn-sm text-white me-1" onclick="openDetailsModal(${id})">Details</button>
+            <button class="btn btn-warning btn-sm me-1" onclick="openEditModal(${id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMedicineAction(${id})">Delete</button>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
-// ===============================
-// ADD MEDICINE
-// ===============================
-document
-  .getElementById("addMedicineForm")
-  ?.addEventListener("submit", async function (e) {
-    e.preventDefault();
+// 3. ADD MEDICINE
+document.getElementById("addMedicineForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const newMedicine = {
-      medicineName: document.getElementById("medicineName").value.trim(),
-      medicinePrice: parseFloat(document.getElementById("medicinePrice").value),
-      medicineCategoryId: parseInt(
-        document.getElementById("categorySelect").value,
-      ),
-      manufacturerId: parseInt(
-        document.getElementById("manufacturerSelect").value,
-      ),
-      supplierId: parseInt(document.getElementById("supplierSelect").value),
-      medicineProductionDate: document.getElementById("medicineProductionDate")
-        .value,
-      medicineExpiryDate: document.getElementById("medicineExpiryDate").value,
-      medicineDescription: document
-        .getElementById("medicineDescription")
-        .value.trim(),
-    };
+  const newMedicine = {
+    medicineName: document.getElementById("addMedName").value.trim(),
+    medicinePrice: parseFloat(document.getElementById("addMedPrice").value),
+    medicineDescription: document.getElementById("addMedDesc").value.trim(),
+    medicineProductionDate: document.getElementById("addMedProdDate").value || new Date().toISOString(),
+    medicineExpiryDate: document.getElementById("addMedExpDate").value,
+    medicineCategoryId: parseInt(document.getElementById("addMedCategory").value),
+    manufacturerId: parseInt(document.getElementById("addMedManufacturer").value),
+    supplierId: parseInt(document.getElementById("addMedSupplier").value),
+  };
 
-    if (
-      !validateMedicinePrice(newMedicine.medicinePrice) ||
-      !validateMedicineDates(
-        newMedicine.medicineProductionDate,
-        newMedicine.medicineExpiryDate,
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`${MEDICINE_API}/AddMedicine`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(newMedicine),
-      });
-
-      if (response.ok) {
-        alert("Medicine Added Successfully");
-        document.getElementById("addMedicineForm").reset();
-        loadMedicines();
-      } else {
-        const errText = await response.text();
-        alert("Failed to add medicine: " + errText);
-      }
-    } catch (error) {
-      console.error("POST Error:", error);
-    }
-  });
-
-// ===============================
-// GET MEDICINE BY ID (DETAILS)
-// ===============================
-async function getMedicineById(id) {
   try {
-    const response = await fetch(`${MEDICINE_API}/GetMedicineById/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Failed to fetch medicine details");
+    await addMedicine(newMedicine);
+    alert("Medicine created successfully!");
 
-    const m = await response.json();
+    document.getElementById("addMedicineForm").reset();
+    const modalEl = document.getElementById("addMedicineModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
 
-    document.getElementById("detailId").innerText = m.medicineId;
-    document.getElementById("detailName").innerText = m.medicineName;
-    document.getElementById("detailPrice").innerText = parseFloat(
-      m.medicinePrice || 0,
-    ).toFixed(2);
-    document.getElementById("detailCategory").innerText =
-      m.medicineCategory?.medicineCategoryName ||
-      categoriesMap[m.medicineCategoryId] ||
-      m.medicineCategoryId;
-    document.getElementById("detailManufacturer").innerText =
-      m.manufacturer?.manufacturerName ||
-      manufacturersMap[m.manufacturerId] ||
-      m.manufacturerId;
-    document.getElementById("detailSupplier").innerText =
-      suppliersMap[m.supplierId] || m.supplierId;
-    document.getElementById("detailProductionDate").innerText = formatDate(
-      m.medicineProductionDate,
-    );
-    document.getElementById("detailExpiryDate").innerText = formatDate(
-      m.medicineExpiryDate,
-    );
-    document.getElementById("detailDescription").innerText =
-      m.medicineDescription || "N/A";
+    fetchMedicines();
+  } catch (error) {
+    console.error("Error creating medicine:", error);
+    alert(`Failed to create medicine: ${error.message}`);
+  }
+});
 
-    const modal = new bootstrap.Modal(
-      document.getElementById("medicineDetailsModal"),
+// 4. EDIT FULL MEDICINE (PUT)
+document.getElementById("editMedicineForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const id = parseInt(document.getElementById("editMedId").value);
+  const updatedMedicine = {
+    medicineId: id,
+    medicineName: document.getElementById("editMedName").value.trim(),
+    medicinePrice: parseFloat(document.getElementById("editMedPrice").value),
+    medicineDescription: document.getElementById("editMedDesc").value.trim(),
+    medicineProductionDate: document.getElementById("editMedProdDate").value || new Date().toISOString(),
+    medicineExpiryDate: document.getElementById("editMedExpDate").value,
+    medicineCategoryId: parseInt(document.getElementById("editMedCategory").value),
+    manufacturerId: parseInt(document.getElementById("editMedManufacturer").value),
+    supplierId: parseInt(document.getElementById("editMedSupplier").value),
+  };
+
+  try {
+    await updateMedicine(id, updatedMedicine);
+    alert("Medicine updated successfully!");
+
+    const modalEl = document.getElementById("editMedicineModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+
+    fetchMedicines();
+  } catch (error) {
+    console.error("Error updating medicine:", error);
+    alert(`Failed to update medicine: ${error.message}`);
+  }
+});
+
+// 5. DELETE MEDICINE
+async function deleteMedicineAction(id) {
+  if (!confirm(`Are you sure you want to delete Medicine ID: ${id}?`)) return;
+
+  try {
+    await deleteMedicine(id);
+    alert("Medicine deleted successfully!");
+    fetchMedicines();
+  } catch (error) {
+    console.error("Error deleting medicine:", error);
+    alert(`Failed to delete medicine: ${error.message}`);
+  }
+}
+
+// 6. OPEN DETAILS MODAL
+async function openDetailsModal(id) {
+  try {
+    const med = await getMedicineById(id);
+    const cat = currentCategories.find(
+      (c) => (c.medicineCategoryId ?? c.MedicineCategoryId) === (med.medicineCategoryId ?? med.MedicineCategoryId),
     );
+    const manu = currentManufacturers.find(
+      (m) => (m.manufacturerId ?? m.ManufacturerId) === (med.manufacturerId ?? med.ManufacturerId),
+    );
+    const supp = currentSuppliers.find(
+      (s) => (s.supplierId ?? s.SupplierId) === (med.supplierId ?? med.SupplierId),
+    );
+
+    const price = Number(med.medicinePrice ?? med.MedicinePrice ?? med.price ?? 0).toFixed(2);
+    const prodDate = med.medicineProductionDate ? new Date(med.medicineProductionDate).toLocaleDateString() : "—";
+    const expDate = med.medicineExpiryDate ? new Date(med.medicineExpiryDate).toLocaleDateString() : "—";
+
+    document.getElementById("medicineDetailsBody").innerHTML = `
+      <div class="row g-3">
+        <div class="col-md-6">
+          <p><strong>Medicine ID:</strong> ${med.medicineId ?? med.MedicineId}</p>
+          <p><strong>Name:</strong> ${med.medicineName ?? med.MedicineName}</p>
+          <p><strong>Price:</strong> $${price}</p>
+          <p><strong>Category:</strong> ${cat?.medicineCategoryName ?? cat?.MedicineCategoryName ?? "General"}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Manufacturer:</strong> ${manu?.manufacturerName ?? manu?.ManufacturerName ?? "—"}</p>
+          <p><strong>Supplier:</strong> ${supp?.supplierName ?? supp?.SupplierName ?? "—"}</p>
+          <p><strong>Production Date:</strong> ${prodDate}</p>
+          <p><strong>Expiry Date:</strong> ${expDate}</p>
+        </div>
+        <div class="col-12">
+          <strong>Description / Indications:</strong>
+          <p class="text-muted mt-1">${med.medicineDescription ?? med.MedicineDescription ?? "No description provided."}</p>
+        </div>
+      </div>
+    `;
+
+    const modal = new bootstrap.Modal(document.getElementById("medicineDetailsModal"));
     modal.show();
   } catch (error) {
-    console.error("Details Error:", error);
+    console.error("Error loading details:", error);
+    alert(`Failed to load details: ${error.message}`);
   }
 }
 
-// ===============================
-// EDIT MODAL & FULL UPDATE
-// ===============================
-async function openEditMedicine(id) {
+// 7. OPEN EDIT MODAL
+async function openEditModal(id) {
   try {
-    const response = await fetch(`${MEDICINE_API}/GetMedicineById/${id}`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) throw new Error("Failed to fetch medicine for edit");
+    const med = await getMedicineById(id);
 
-    const m = await response.json();
+    document.getElementById("editMedId").value = med.medicineId ?? med.MedicineId;
+    document.getElementById("editMedName").value = med.medicineName ?? med.MedicineName ?? "";
+    document.getElementById("editMedPrice").value = med.medicinePrice ?? med.MedicinePrice ?? med.price ?? 0;
+    document.getElementById("editMedCategory").value = med.medicineCategoryId ?? med.MedicineCategoryId ?? "";
+    document.getElementById("editMedManufacturer").value = med.manufacturerId ?? med.ManufacturerId ?? "";
+    document.getElementById("editMedSupplier").value = med.supplierId ?? med.SupplierId ?? "";
 
-    document.getElementById("editMedicineId").value = m.medicineId;
-    document.getElementById("editMedicineName").value = m.medicineName;
-    document.getElementById("editMedicinePrice").value = m.medicinePrice;
-    document.getElementById("editCategorySelect").value = m.medicineCategoryId;
-    document.getElementById("editManufacturerSelect").value = m.manufacturerId;
-    document.getElementById("editSupplierSelect").value = m.supplierId;
-    document.getElementById("editMedicineProductionDate").value =
-      formatDateForInput(m.medicineProductionDate);
-    document.getElementById("editMedicineExpiryDate").value =
-      formatDateForInput(m.medicineExpiryDate);
-    document.getElementById("editMedicineDescription").value =
-      m.medicineDescription || "";
+    const prodDate = med.medicineProductionDate ?? med.MedicineProductionDate;
+    const expDate = med.medicineExpiryDate ?? med.MedicineExpiryDate;
 
-    const modal = new bootstrap.Modal(
-      document.getElementById("editMedicineModal"),
-    );
+    document.getElementById("editMedProdDate").value = prodDate ? prodDate.substring(0, 10) : "";
+    document.getElementById("editMedExpDate").value = expDate ? expDate.substring(0, 10) : "";
+    document.getElementById("editMedDesc").value = med.medicineDescription ?? med.MedicineDescription ?? "";
+
+    const modal = new bootstrap.Modal(document.getElementById("editMedicineModal"));
     modal.show();
   } catch (error) {
-    console.error("Edit Modal Error:", error);
+    console.error("Error loading medicine for edit:", error);
+    alert(`Failed to load medicine: ${error.message}`);
   }
 }
 
-document
-  .getElementById("editMedicineForm")
-  ?.addEventListener("submit", async function (e) {
-    e.preventDefault();
+// 8. SEARCH & FILTER
+async function handleSearch() {
+  const query = document.getElementById("searchInput").value.trim();
+  const categoryId = document.getElementById("filterCategory").value;
 
-    const id = parseInt(document.getElementById("editMedicineId").value);
-    const updatedMedicine = {
-      medicineId: id,
-      medicineName: document.getElementById("editMedicineName").value.trim(),
-      medicinePrice: parseFloat(
-        document.getElementById("editMedicinePrice").value,
-      ),
-      medicineCategoryId: parseInt(
-        document.getElementById("editCategorySelect").value,
-      ),
-      manufacturerId: parseInt(
-        document.getElementById("editManufacturerSelect").value,
-      ),
-      supplierId: parseInt(document.getElementById("editSupplierSelect").value),
-      medicineProductionDate: document.getElementById(
-        "editMedicineProductionDate",
-      ).value,
-      medicineExpiryDate: document.getElementById("editMedicineExpiryDate")
-        .value,
-      medicineDescription: document
-        .getElementById("editMedicineDescription")
-        .value.trim(),
-    };
+  let filtered = currentMedicines;
 
-    if (
-      !validateMedicinePrice(updatedMedicine.medicinePrice) ||
-      !validateMedicineDates(
-        updatedMedicine.medicineProductionDate,
-        updatedMedicine.medicineExpiryDate,
-      )
-    ) {
-      return;
-    }
+  if (categoryId) {
+    filtered = filtered.filter(
+      (m) => String(m.medicineCategoryId ?? m.MedicineCategoryId) === String(categoryId),
+    );
+  }
 
-    try {
-      const response = await fetch(`${MEDICINE_API}/UpdateMedicine/${id}`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(updatedMedicine),
-      });
-
-      if (response.ok) {
-        alert("Medicine Updated Successfully");
-
-        const modalEl = document.getElementById("editMedicineModal");
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) modalInstance.hide();
-
-        loadMedicines();
-      } else {
-        const errText = await response.text();
-        alert("Update Failed: " + errText);
-      }
-    } catch (error) {
-      console.error("PUT Error:", error);
-    }
-  });
-
-// ===============================
-// PATCH ENDPOINTS (INDIVIDUAL UPDATES)
-// ===============================
-async function updateMedicinePrice(id, newPrice) {
-  if (!validateMedicinePrice(newPrice)) return;
-
-  try {
-    const response = await fetch(`${MEDICINE_API}/UpdateMedicinePrice/${id}`, {
-      method: "PATCH",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(parseFloat(newPrice)),
+  if (query) {
+    filtered = filtered.filter((m) => {
+      const name = (m.medicineName ?? m.MedicineName ?? "").toLowerCase();
+      const desc = (m.medicineDescription ?? m.MedicineDescription ?? "").toLowerCase();
+      return name.includes(query.toLowerCase()) || desc.includes(query.toLowerCase());
     });
-
-    if (response.ok) {
-      alert("Price updated successfully");
-      loadMedicines();
-    } else {
-      const err = await response.text();
-      alert("Price update failed: " + err);
-    }
-  } catch (error) {
-    console.error("PATCH Price Error:", error);
   }
-}
-
-async function updateMedicineDescription(id, newDescription) {
-  try {
-    const response = await fetch(
-      `${MEDICINE_API}/UpdateMedicineDescription/${id}`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(newDescription),
-      },
-    );
-
-    if (response.ok) {
-      alert("Description updated successfully");
-      loadMedicines();
-    } else {
-      const err = await response.text();
-      alert("Description update failed: " + err);
-    }
-  } catch (error) {
-    console.error("PATCH Description Error:", error);
-  }
-}
-
-async function updateMedicineExpiryDate(id, newExpiryDate) {
-  try {
-    const response = await fetch(
-      `${MEDICINE_API}/UpdateMedicineExpiryDate/${id}`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(newExpiryDate),
-      },
-    );
-
-    if (response.ok) {
-      alert("Expiry date updated successfully");
-      loadMedicines();
-    } else {
-      const err = await response.text();
-      alert("Expiry date update failed: " + err);
-    }
-  } catch (error) {
-    console.error("PATCH Expiry Error:", error);
-  }
-}
-
-async function updateMedicineProductionDate(id, newProductionDate) {
-  try {
-    const response = await fetch(
-      `${MEDICINE_API}/UpdateMedicineProductionDate/${id}`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(newProductionDate),
-      },
-    );
-
-    if (response.ok) {
-      alert("Production date updated successfully");
-      loadMedicines();
-    } else {
-      const err = await response.text();
-      alert("Production date update failed: " + err);
-    }
-  } catch (error) {
-    console.error("PATCH Production Date Error:", error);
-  }
-}
-
-async function updateMedicineCategory(id, newCategoryId) {
-  try {
-    const response = await fetch(
-      `${MEDICINE_API}/UpdateMedicineCategory/${id}`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(parseInt(newCategoryId)),
-      },
-    );
-
-    if (response.ok) {
-      alert("Category updated successfully");
-      loadMedicines();
-    } else {
-      const err = await response.text();
-      alert("Category update failed: " + err);
-    }
-  } catch (error) {
-    console.error("PATCH Category Error:", error);
-  }
-}
-
-// ===============================
-// REMOVE MEDICINE
-// ===============================
-async function removeMedicine(id) {
-  if (!confirm("Are you sure you want to delete this medicine?")) return;
-
-  try {
-    const response = await fetch(`${MEDICINE_API}/RemoveMedicine/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-
-    if (response.ok) {
-      alert("Medicine Deleted Successfully");
-      loadMedicines();
-    } else {
-      const errText = await response.text();
-      alert("Delete Failed: " + errText);
-    }
-  } catch (error) {
-    console.error("DELETE Error:", error);
-  }
-}
-
-// ===============================
-// SEARCH & SORT UTILITIES
-// ===============================
-function filterMedicines() {
-  const query = document
-    .getElementById("searchInput")
-    .value.toLowerCase()
-    .trim();
-
-  const filtered = allMedicines.filter((m) => {
-    const name = (m.medicineName || "").toLowerCase();
-    const category = (
-      m.medicineCategory?.medicineCategoryName ||
-      categoriesMap[m.medicineCategoryId] ||
-      ""
-    ).toLowerCase();
-    const manufacturer = (
-      m.manufacturer?.manufacturerName ||
-      manufacturersMap[m.manufacturerId] ||
-      ""
-    ).toLowerCase();
-
-    return (
-      name.includes(query) ||
-      category.includes(query) ||
-      manufacturer.includes(query)
-    );
-  });
 
   renderTable(filtered);
 }
 
-function sortMedicinesById() {
-  isAscending = !isAscending;
-  allMedicines.sort((a, b) =>
-    isAscending ? a.medicineId - b.medicineId : b.medicineId - a.medicineId,
-  );
-
-  const btn = document.getElementById("sortBtn");
-  if (btn) btn.innerText = `Sort by ID (${isAscending ? "Asc" : "Desc"})`;
-
-  filterMedicines();
+function clearSearch() {
+  document.getElementById("searchInput").value = "";
+  document.getElementById("filterCategory").value = "";
+  renderTable(currentMedicines);
 }
 
-function formatDate(dateString) {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  return isNaN(date.getTime()) ? dateString : date.toLocaleDateString();
+// 9. SORT BY PRICE
+function sortMedicinesByPrice() {
+  currentMedicines.sort((a, b) => {
+    const priceA = a.medicinePrice ?? a.MedicinePrice ?? a.price ?? 0;
+    const priceB = b.medicinePrice ?? b.MedicinePrice ?? b.price ?? 0;
+    return sortPriceAsc ? priceA - priceB : priceB - priceA;
+  });
+  sortPriceAsc = !sortPriceAsc;
+  const btn = document.getElementById("sortPriceBtn");
+  if (btn) {
+    btn.textContent = sortPriceAsc ? "Sort by Price (Low-High)" : "Sort by Price (High-Low)";
+  }
+  handleSearch();
 }
 
-function formatDateForInput(dateString) {
-  if (!dateString) return "";
-  return dateString.split("T")[0];
-}
+// Event Listeners & Initialize
+document.addEventListener("DOMContentLoaded", async () => {
+  if (checkAccess()) {
+    await loadDropdowns();
+    await fetchMedicines();
+
+    document.getElementById("searchBtn")?.addEventListener("click", handleSearch);
+    document.getElementById("searchInput")?.addEventListener("keyup", (e) => {
+      if (e.key === "Enter" || e.target.value === "") handleSearch();
+    });
+    document.getElementById("filterCategory")?.addEventListener("change", handleSearch);
+  }
+});

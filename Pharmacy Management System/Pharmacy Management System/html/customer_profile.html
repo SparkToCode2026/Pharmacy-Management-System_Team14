@@ -11,23 +11,26 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body class="bg-light">
+    <!-- Navigation Bar -->
     <div id="navbar-placeholder"></div>
+
     <div class="container my-5">
       <!-- 1. Add New Profile Section (Shown ONLY if user has NO profile) -->
       <div class="card shadow-sm mb-4" id="addProfileCard">
         <div class="card-header bg-primary text-white">
-          <h5 class="card-title mb-0">Add New Profile</h5>
+          <h5 class="card-title mb-0">Complete Your Profile</h5>
         </div>
         <div class="card-body">
+          <p class="text-muted mb-3">You don't have a profile on file yet. Please provide your contact details below.</p>
           <form id="ProfileForm">
             <div class="row g-3">
               <div class="col-md-4">
-                <label for="customerPhone" class="form-label">Phone</label>
+                <label for="customerPhone" class="form-label">Phone Number</label>
                 <input
-                  type="text"
+                  type="tel"
                   class="form-control"
                   id="customerPhone"
-                  placeholder="0000 0000"
+                  placeholder="e.g. 12345678"
                   required
                 />
               </div>
@@ -37,14 +40,12 @@
                   type="text"
                   class="form-control"
                   id="customerAddress"
-                  placeholder="House number and street name"
+                  placeholder="House number, street, city"
                   required
                 />
               </div>
               <div class="col-md-4">
-                <label for="DateOfBirth" class="form-label"
-                  >Date of Birth</label
-                >
+                <label for="DateOfBirth" class="form-label">Date of Birth</label>
                 <input
                   type="date"
                   class="form-control"
@@ -54,7 +55,7 @@
               </div>
             </div>
             <button type="submit" class="btn btn-success mt-3">
-              Add Profile
+              Save Profile
             </button>
           </form>
         </div>
@@ -65,8 +66,9 @@
         <div
           class="card-header bg-primary text-white d-flex justify-content-between align-items-center"
         >
-          <h5 class="card-title mb-0">My Profile</h5>
+          <h5 class="card-title mb-0">My Customer Profile</h5>
           <button
+            type="button"
             onclick="openEditMyProfileModal()"
             class="btn btn-sm btn-warning"
           >
@@ -83,7 +85,7 @@
         <div
           class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
         >
-          <h5 class="card-title mb-0">Customer Profiles List</h5>
+          <h5 class="card-title mb-0">Customer Profiles Directory (Admin View)</h5>
           <button onclick="getAllProfiles()" class="btn btn-sm btn-light">
             Refresh
           </button>
@@ -91,20 +93,22 @@
         <div class="card-body">
           <!-- Search & Filter Controls -->
           <div class="row mb-3">
-            <div class="col-md-4 d-flex">
+            <div class="col-md-5 d-flex gap-2">
               <input
                 type="number"
                 id="searchUserIdInput"
-                class="form-control me-2"
+                class="form-control"
                 placeholder="Filter by User ID..."
               />
               <button
+                type="button"
                 onclick="searchByUserId()"
-                class="btn btn-outline-secondary me-1"
+                class="btn btn-outline-secondary"
               >
                 Search
               </button>
               <button
+                type="button"
                 onclick="clearUserIdFilter()"
                 class="btn btn-outline-danger"
               >
@@ -120,6 +124,7 @@
                 <tr>
                   <th>Profile ID</th>
                   <th>User Name</th>
+                  <th>User ID</th>
                   <th>Phone</th>
                   <th>Address</th>
                   <th>Date of Birth</th>
@@ -148,7 +153,7 @@
             <h5 class="modal-title">Customer Profile Details</h5>
             <button
               type="button"
-              class="btn-close"
+              class="btn-close btn-close-white"
               data-bs-dismiss="modal"
               aria-label="Close"
             ></button>
@@ -169,7 +174,7 @@
     >
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header bg-warning">
+          <div class="modal-header bg-warning text-dark">
             <h5 class="modal-title">Edit Customer Profile</h5>
             <button
               type="button"
@@ -184,7 +189,7 @@
               <div class="mb-3">
                 <label for="editCustomerPhone" class="form-label">Phone</label>
                 <input
-                  type="text"
+                  type="tel"
                   class="form-control"
                   id="editCustomerPhone"
                   required
@@ -229,10 +234,13 @@
         </div>
       </div>
     </div>
+
+    <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="customer_profiles.js"></script>
+    <script src="api.js"></script>
     <script src="navbar.js"></script>
+    <script src="customer_profiles.js"></script>
   </body>
 </html>

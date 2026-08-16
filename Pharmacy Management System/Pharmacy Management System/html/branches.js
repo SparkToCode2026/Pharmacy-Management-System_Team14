@@ -1,81 +1,62 @@
-const API = "https://localhost:7293/api/Branch";
+// ============================================================
+// branches.js
+// Logic for Branch Management using api.js
+// ============================================================
 
 let currentBranches = [];
 
-// Helper function for authorization headers
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("Please log in first.");
-    window.location.href = "auth.html";
-    return {};
-  }
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-}
-
-// 1. GET ALL BRANCHES [AllowAnonymous]
-function getAllBranches() {
-  fetch(`${API}/GetAllBranch`, { method: "GET" })
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-      return res.json();
-    })
-    .then((branches) => {
-      currentBranches = branches || [];
-      renderBranchesTable(currentBranches);
-      getTotalBranches(); // Refresh counter as well
-    })
-    .catch((err) => {
-      console.error("Failed to load branches:", err);
-      document.getElementById("branchesTable").innerHTML = `
+// 1. GET ALL BRANCHES
+async function getAllBranches() {
+  try {
+    const branches = await getBranches();
+    currentBranches = branches || [];
+    renderBranchesTable(currentBranches);
+    loadBranchCount();
+  } catch (err) {
+    console.error("Failed to load branches:", err);
+    const tbody = document.getElementById("branchesTable");
+    if (tbody) {
+      tbody.innerHTML = `
         <tr>
           <td colspan="6" class="text-center text-danger">${err.message}</td>
         </tr>`;
-    });
+    }
+  }
 }
 
-// 2. GET BRANCH BY ID [AllowAnonymous]
-function getBranch(id) {
-  fetch(`${API}/GetBranch/${id}`)
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to fetch branch details");
-      return res.json();
-    })
-    .then((b) => {
-      const body = document.getElementById("viewBranchBody");
-      body.innerHTML = `
-        <p><strong>Branch ID:</strong> ${b.branchId ?? b.BranchId}</p>
-        <p><strong>Name:</strong> ${b.branchName ?? b.BranchName}</p>
-        <p><strong>Address:</strong> ${b.branchAddress ?? b.BranchAddress}</p>
-        <p><strong>City:</strong> ${b.branchCity ?? b.BranchCity}</p>
-        <p><strong>Phone:</strong> ${b.branchPhone ?? b.BranchPhone}</p>
-      `;
-      const modal = new bootstrap.Modal(
-        document.getElementById("viewBranchModal"),
-      );
-      modal.show();
-    })
-    .catch((err) => alert("Error: " + err.message));
+// 2. GET BRANCH BY ID
+async function getBranch(id) {
+  try {
+    const b = await getBranchById(id);
+    const body = document.getElementById("viewBranchBody");
+    body.innerHTML = `
+      <p><strong>Branch ID:</strong> ${b.branchId ?? b.BranchId}</p>
+      <p><strong>Name:</strong> ${b.branchName ?? b.BranchName}</p>
+      <p><strong>Address:</strong> ${b.branchAddress ?? b.BranchAddress}</p>
+      <p><strong>City:</strong> ${b.branchCity ?? b.BranchCity}</p>
+      <p><strong>Phone:</strong> ${b.branchPhone ?? b.BranchPhone}</p>
+    `;
+    const modal = new bootstrap.Modal(document.getElementById("viewBranchModal"));
+    modal.show();
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
 }
 
-// 3. GET BY BRANCH CITY [AllowAnonymous]
-function searchByCity() {
+// 3. GET BY BRANCH CITY
+async function searchByCity() {
   const city = document.getElementById("searchCityInput").value.trim();
   if (!city) {
     getAllBranches();
     return;
   }
 
-  fetch(`${API}/GetByBranchCity?city=${encodeURIComponent(city)}`)
-    .then((res) => {
-      if (!res.ok) throw new Error("No branches found for this city");
-      return res.json();
-    })
-    .then((branches) => renderBranchesTable(branches))
-    .catch((err) => alert(err.message));
+  try {
+    const branches = await getBranchesByCity(city);
+    renderBranchesTable(branches);
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 function clearCityFilter() {
@@ -83,25 +64,25 @@ function clearCityFilter() {
   getAllBranches();
 }
 
-// 4. GET TOTAL BRANCHES [AllowAnonymous]
-function getTotalBranches() {
-  fetch(`${API}/GetTotalBranches`)
-    .then((res) => res.json())
-    .then((data) => {
-      const badge = document.getElementById("totalBranchesBadge");
-      if (badge)
-        badge.textContent = `Total: ${data.totalBranches ?? data.TotalBranches ?? 0}`;
-    })
-    .catch((err) => console.error("Error getting branch count:", err));
+// 4. GET TOTAL BRANCHES
+async function loadBranchCount() {
+  try {
+    const data = await fetchTotalBranches();
+    const badge = document.getElementById("totalBranchesBadge");
+    if (badge) {
+      badge.textContent = `Total: ${data.totalBranches ?? data.TotalBranches ?? currentBranches.length}`;
+    }
+  } catch (err) {
+    const badge = document.getElementById("totalBranchesBadge");
+    if (badge) badge.textContent = `Total: ${currentBranches.length}`;
+  }
 }
 
-// 5. ADD BRANCH [Roles: 1, 2]
-document.getElementById("branchForm")?.addEventListener("submit", (e) => {
+// 5. ADD BRANCH
+document.getElementById("branchForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const phoneInput = document
-    .getElementById("BranchPhone")
-    .value.replace(/\D/g, "");
+  const phoneInput = document.getElementById("BranchPhone").value.replace(/\D/g, "");
 
   const newBranch = {
     branchName: document.getElementById("BranchName").value.trim(),
@@ -110,38 +91,28 @@ document.getElementById("branchForm")?.addEventListener("submit", (e) => {
     branchPhone: parseInt(phoneInput, 10) || 0,
   };
 
-  fetch(`${API}/AddBranch`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(newBranch),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        document.getElementById("branchForm").reset();
-        getAllBranches();
-      } else if (res.status === 401 || res.status === 403) {
-        alert("Permission denied. Please log in as Admin or Pharmacist.");
-      } else {
-        const txt = await res.text();
-        alert("Failed to add branch: " + txt);
-      }
-    })
-    .catch((err) => console.error("Error adding branch:", err));
+  try {
+    await addBranch(newBranch);
+    alert("Branch added successfully!");
+    document.getElementById("branchForm").reset();
+    getAllBranches();
+  } catch (err) {
+    console.error("Error adding branch:", err);
+    alert("Failed to add branch: " + err.message);
+  }
 });
 
-// 6. UPDATE ALL BRANCH [Roles: 1, 2]
-document.getElementById("editBranchForm")?.addEventListener("submit", (e) => {
+// 6. UPDATE ALL BRANCH
+document.getElementById("editBranchForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const id = document.getElementById("editBranchId").value;
-  if (!id || id === "undefined") {
+  if (!id) {
     alert("Invalid Branch ID.");
     return;
   }
 
-  const phoneInput = document
-    .getElementById("editBranchPhone")
-    .value.replace(/\D/g, "");
+  const phoneInput = document.getElementById("editBranchPhone").value.replace(/\D/g, "");
 
   const updatedBranch = {
     branchId: parseInt(id, 10),
@@ -151,68 +122,47 @@ document.getElementById("editBranchForm")?.addEventListener("submit", (e) => {
     branchPhone: parseInt(phoneInput, 10) || 0,
   };
 
-  fetch(`${API}/UpdateAllBranch/${id}`, {
-    method: "PUT",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(updatedBranch),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        const modalEl = document.getElementById("editBranchModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        modal?.hide();
-        getAllBranches();
-      } else if (res.status === 401 || res.status === 403) {
-        alert("Permission denied.");
-      } else {
-        const txt = await res.text();
-        alert("Failed to update branch: " + txt);
-      }
-    })
-    .catch((err) => console.error("Error updating branch:", err));
+  try {
+    await updateBranch(id, updatedBranch);
+    alert("Branch updated successfully!");
+    const modalEl = document.getElementById("editBranchModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+    getAllBranches();
+  } catch (err) {
+    console.error("Error updating branch:", err);
+    alert("Failed to update branch: " + err.message);
+  }
 });
 
-// 7. UPDATE BRANCH NAME ONLY [Roles: 1, 2]
-function promptUpdateBranchName(id, currentName) {
+// 7. UPDATE BRANCH NAME ONLY
+async function promptUpdateBranchName(id, currentName) {
   const newName = prompt("Enter new branch name:", currentName);
   if (!newName || newName.trim() === "" || newName === currentName) return;
 
-  fetch(`${API}/UpdateBranchName/${id}`, {
-    method: "PATCH",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(newName.trim()),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        getAllBranches();
-      } else {
-        const txt = await res.text();
-        alert("Failed to update name: " + txt);
-      }
-    })
-    .catch((err) => console.error("Error updating branch name:", err));
+  try {
+    await updateBranchName(id, newName.trim());
+    alert("Branch renamed successfully!");
+    getAllBranches();
+  } catch (err) {
+    console.error("Error updating branch name:", err);
+    alert("Failed to update name: " + err.message);
+  }
 }
 
-// 8. REMOVE BRANCH [Roles: 1, 2]
-function removeBranch(id) {
-  if (!id || id === "undefined") return;
+// 8. REMOVE BRANCH
+async function removeBranchAction(id) {
+  if (!id) return;
   if (!confirm("Are you sure you want to remove this branch?")) return;
 
-  fetch(`${API}/RemoveBranch/${id}`, {
-    method: "DELETE",
-    headers: getAuthHeaders(),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        getAllBranches();
-      } else if (res.status === 401 || res.status === 403) {
-        alert("Permission denied.");
-      } else {
-        const txt = await res.text();
-        alert("Failed to remove branch: " + txt);
-      }
-    })
-    .catch((err) => console.error("Error removing branch:", err));
+  try {
+    await removeBranch(id);
+    alert("Branch removed successfully!");
+    getAllBranches();
+  } catch (err) {
+    console.error("Error removing branch:", err);
+    alert("Failed to remove branch: " + err.message);
+  }
 }
 
 // Open Edit Modal
@@ -239,9 +189,10 @@ function openEditModal(id) {
 // Render Table
 function renderBranchesTable(branches) {
   const tbody = document.getElementById("branchesTable");
+  if (!tbody) return;
 
   if (!branches || branches.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center">No branches found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No branches found.</td></tr>`;
     return;
   }
 
@@ -256,20 +207,27 @@ function renderBranchesTable(branches) {
       return `
         <tr>
             <td>${id ?? ""}</td>
-            <td>${name}</td>
+            <td class="fw-semibold">${name}</td>
             <td>${address}</td>
             <td>${city}</td>
             <td>${phone}</td>
-            <td>
+            <td class="text-center text-nowrap">
               <button onclick="getBranch(${id})" class="btn btn-sm btn-info text-white me-1">View</button>
               <button onclick="openEditModal(${id})" class="btn btn-sm btn-warning me-1">Edit</button>
-              <button onclick="promptUpdateBranchName(${id}, '${name}')" class="btn btn-sm btn-outline-secondary me-1">Rename</button>
-              <button onclick="removeBranch(${id})" class="btn btn-sm btn-danger">Delete</button>
+              <button onclick="promptUpdateBranchName(${id}, '${escapeHtml(name)}')" class="btn btn-sm btn-outline-secondary me-1">Rename</button>
+              <button onclick="removeBranchAction(${id})" class="btn btn-sm btn-danger">Delete</button>
             </td>
         </tr>`;
     })
     .join("");
 }
 
+function escapeHtml(text) {
+  if (!text) return "";
+  return String(text).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+}
+
 // Initial Load
-getAllBranches();
+document.addEventListener("DOMContentLoaded", () => {
+  getAllBranches();
+});

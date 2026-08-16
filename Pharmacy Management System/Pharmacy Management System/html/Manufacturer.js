@@ -1,254 +1,244 @@
-const API_URL = "https://localhost:7293/api/Manufacturer";
-let manufacturersList = [];
-let isAscending = true;
+// ============================================================
+// Manufacturer.js
+// Logic for Manufacturer Management using api.js
+// ============================================================
 
-function getAuthToken() {
-  return localStorage.getItem("token");
-}
+let currentManufacturers = [];
 
-function checkAuth() {
-  const token = getAuthToken();
+// Check Access
+function checkAccess() {
+  const token = localStorage.getItem("token");
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "auth.html";
     return false;
   }
-  return token;
+  return true;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  if (!checkAuth()) return;
-
-  loadManufacturers();
-
-  document
-    .getElementById("sortBtn")
-    ?.addEventListener("click", sortManufacturersById);
-
-  document
-    .getElementById("refreshBtn")
-    ?.addEventListener("click", loadManufacturers);
-
-  document.getElementById("searchBtn")?.addEventListener("click", handleSearch);
-
-  document.getElementById("searchInput")?.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleSearch();
-  });
-
-  document
-    .getElementById("searchInput")
-    ?.addEventListener("input", handleSearch);
-
-  document
-    .getElementById("addManufacturerForm")
-    ?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const payload = {
-        manufacturerName: document.getElementById("manufacturerName").value,
-        licenseNumber:
-          document.getElementById("manufacturerLicense")?.value ||
-          "LIC-" + Date.now(),
-        contactNumber: document.getElementById("manufacturerPhone").value,
-        contactEmail: document.getElementById("manufacturerEmail").value,
-      };
-
-      if (await sendRequest(`${API_URL}/CreateManufacturer`, "POST", payload)) {
-        e.target.reset();
-        loadManufacturers();
-      }
-    });
-
-  document
-    .getElementById("editManufacturerForm")
-    ?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = document.getElementById("editManufacturerId").value;
-
-      const payload = {
-        manufacturerId: parseInt(id),
-        manufacturerName: document.getElementById("editManufacturerName").value,
-        contactEmail: document.getElementById("editManufacturerEmail").value,
-        contactNumber: document.getElementById("editManufacturerPhone").value,
-        licenseNumber:
-          document.getElementById("editManufacturerLicense")?.value || "",
-      };
-
-      if (
-        await sendRequest(`${API_URL}/UpdateManufacturer/${id}`, "PUT", payload)
-      ) {
-        const modalEl = document.getElementById("editManufacturerModal");
-        const modalInstance =
-          bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.hide();
-        loadManufacturers();
-      }
-    });
-});
-
-function handleSearch() {
-  const query =
-    document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
-  const filtered = manufacturersList.filter(
-    (m) =>
-      (m.manufacturerName &&
-        m.manufacturerName.toLowerCase().includes(query)) ||
-      (m.contactEmail && m.contactEmail.toLowerCase().includes(query)),
-  );
-  renderTable(filtered);
-}
-
-function sortManufacturersById() {
-  manufacturersList.sort((a, b) => {
-    return isAscending
-      ? a.manufacturerId - b.manufacturerId
-      : b.manufacturerId - a.manufacturerId;
-  });
-
-  isAscending = !isAscending;
-
-  const sortBtn = document.getElementById("sortBtn");
-  if (sortBtn) {
-    sortBtn.textContent = isAscending
-      ? "Sort by ID (Asc)"
-      : "Sort by ID (Desc)";
-  }
-
-  handleSearch();
-}
-
-async function sendRequest(url, method, body = null) {
-  const token = checkAuth();
-  if (!token) return false;
-
+// 1. GET ALL MANUFACTURERS
+async function fetchManufacturers() {
   try {
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-
-    const options = { method, headers };
-    if (body) options.body = JSON.stringify(body);
-
-    const res = await fetch(url, options);
-
-    if (res.status === 401 || res.status === 403) {
-      alert("Session expired or unauthorized. Please log in again.");
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-      return false;
+    const data = await apiGetManufacturers();
+    currentManufacturers = data || [];
+    renderTable(currentManufacturers);
+  } catch (error) {
+    console.error("Error loading manufacturers:", error);
+    const tbody = document.getElementById("manufacturersTableBody");
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load manufacturers: ${error.message}</td></tr>`;
     }
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(errorText || "Action failed");
-    }
-    return true;
-  } catch (err) {
-    alert("Error: " + err.message);
-    return false;
   }
 }
 
-async function loadManufacturers() {
-  const token = checkAuth();
-  if (!token) return;
-
-  try {
-    const res = await fetch(`${API_URL}/GetAllManufacturers`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (res.status === 401 || res.status === 403) {
-      alert("Session expired or unauthorized. Please log in again.");
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-      return;
-    }
-
-    if (!res.ok) throw new Error("Failed to load manufacturers");
-    manufacturersList = await res.json();
-    renderTable(manufacturersList);
-  } catch (err) {
-    alert("Error loading manufacturers: " + err.message);
-  }
-}
-
+// Render data to table
 function renderTable(data) {
   const tbody = document.getElementById("manufacturersTableBody");
   if (!tbody) return;
 
   if (!data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No records found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No manufacturers found.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = data
-    .map(
-      (item) => `
-    <tr>
-      <td>${item.manufacturerId}</td>
-      <td>${item.manufacturerName || "N/A"}</td>
-      <td>${item.contactEmail || "N/A"}</td>
-      <td>${item.contactNumber || "N/A"}</td>
-      <td>${item.licenseNumber || "N/A"}</td>
-      <td class="text-center">
-        <button class="btn btn-sm btn-info text-white me-1" 
-                data-bs-toggle="modal" 
-                data-bs-target="#manufacturerDetailsModal" 
-                onclick="openDetailsModal(${item.manufacturerId})">Details</button>
-        <button class="btn btn-sm btn-warning me-1" 
-                data-bs-toggle="modal" 
-                data-bs-target="#editManufacturerModal" 
-                onclick="openEditModal(${item.manufacturerId})">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteManufacturer(${item.manufacturerId})">Delete</button>
-      </td>
-    </tr>
-  `,
-    )
+    .map((item) => {
+      const id = item.manufacturerId ?? item.ManufacturerId;
+      const name = item.manufacturerName ?? item.ManufacturerName ?? "";
+      const country = item.manufacturerCountry ?? item.ManufacturerCountry ?? "";
+      const contact = item.manufacturerContactInfo ?? item.ManufacturerContactInfo ?? "";
+
+      return `
+        <tr>
+          <td class="fw-bold">${id}</td>
+          <td>${name}</td>
+          <td>${country || "—"}</td>
+          <td>${contact || "—"}</td>
+          <td class="text-center text-nowrap">
+            <button class="btn btn-info btn-sm text-white me-1" onclick="openDetailsModal(${id})">Details</button>
+            <button class="btn btn-warning btn-sm me-1" onclick="openEditModal(${id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteManufacturer(${id})">Delete</button>
+          </td>
+        </tr>
+      `;
+    })
     .join("");
 }
 
-function openDetailsModal(id) {
-  const item = manufacturersList.find((m) => m.manufacturerId === id);
-  if (!item) return;
+// 2. CREATE MANUFACTURER
+document.getElementById("createForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  document.getElementById("detailId").textContent = item.manufacturerId;
-  document.getElementById("detailName").textContent =
-    item.manufacturerName || "N/A";
-  document.getElementById("detailEmail").textContent =
-    item.contactEmail || "N/A";
-  document.getElementById("detailPhone").textContent =
-    item.contactNumber || "N/A";
-  document.getElementById("detailLicense").textContent =
-    item.licenseNumber || "N/A";
-}
+  const newManufacturer = {
+    manufacturerName: document.getElementById("createName").value.trim(),
+    manufacturerCountry: document.getElementById("createCountry").value.trim(),
+    manufacturerContactInfo: document.getElementById("createContact").value.trim(),
+  };
 
-function openEditModal(id) {
-  const item = manufacturersList.find((m) => m.manufacturerId === id);
-  if (!item) return;
+  try {
+    await apiCreateManufacturer(newManufacturer);
+    alert("Manufacturer created successfully!");
 
-  document.getElementById("editManufacturerId").value = item.manufacturerId;
-  document.getElementById("editManufacturerName").value =
-    item.manufacturerName || "";
-  document.getElementById("editManufacturerEmail").value =
-    item.contactEmail || "";
-  document.getElementById("editManufacturerPhone").value =
-    item.contactNumber || "";
-  document.getElementById("editManufacturerLicense").value =
-    item.licenseNumber || "";
-}
+    document.getElementById("createForm").reset();
+    const modalEl = document.getElementById("createModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
 
-async function deleteManufacturer(id) {
-  if (confirm("Are you sure you want to delete this manufacturer?")) {
-    if (await sendRequest(`${API_URL}/DeleteManufacturer/${id}`, "DELETE")) {
-      loadManufacturers();
-    }
+    fetchManufacturers();
+  } catch (error) {
+    console.error("Error creating manufacturer:", error);
+    alert(`Failed to create manufacturer: ${error.message}`);
+  }
+});
+
+// 3. EDIT FULL MANUFACTURER (PUT)
+document.getElementById("editForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const id = document.getElementById("editId").value;
+  const updatedManufacturer = {
+    manufacturerId: parseInt(id),
+    manufacturerName: document.getElementById("editName").value.trim(),
+    manufacturerCountry: document.getElementById("editCountry").value.trim(),
+    manufacturerContactInfo: document.getElementById("editContact").value.trim(),
+  };
+
+  try {
+    await apiUpdateManufacturer(id, updatedManufacturer);
+    alert("Manufacturer updated successfully!");
+
+    const modalEl = document.getElementById("editModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+
+    fetchManufacturers();
+  } catch (error) {
+    console.error("Error updating manufacturer:", error);
+    alert(`Failed to update manufacturer: ${error.message}`);
+  }
+});
+
+// 4. PATCH CONTACT INFO
+async function patchContactInfo() {
+  const id = document.getElementById("editId").value;
+  const contact = document.getElementById("editContact").value.trim();
+
+  try {
+    await apiUpdateManufacturerContact(id, contact);
+    alert("Contact Info patched successfully!");
+    fetchManufacturers();
+  } catch (error) {
+    console.error("Error patching contact info:", error);
+    alert(`Patch failed: ${error.message}`);
   }
 }
 
-window.openDetailsModal = openDetailsModal;
-window.openEditModal = openEditModal;
-window.deleteManufacturer = deleteManufacturer;
-window.sortManufacturersById = sortManufacturersById;
-window.loadManufacturers = loadManufacturers;
+// 5. DELETE MANUFACTURER
+async function deleteManufacturer(id) {
+  if (!confirm(`Are you sure you want to delete Manufacturer ID: ${id}?`)) return;
+
+  try {
+    await apiDeleteManufacturer(id);
+    alert("Manufacturer deleted successfully!");
+    fetchManufacturers();
+  } catch (error) {
+    console.error("Error deleting manufacturer:", error);
+    alert(`Failed to delete manufacturer: ${error.message}`);
+  }
+}
+
+// 6. OPEN DETAILS MODAL
+async function openDetailsModal(id) {
+  try {
+    const data = await apiGetManufacturerById(id);
+    const idVal = data.manufacturerId ?? data.ManufacturerId;
+    const nameVal = data.manufacturerName ?? data.ManufacturerName ?? "";
+    const countryVal = data.manufacturerCountry ?? data.ManufacturerCountry ?? "";
+    const contactVal = data.manufacturerContactInfo ?? data.ManufacturerContactInfo ?? "";
+
+    document.getElementById("detailId").innerText = idVal;
+    document.getElementById("detailName").innerText = nameVal;
+    document.getElementById("detailCountry").innerText = countryVal || "—";
+    document.getElementById("detailContact").innerText = contactVal || "—";
+
+    const modal = new bootstrap.Modal(document.getElementById("detailsModal"));
+    modal.show();
+  } catch (error) {
+    console.error("Error loading manufacturer details:", error);
+    alert(`Failed to fetch details: ${error.message}`);
+  }
+}
+
+// 7. OPEN EDIT MODAL
+async function openEditModal(id) {
+  try {
+    const data = await apiGetManufacturerById(id);
+    const idVal = data.manufacturerId ?? data.ManufacturerId;
+    const nameVal = data.manufacturerName ?? data.ManufacturerName ?? "";
+    const countryVal = data.manufacturerCountry ?? data.ManufacturerCountry ?? "";
+    const contactVal = data.manufacturerContactInfo ?? data.ManufacturerContactInfo ?? "";
+
+    document.getElementById("editId").value = idVal;
+    document.getElementById("editName").value = nameVal;
+    document.getElementById("editCountry").value = countryVal;
+    document.getElementById("editContact").value = contactVal;
+
+    const modal = new bootstrap.Modal(document.getElementById("editModal"));
+    modal.show();
+  } catch (error) {
+    console.error("Error loading manufacturer for edit:", error);
+    alert(`Failed to load manufacturer data: ${error.message}`);
+  }
+}
+
+// 8. SEARCH HANDLING (Backend & Client Fallback)
+async function handleSearch() {
+  const query = document.getElementById("searchInput").value.trim();
+
+  if (!query) {
+    renderTable(currentManufacturers);
+    return;
+  }
+
+  try {
+    const results = await apiSearchManufacturers(query);
+    renderTable(Array.isArray(results) ? results : [results]);
+  } catch {
+    // Client-side fallback
+    const filtered = currentManufacturers.filter((m) => {
+      const name = (m.manufacturerName ?? m.ManufacturerName ?? "").toLowerCase();
+      const country = (m.manufacturerCountry ?? m.ManufacturerCountry ?? "").toLowerCase();
+      return name.includes(query.toLowerCase()) || country.includes(query.toLowerCase());
+    });
+    renderTable(filtered);
+  }
+}
+
+function clearManufacturerSearch() {
+  document.getElementById("searchInput").value = "";
+  renderTable(currentManufacturers);
+}
+
+// 9. SORT BY NAME
+let sortAsc = true;
+function sortManufacturers() {
+  currentManufacturers.sort((a, b) => {
+    const nameA = (a.manufacturerName ?? a.ManufacturerName ?? "").toLowerCase();
+    const nameB = (b.manufacturerName ?? b.ManufacturerName ?? "").toLowerCase();
+    return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+  });
+  sortAsc = !sortAsc;
+  renderTable(currentManufacturers);
+}
+
+// Event Listeners & Initialize
+document.addEventListener("DOMContentLoaded", () => {
+  if (checkAccess()) {
+    fetchManufacturers();
+
+    document.getElementById("searchBtn")?.addEventListener("click", handleSearch);
+    document.getElementById("searchInput")?.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") handleSearch();
+      if (e.target.value === "") renderTable(currentManufacturers);
+    });
+  }
+});

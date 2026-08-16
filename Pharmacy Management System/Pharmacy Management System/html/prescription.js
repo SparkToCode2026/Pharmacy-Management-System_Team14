@@ -1,15 +1,9 @@
-const API = "https://localhost:7293/api/Prescription";
+// ============================================================
+// prescription.js
+// Logic for Prescription Management using api.js
+// ============================================================
 
-let currentEditId = 0;
-
-// Auth Helper Function
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    "Content-Type": "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-}
+let currentPrescriptions = [];
 
 // Set Today's Date Default for Input
 function setDefaultDate() {
@@ -19,206 +13,172 @@ function setDefaultDate() {
   }
 }
 
-// ===============================
-// GET ALL PRESCRIPTIONS
-// ===============================
+// 1. GET ALL PRESCRIPTIONS
 async function getAllPrescriptions() {
   try {
-    const response = await fetch(`${API}/GetAllPrescriptions`, {
-      headers: getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    displayPrescriptions(data);
+    const data = await apiGetPrescriptions();
+    currentPrescriptions = data || [];
+    displayPrescriptions(currentPrescriptions);
   } catch (error) {
     console.error("GET Error:", error);
     const table = document.getElementById("prescriptionsTableBody");
-    table.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Failed to load prescriptions.</td></tr>`;
+    if (table) {
+      table.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">Failed to load prescriptions: ${error.message}</td></tr>`;
+    }
   }
 }
 
-// ===============================
-// DISPLAY TABLE
-// ===============================
+// 2. DISPLAY TABLE
 function displayPrescriptions(data) {
   const table = document.getElementById("prescriptionsTableBody");
-  table.innerHTML = "";
+  if (!table) return;
 
   if (!data || data.length === 0) {
-    table.innerHTML = `<tr><td colspan="8" class="text-center">No prescriptions found.</td></tr>`;
+    table.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No prescriptions found.</td></tr>`;
     return;
   }
 
-  data.forEach((p) => {
-    const formattedDate = p.prescriptionDate
-      ? p.prescriptionDate.split("T")[0]
-      : "";
-    table.innerHTML += `
+  table.innerHTML = data
+    .map((p) => {
+      const id = p.prescriptionId ?? p.PrescriptionId;
+      const doctor = p.prescriptionDoctorName ?? p.PrescriptionDoctorName ?? "—";
+      const rawDate = p.prescriptionDate ?? p.PrescriptionDate;
+      const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString() : "—";
+      const dosage = p.prescriptionDosage ?? p.PrescriptionDosage ?? "—";
+      const duration = p.prescriptionDuration ?? p.PrescriptionDuration ?? "—";
+      const status = p.prescriptionStatus ?? p.PrescriptionStatus ?? "Pending";
+      const userId = p.userId ?? p.UserId ?? "—";
+
+      const badgeColor = status === "Approved" ? "success" : status === "Pending" ? "warning text-dark" : "secondary";
+
+      return `
         <tr>
-            <td>${p.prescriptionId}</td>
-            <td>${p.prescriptionDoctorName}</td>
+            <td class="fw-bold">#${id}</td>
+            <td class="fw-semibold">${doctor}</td>
             <td>${formattedDate}</td>
-            <td>${p.prescriptionDosage}</td>
-            <td>${p.prescriptionDuration}</td>
-            <td><span class="badge bg-${p.prescriptionStatus === "Approved" ? "success" : p.prescriptionStatus === "Pending" ? "warning text-dark" : "secondary"}">${p.prescriptionStatus}</span></td>
-            <td>${p.userId}</td>
+            <td>${dosage}</td>
+            <td>${duration}</td>
+            <td><span class="badge bg-${badgeColor}">${status}</span></td>
+            <td>${userId}</td>
             <td class="text-center text-nowrap">
-                <button class="btn btn-sm btn-warning me-1" onclick="openEditModal(${p.prescriptionId})">Edit</button>
-                <button class="btn btn-sm btn-danger" onclick="deletePrescription(${p.prescriptionId})">Delete</button>
+                <button class="btn btn-sm btn-warning me-1" onclick="openEditModal(${id})">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deletePrescriptionAction(${id})">Delete</button>
             </td>
         </tr>`;
-  });
+    })
+    .join("");
 }
 
-// ===============================
-// ADD PRESCRIPTION
-// ===============================
-document
-  .getElementById("addPrescriptionForm")
-  ?.addEventListener("submit", async function (e) {
-    e.preventDefault();
+// 3. ADD PRESCRIPTION
+document.getElementById("addPrescriptionForm")?.addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-    const prescription = {
-      prescriptionDoctorName: document.getElementById("prescriptionDoctorName")
-        .value,
-      prescriptionDate: document.getElementById("prescriptionDate").value,
-      prescriptionDosage: document.getElementById("prescriptionDosage").value,
-      prescriptionDuration: document.getElementById("prescriptionDuration")
-        .value,
-      prescriptionStatus: document.getElementById("prescriptionStatus").value,
-      userId: parseInt(document.getElementById("userId").value),
-    };
-
-    try {
-      const response = await fetch(`${API}/CreatePrescription`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(prescription),
-      });
-
-      if (response.ok) {
-        alert("Prescription Added Successfully");
-        document.getElementById("addPrescriptionForm").reset();
-        setDefaultDate();
-        getAllPrescriptions();
-      } else {
-        const errText = await response.text();
-        alert(`Error: ${errText}`);
-      }
-    } catch (error) {
-      console.error("Add Error:", error);
-    }
-  });
-
-// ===============================
-// DELETE PRESCRIPTION
-// ===============================
-async function deletePrescription(id) {
-  if (!confirm("Are you sure you want to delete this prescription?")) return;
+  const prescription = {
+    prescriptionDoctorName: document.getElementById("prescriptionDoctorName").value.trim(),
+    prescriptionDate: document.getElementById("prescriptionDate").value,
+    prescriptionDosage: document.getElementById("prescriptionDosage").value.trim(),
+    prescriptionDuration: document.getElementById("prescriptionDuration").value.trim(),
+    prescriptionStatus: document.getElementById("prescriptionStatus").value,
+    userId: parseInt(document.getElementById("userId").value),
+  };
 
   try {
-    const response = await fetch(`${API}/DeletePrescription/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-
-    if (response.ok) {
-      alert("Deleted Successfully");
-      getAllPrescriptions();
-    } else {
-      const errText = await response.text();
-      alert(`Delete failed: ${errText}`);
-    }
+    await apiCreatePrescription(prescription);
+    alert("Prescription added successfully!");
+    document.getElementById("addPrescriptionForm").reset();
+    setDefaultDate();
+    getAllPrescriptions();
   } catch (error) {
-    console.error("Delete Error:", error);
+    console.error("Add Error:", error);
+    alert(`Error adding prescription: ${error.message}`);
   }
-}
+});
 
-// ===============================
-// OPEN EDIT MODAL
-// ===============================
+// 4. OPEN EDIT MODAL
 async function openEditModal(id) {
-  currentEditId = id;
-
   try {
-    const response = await fetch(`${API}/GetPrescriptionById/${id}`, {
-      headers: getAuthHeaders(),
-    });
+    const p = await apiGetPrescriptionById(id);
 
-    if (!response.ok) {
-      alert("Failed to fetch prescription details.");
-      return;
-    }
+    document.getElementById("editPrescriptionId").value = p.prescriptionId ?? p.PrescriptionId;
+    document.getElementById("editDoctorName").value = p.prescriptionDoctorName ?? p.PrescriptionDoctorName ?? "";
 
-    const p = await response.json();
-
-    document.getElementById("editPrescriptionId").value = p.prescriptionId;
-    document.getElementById("editDoctorName").value = p.prescriptionDoctorName;
-    document.getElementById("editDate").value = p.prescriptionDate
-      ? p.prescriptionDate.substring(0, 10)
-      : "";
-    document.getElementById("editDosage").value = p.prescriptionDosage;
-    document.getElementById("editDuration").value = p.prescriptionDuration;
-    document.getElementById("editStatus").value = p.prescriptionStatus;
-    document.getElementById("editUserId").value = p.userId;
+    const rawDate = p.prescriptionDate ?? p.PrescriptionDate;
+    document.getElementById("editDate").value = rawDate ? rawDate.substring(0, 10) : "";
+    document.getElementById("editDosage").value = p.prescriptionDosage ?? p.PrescriptionDosage ?? "";
+    document.getElementById("editDuration").value = p.prescriptionDuration ?? p.PrescriptionDuration ?? "";
+    document.getElementById("editStatus").value = p.prescriptionStatus ?? p.PrescriptionStatus ?? "Pending";
+    document.getElementById("editUserId").value = p.userId ?? p.UserId ?? "";
 
     const modalEl = document.getElementById("editPrescriptionModal");
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
   } catch (error) {
     console.error("Fetch Single Error:", error);
+    alert("Failed to fetch prescription details: " + error.message);
   }
 }
 
-// ===============================
-// UPDATE PRESCRIPTION
-// ===============================
-document
-  .getElementById("editPrescriptionForm")
-  ?.addEventListener("submit", async function (e) {
-    e.preventDefault();
+// 5. UPDATE PRESCRIPTION
+document.getElementById("editPrescriptionForm")?.addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-    const id = parseInt(document.getElementById("editPrescriptionId").value);
+  const id = parseInt(document.getElementById("editPrescriptionId").value);
 
-    const prescription = {
-      prescriptionId: id,
-      prescriptionDoctorName: document.getElementById("editDoctorName").value,
-      prescriptionDate: document.getElementById("editDate").value,
-      prescriptionDosage: document.getElementById("editDosage").value,
-      prescriptionDuration: document.getElementById("editDuration").value,
-      prescriptionStatus: document.getElementById("editStatus").value,
-      userId: parseInt(document.getElementById("editUserId").value),
-    };
+  const prescription = {
+    prescriptionId: id,
+    prescriptionDoctorName: document.getElementById("editDoctorName").value.trim(),
+    prescriptionDate: document.getElementById("editDate").value,
+    prescriptionDosage: document.getElementById("editDosage").value.trim(),
+    prescriptionDuration: document.getElementById("editDuration").value.trim(),
+    prescriptionStatus: document.getElementById("editStatus").value,
+    userId: parseInt(document.getElementById("editUserId").value),
+  };
 
-    try {
-      const response = await fetch(`${API}/UpdatePrescription/${id}`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(prescription),
-      });
+  try {
+    await apiUpdatePrescription(id, prescription);
+    alert("Prescription updated successfully!");
+    const modalEl = document.getElementById("editPrescriptionModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
 
-      if (response.ok) {
-        alert("Updated Successfully");
-        const modalEl = document.getElementById("editPrescriptionModal");
-        const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+    getAllPrescriptions();
+  } catch (error) {
+    console.error("Update Error:", error);
+    alert(`Update failed: ${error.message}`);
+  }
+});
 
-        getAllPrescriptions();
-      } else {
-        const errText = await response.text();
-        alert(`Update failed: ${errText}`);
-      }
-    } catch (error) {
-      console.error("Update Error:", error);
-    }
-  });
+// 6. DELETE PRESCRIPTION
+async function deletePrescriptionAction(id) {
+  if (!confirm(`Are you sure you want to delete prescription #${id}?`)) return;
 
-// ===============================
+  try {
+    await apiDeletePrescription(id);
+    alert("Prescription deleted successfully!");
+    getAllPrescriptions();
+  } catch (error) {
+    console.error("Delete Error:", error);
+    alert(`Delete failed: ${error.message}`);
+  }
+}
+
+// 7. SORT PRESCRIPTIONS
+async function sortPrescriptionsAction() {
+  try {
+    const sorted = await apiSortPrescriptions();
+    displayPrescriptions(sorted);
+  } catch {
+    currentPrescriptions.sort((a, b) => {
+      const docA = (a.prescriptionDoctorName || "").toLowerCase();
+      const docB = (b.prescriptionDoctorName || "").toLowerCase();
+      return docA.localeCompare(docB);
+    });
+    displayPrescriptions(currentPrescriptions);
+  }
+}
+
 // INITIAL LOAD
-// ===============================
-setDefaultDate();
-getAllPrescriptions();
+document.addEventListener("DOMContentLoaded", () => {
+  setDefaultDate();
+  getAllPrescriptions();
+});

@@ -22,13 +22,13 @@
       <!-- Add New Branch -->
       <div class="card mb-4 shadow-sm">
         <div class="card-header bg-primary text-white">
-          <h5 class="card-title mb-0">Add new branch</h5>
+          <h5 class="card-title mb-0">Add New Branch</h5>
         </div>
         <div class="card-body">
           <form id="branchForm">
             <div class="row g-3">
               <div class="col-md-3">
-                <label for="BranchName" class="form-label">Name</label>
+                <label for="BranchName" class="form-label">Branch Name</label>
                 <input
                   type="text"
                   class="form-control"
@@ -61,16 +61,15 @@
                 <label for="BranchPhone" class="form-label">Phone</label>
                 <input
                   type="tel"
-                  inputmode="numeric"
                   class="form-control"
                   id="BranchPhone"
-                  placeholder="0000 0000"
+                  placeholder="e.g. 12345678"
                   required
                 />
               </div>
             </div>
             <button type="submit" class="btn btn-success mt-3">
-              Add branch
+              Add Branch
             </button>
           </form>
         </div>
@@ -82,8 +81,7 @@
           class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
         >
           <div class="d-flex align-items-center gap-3">
-            <h5 class="card-title mb-0">Branches List</h5>
-            <!-- Total Branches Counter Badge (GetTotalBranches) -->
+            <h5 class="card-title mb-0">Branches Directory</h5>
             <span class="badge bg-light text-dark" id="totalBranchesBadge"
               >Total: --</span
             >
@@ -95,9 +93,9 @@
           </div>
         </div>
         <div class="card-body">
-          <!-- City Filter Input (GetByBranchCity) -->
+          <!-- City Filter Input -->
           <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-5">
               <div class="input-group">
                 <input
                   type="text"
@@ -123,26 +121,28 @@
             </div>
           </div>
 
-          <table class="table table-striped table-hover align-middle">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Branch Name</th>
-                <th>Address</th>
-                <th>City</th>
-                <th>Phone</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="branchesTable">
-              <!-- Dynamic Data -->
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Branch Name</th>
+                  <th>Address</th>
+                  <th>City</th>
+                  <th>Phone</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="branchesTable">
+                <!-- Dynamic Data -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </main>
 
-    <!-- Edit Branch Modal (UpdateAllBranch) -->
+    <!-- Edit Branch Modal -->
     <div
       class="modal fade"
       id="editBranchModal"
@@ -164,7 +164,7 @@
             <form id="editBranchForm">
               <input type="hidden" id="editBranchId" />
               <div class="mb-3">
-                <label for="editBranchName" class="form-label">Name</label>
+                <label for="editBranchName" class="form-label">Branch Name</label>
                 <input
                   type="text"
                   class="form-control"
@@ -173,9 +173,7 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="editBranchAddress" class="form-label"
-                  >Address</label
-                >
+                <label for="editBranchAddress" class="form-label">Address</label>
                 <input
                   type="text"
                   class="form-control"
@@ -219,7 +217,7 @@
       </div>
     </div>
 
-    <!-- View Branch Modal (GetBranch/{id}) -->
+    <!-- View Branch Modal -->
     <div
       class="modal fade"
       id="viewBranchModal"
@@ -232,7 +230,7 @@
             <h5 class="modal-title">Branch Details</h5>
             <button
               type="button"
-              class="btn-close"
+              class="btn-close btn-close-white"
               data-bs-dismiss="modal"
               aria-label="Close"
             ></button>
@@ -249,7 +247,8 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="branches.js"></script>
+    <script src="api.js"></script>
     <script src="navbar.js"></script>
+    <script src="branches.js"></script>
   </body>
 </html>

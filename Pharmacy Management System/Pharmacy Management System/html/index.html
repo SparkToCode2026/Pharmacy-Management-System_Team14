@@ -15,88 +15,87 @@
     <div id="navbar-placeholder"></div>
 
     <!-- Hero Header -->
-    <header class="hero-section">
-      <div class="container">
-        <h1 class="hero-title">Pharmacy Management System</h1>
-        <p class="hero-subtitle">
-          Streamline inventory, prescriptions, and sales in one place.
+    <header class="hero-section text-center py-5 bg-white border-bottom">
+      <div class="container py-4">
+        <h1 class="hero-title fw-bold display-5 text-primary mb-3">💊 Pharmacy Management System</h1>
+        <p class="hero-subtitle lead text-muted mx-auto mb-4" style="max-width: 650px;">
+          Streamline inventory, prescriptions, orders, and sales analytics all in one unified platform.
         </p>
-        <button type="button" class="btn btn-primary">Get Started</button>
+        <div class="d-flex justify-content-center gap-3">
+          <a href="auth.html" id="getStartedBtn" class="btn btn-primary btn-lg px-4 shadow-sm">Get Started</a>
+          <a href="user-medicines.html" class="btn btn-outline-secondary btn-lg px-4">Browse Medicines</a>
+        </div>
       </div>
     </header>
 
     <!-- Main Content Grid -->
-    <main class="main-content" id="features">
+    <main class="main-content py-5" id="features">
       <div class="container">
+        <h2 class="text-center mb-4 fw-bold text-dark">System Modules</h2>
         <div class="card-grid">
-          <!-- Card 1 -->
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">Inventory Tracking</h3>
-              <p class="card-text">
-                Monitor medicine stock levels and receive automated reorder
-                alerts.
+          <!-- Card 1: Inventory -->
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5 fw-bold text-primary">📦 Stock & Inventory</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Monitor real-time medicine stock levels, reorder alerts, and track restocking dates across branches.
               </p>
-              <a href="inventory.html" class="btn btn-primary">Read More</a>
+              <a href="stocklevel.html" class="btn btn-outline-primary mt-auto">Manage Stock</a>
             </div>
           </div>
 
-          <!-- Card 2 -->
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">Prescription Management</h3>
-              <p class="card-text">
-                Process patient prescriptions efficiently and keep digital
-                records.
+          <!-- Card 2: Prescriptions -->
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5 fw-bold text-primary">📋 Prescriptions</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Process patient prescriptions efficiently, track doctors, dosages, durations, and approval statuses.
               </p>
-              <a href="prescriptions.html" class="btn btn-primary">Read More</a>
+              <a href="prescriptions.html" class="btn btn-outline-primary mt-auto">Manage Prescriptions</a>
             </div>
           </div>
 
-          <!-- Card 3 -->
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">Sales & Analytics</h3>
-              <p class="card-text">
-                Generate detailed financial reports and sales receipts
-                instantly.
+          <!-- Card 3: Orders & Sales -->
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5 fw-bold text-primary">💳 Orders & Payments</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Create and track customer orders, process transactions, and view sales revenue analytics.
               </p>
-              <a href="sales.html" class="btn btn-primary">Read More</a>
+              <a href="orders.html" class="btn btn-outline-primary mt-auto">Manage Orders</a>
             </div>
           </div>
 
-          <!-- Card 4 -->
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">Suppliers & Orders</h3>
-              <p class="card-text">
-                Manage vendor contacts, purchase orders, and stock deliveries.
+          <!-- Card 4: Medicines & Categories -->
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5 fw-bold text-primary">💊 Medicines Catalog</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Maintain comprehensive medicine records, pricing, categories, production, and expiry dates.
               </p>
-              <a href="suppliers.html" class="btn btn-primary">Read More</a>
+              <a href="Medicine.html" class="btn btn-outline-primary mt-auto">View Catalog</a>
             </div>
           </div>
 
-          <!-- Card 5 -->
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">Customer Records</h3>
-              <p class="card-text">
-                Maintain patient history, profiles, and contact information
-                securely.
+          <!-- Card 5: Supply Chain -->
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5 fw-bold text-primary">🚚 Suppliers & Manufacturers</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Coordinate with pharmaceutical manufacturers and suppliers to maintain steady medicine supply.
               </p>
-              <a href="customers.html" class="btn btn-primary">Read More</a>
+              <a href="suppliers.html" class="btn btn-outline-primary mt-auto">View Suppliers</a>
             </div>
           </div>
 
-          <!-- Card 6 -->
-          <div class="card">
-            <div class="card-body">
-              <h3 class="card-title">System Settings</h3>
-              <p class="card-text">
-                Configure user roles, access permissions, and system
-                preferences.
+          <!-- Card 6: Users & Profiles -->
+          <div class="card h-100 shadow-sm border-0">
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5 fw-bold text-primary">👥 Users & Profiles</h3>
+              <p class="card-text text-muted flex-grow-1">
+                Configure user roles, account credentials, and detailed customer medical contact profiles.
               </p>
-              <a href="settings.html" class="btn btn-primary">Read More</a>
+              <a href="users.html" class="btn btn-outline-primary mt-auto">Manage Users</a>
             </div>
           </div>
         </div>
@@ -106,21 +105,21 @@
     <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>
 
-    <!-- Shared Component Loader Script -->
-    <script>
-      fetch("navbar.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("navbar-placeholder").innerHTML = data;
-        });
-
-      fetch("footer.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("footer-placeholder").innerHTML = data;
-        });
-    </script>
+    <!-- Bootstrap 5 JS, API, Navbar -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
     <script src="navbar.js"></script>
+    <script>
+      // Adjust "Get Started" button destination based on auth status
+      document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("token");
+        const role = getUserRole();
+        const btn = document.getElementById("getStartedBtn");
+        if (token && role) {
+          btn.href = ["admin", "pharmacist"].includes(role) ? "admin-dashboard.html" : "user-dashboard.html";
+          btn.textContent = "Go to Dashboard";
+        }
+      });
+    </script>
   </body>
 </html>

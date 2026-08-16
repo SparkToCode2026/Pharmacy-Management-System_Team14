@@ -1,13 +1,14 @@
-const API = "https://localhost:7293/User";
+// ============================================================
+// User.js
+// Logic for User Management using api.js
+// ============================================================
 
-// Map Role Names to Database Role IDs
 const ROLE_MAP = {
   Admin: 1,
   Pharmacist: 2,
   User: 3,
 };
 
-// Map Role IDs back to Display Names
 const ROLE_NAMES = {
   1: "Admin",
   2: "Pharmacist",
@@ -18,91 +19,122 @@ let currentUsers = [];
 let isAscending = true;
 
 // 1. Fetch and display users in the table
-function loadUsers() {
-  fetch(`${API}/GetAllUsers`)
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-      return res.json();
-    })
-    .then((users) => {
-      currentUsers = users || [];
-      renderTable(currentUsers);
-    })
-    .catch((err) => {
-      console.error("Failed to load users:", err);
-      document.getElementById("usersTableBody").innerHTML = `
+async function loadUsers() {
+  try {
+    const users = await apiGetUsers();
+    currentUsers = users || [];
+    renderTable(currentUsers);
+  } catch (err) {
+    console.error("Failed to load users:", err);
+    const tbody = document.getElementById("usersTableBody");
+    if (tbody) {
+      tbody.innerHTML = `
         <tr>
-          <td colspan="5" class="text-center text-danger">Error connecting to server.</td>
+          <td colspan="5" class="text-center text-danger">Error loading users from server.</td>
         </tr>`;
-    });
+    }
+  }
 }
 
 // Render user array to table
 function renderTable(users) {
   const tbody = document.getElementById("usersTableBody");
+  if (!tbody) return;
 
   if (!users || users.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center">No registered users found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No registered users found.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = users
-    .map(
-      (u) => `
-    <tr>
-      <td>${u.userId}</td>
-      <td>${u.username}</td>
-      <td>${u.email}</td>
-      <td>${ROLE_NAMES[u.roleId] || u.roleId || "N/A"}</td>
-      <td class="text-center">
-        <button class="btn btn-sm btn-warning me-1" onclick="editUser(${u.userId}, '${u.username}', '${u.email}', ${u.roleId || 0})">Edit</button>
-        <button class="btn btn-sm btn-dark me-1" onclick="openPasswordModal(${u.userId})">Password</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.userId})">Delete</button>
-      </td>
-    </tr>
-  `,
-    )
+    .map((u) => {
+      const roleId = u.roleId || u.RoleId;
+      const roleName = ROLE_NAMES[roleId] || u.role?.roleName || u.Role?.RoleName || "User";
+      const badgeColor = roleId === 1 ? "primary" : roleId === 2 ? "info" : "secondary";
+
+      return `
+      <tr>
+        <td>${u.userId}</td>
+        <td class="fw-semibold">${u.username}</td>
+        <td>${u.email}</td>
+        <td><span class="badge bg-${badgeColor}">${roleName}</span></td>
+        <td class="text-center text-nowrap">
+          <button class="btn btn-sm btn-warning me-1" onclick="editUser(${u.userId}, '${escapeHtml(u.username)}', '${escapeHtml(u.email)}', ${roleId || 3})">Edit</button>
+          <button class="btn btn-sm btn-dark me-1" onclick="openPasswordModal(${u.userId})">Password</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.userId})">Delete</button>
+        </td>
+      </tr>
+    `;
+    })
     .join("");
+}
+
+function escapeHtml(text) {
+  if (!text) return "";
+  return String(text)
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "&quot;");
+}
+
+// Search Filter
+function filterUsers() {
+  const query = document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
+  if (!query) {
+    renderTable(currentUsers);
+    return;
+  }
+
+  const filtered = currentUsers.filter((u) => {
+    const username = (u.username || u.Username || "").toLowerCase();
+    const email = (u.email || u.Email || "").toLowerCase();
+    const roleId = u.roleId || u.RoleId;
+    const roleName = (ROLE_NAMES[roleId] || "").toLowerCase();
+    return username.includes(query) || email.includes(query) || roleName.includes(query);
+  });
+
+  renderTable(filtered);
+}
+
+function clearUserSearch() {
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) searchInput.value = "";
+  renderTable(currentUsers);
 }
 
 // Sort function for the Sort by ID button
 function sortUsersById() {
-  currentUsers.sort((a, b) =>
-    isAscending ? a.userId - b.userId : b.userId - a.userId,
-  );
   isAscending = !isAscending;
-  renderTable(currentUsers);
+  currentUsers.sort((a, b) => (isAscending ? a.userId - b.userId : b.userId - a.userId));
+  const sortBtn = document.getElementById("sortBtn");
+  if (sortBtn) {
+    sortBtn.textContent = isAscending ? "Sort by ID (Asc)" : "Sort by ID (Desc)";
+  }
+  filterUsers();
 }
 
 // 2. Add New User (POST /User/register)
-document.getElementById("addUserForm")?.addEventListener("submit", (e) => {
+document.getElementById("addUserForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const roleValue = document.getElementById("userRole").value;
   const roleId = ROLE_MAP[roleValue] || 3;
 
   const newUser = {
-    username: document.getElementById("userName").value,
-    email: document.getElementById("userEmail").value,
+    username: document.getElementById("userName").value.trim(),
+    email: document.getElementById("userEmail").value.trim(),
     password: document.getElementById("userPassword").value,
     roleId: roleId,
   };
 
-  fetch(`${API}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(newUser),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        document.getElementById("addUserForm").reset();
-        loadUsers();
-      } else {
-        const errorMsg = await res.text();
-        alert(`Registration failed: ${errorMsg}`);
-      }
-    })
-    .catch((err) => console.error("Error adding user:", err));
+  try {
+    await apiRegisterUser(newUser);
+    alert("User registered successfully!");
+    document.getElementById("addUserForm").reset();
+    loadUsers();
+  } catch (err) {
+    console.error("Error adding user:", err);
+    alert(`Registration failed: ${err.message}`);
+  }
 });
 
 // 3. Open and populate Edit User Modal
@@ -122,38 +154,32 @@ function editUser(id, name, email, roleId) {
 }
 
 // 4. Update User (PUT /User/UpdateUser?id={id})
-document.getElementById("editUserForm")?.addEventListener("submit", (e) => {
+document.getElementById("editUserForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const id = document.getElementById("editUserId").value;
+  const id = parseInt(document.getElementById("editUserId").value);
   const roleValue = document.getElementById("editUserRole").value;
   const roleId = ROLE_MAP[roleValue] || 3;
 
   const updatedData = {
-    userId: parseInt(id),
-    username: document.getElementById("editUserName").value,
-    email: document.getElementById("editUserEmail").value,
+    userId: id,
+    username: document.getElementById("editUserName").value.trim(),
+    email: document.getElementById("editUserEmail").value.trim(),
     roleId: roleId,
   };
 
-  fetch(`${API}/UpdateUser?id=${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedData),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        const modalElement = document.getElementById("editUserModal");
-        const modal = bootstrap.Modal.getInstance(modalElement);
-        if (modal) modal.hide();
+  try {
+    await apiUpdateUser(id, updatedData);
+    alert("User updated successfully!");
+    const modalElement = document.getElementById("editUserModal");
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) modal.hide();
 
-        loadUsers();
-      } else {
-        const errText = await res.text();
-        alert(`Update failed: ${errText}`);
-      }
-    })
-    .catch((err) => console.error("Error updating user:", err));
+    loadUsers();
+  } catch (err) {
+    console.error("Error updating user:", err);
+    alert(`Update failed: ${err.message}`);
+  }
 });
 
 // 5. Open Update Password Modal
@@ -167,56 +193,46 @@ function openPasswordModal(id) {
 }
 
 // 6. Update Password Submit Event (PATCH /User/UpdatePassword?id={id})
-document
-  .getElementById("updatePasswordForm")
-  ?.addEventListener("submit", (e) => {
-    e.preventDefault();
+document.getElementById("updatePasswordForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const id = document.getElementById("pwdUserId").value;
-    const newPassword = document.getElementById("newPasswordInput").value;
+  const id = parseInt(document.getElementById("pwdUserId").value);
+  const newPassword = document.getElementById("newPasswordInput").value;
 
-    fetch(`${API}/UpdatePassword?id=${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // JSON.stringify wraps the raw string in quotes, which ASP.NET [FromBody] string expects
-      body: JSON.stringify(newPassword),
-    })
-      .then(async (res) => {
-        if (res.ok) {
-          alert("Password updated successfully!");
+  try {
+    await apiUpdatePassword(id, newPassword);
+    alert("Password updated successfully!");
 
-          // Hide modal
-          const modalElement = document.getElementById("updatePasswordModal");
-          const modal = bootstrap.Modal.getInstance(modalElement);
-          if (modal) modal.hide();
+    const modalElement = document.getElementById("updatePasswordModal");
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) modal.hide();
 
-          // Reset form
-          document.getElementById("updatePasswordForm").reset();
-        } else {
-          const errText = await res.text();
-          console.error("Backend error response:", errText);
-          alert(`Failed to update password: ${errText || res.statusText}`);
-        }
-      })
-      .catch((err) => console.error("Error updating password:", err));
-  });
+    document.getElementById("updatePasswordForm").reset();
+  } catch (err) {
+    console.error("Error updating password:", err);
+    alert(`Failed to update password: ${err.message}`);
+  }
+});
 
 // 7. Delete User (DELETE /User/DeleteUser?id={id})
-function deleteUser(id) {
-  if (confirm("Are you sure you want to delete this user?")) {
-    fetch(`${API}/DeleteUser?id=${id}`, { method: "DELETE" })
-      .then((res) => {
-        if (res.ok) {
-          loadUsers();
-        } else {
-          alert("Failed to delete user.");
-        }
-      })
-      .catch((err) => console.error("Error deleting user:", err));
+async function deleteUser(id) {
+  if (!confirm("Are you sure you want to delete this user?")) return;
+
+  try {
+    await apiDeleteUser(id);
+    alert("User deleted successfully!");
+    loadUsers();
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    alert(`Failed to delete user: ${err.message}`);
   }
 }
 
-// Load user data on startup
-loadUsers();
+// Setup search listener
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", filterUsers);
+  }
+  loadUsers();
+});

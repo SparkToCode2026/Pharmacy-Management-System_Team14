@@ -12,6 +12,7 @@
   </head>
 
   <body>
+    <!-- Dynamic Navigation Bar -->
     <div id="navbar-placeholder"></div>
 
     <main class="container my-5">
@@ -26,18 +27,18 @@
           <form id="addPrescriptionForm">
             <div class="row g-3">
               <div class="col-md-3">
-                <label class="form-label">Doctor Name</label>
+                <label class="form-label fw-bold">Doctor Name <span class="text-danger">*</span></label>
                 <input
                   type="text"
                   class="form-control"
                   id="prescriptionDoctorName"
-                  placeholder="Enter doctor name"
+                  placeholder="e.g. Dr. John Smith"
                   required
                 />
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Prescription Date</label>
+                <label class="form-label fw-bold">Prescription Date <span class="text-danger">*</span></label>
                 <input
                   type="date"
                   class="form-control"
@@ -47,50 +48,49 @@
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Dosage</label>
+                <label class="form-label fw-bold">Dosage <span class="text-danger">*</span></label>
                 <input
                   type="text"
                   class="form-control"
                   id="prescriptionDosage"
-                  placeholder="Enter dosage"
+                  placeholder="e.g. 500mg twice daily"
                   required
                 />
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Duration</label>
+                <label class="form-label fw-bold">Duration <span class="text-danger">*</span></label>
                 <input
                   type="text"
                   class="form-control"
                   id="prescriptionDuration"
-                  placeholder="Example: 7 Days"
+                  placeholder="e.g. 7 Days"
                   required
                 />
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Status</label>
+                <label class="form-label fw-bold">Status <span class="text-danger">*</span></label>
                 <select class="form-select" id="prescriptionStatus" required>
-                  <option value="">Select status...</option>
-                  <option value="Pending">Pending</option>
+                  <option value="Pending" selected>Pending</option>
                   <option value="Approved">Approved</option>
                   <option value="Completed">Completed</option>
                 </select>
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">User ID</label>
+                <label class="form-label fw-bold">User ID <span class="text-danger">*</span></label>
                 <input
                   type="number"
                   class="form-control"
                   id="userId"
-                  placeholder="Enter User ID"
+                  placeholder="User account ID"
                   required
                 />
               </div>
             </div>
 
-            <button type="submit" class="btn btn-success mt-3">
+            <button type="submit" class="btn btn-success mt-3 px-4">
               Add Prescription
             </button>
           </form>
@@ -100,12 +100,17 @@
       <!-- Prescription Table -->
       <div class="card shadow-sm">
         <div
-          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
+          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap gap-2"
         >
           <h5 class="card-title mb-0">Registered Prescriptions</h5>
-          <button class="btn btn-sm btn-light" onclick="getAllPrescriptions()">
-            Refresh
-          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-light" id="sortPrescriptionsBtn" onclick="sortPrescriptionsAction()">
+              Sort Prescriptions
+            </button>
+            <button class="btn btn-sm btn-light" onclick="getAllPrescriptions()">
+              Refresh
+            </button>
+          </div>
         </div>
 
         <div class="card-body">
@@ -141,7 +146,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header bg-warning text-dark">
-            <h5 class="modal-title">Edit Prescription</h5>
+            <h5 class="modal-title fw-bold">Edit Prescription</h5>
             <button
               type="button"
               class="btn-close"
@@ -154,7 +159,7 @@
               <input type="hidden" id="editPrescriptionId" />
 
               <div class="mb-3">
-                <label class="form-label">Doctor Name</label>
+                <label class="form-label fw-bold">Doctor Name</label>
                 <input
                   type="text"
                   class="form-control"
@@ -164,7 +169,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Prescription Date</label>
+                <label class="form-label fw-bold">Prescription Date</label>
                 <input
                   type="date"
                   class="form-control"
@@ -174,7 +179,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Dosage</label>
+                <label class="form-label fw-bold">Dosage</label>
                 <input
                   type="text"
                   class="form-control"
@@ -184,7 +189,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Duration</label>
+                <label class="form-label fw-bold">Duration</label>
                 <input
                   type="text"
                   class="form-control"
@@ -194,7 +199,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Status</label>
+                <label class="form-label fw-bold">Status</label>
                 <select class="form-select" id="editStatus">
                   <option value="Pending">Pending</option>
                   <option value="Approved">Approved</option>
@@ -203,7 +208,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">User ID</label>
+                <label class="form-label fw-bold">User ID</label>
                 <input
                   type="number"
                   class="form-control"
@@ -230,23 +235,13 @@
       </div>
     </div>
 
+    <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>
 
+    <!-- Bootstrap JS, API, Navbar, Prescription JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      fetch("navbar.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("navbar-placeholder").innerHTML = data;
-        });
-
-      fetch("footer.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("footer-placeholder").innerHTML = data;
-        });
-    </script>
-    <script src="prescription.js"></script>
+    <script src="api.js"></script>
     <script src="navbar.js"></script>
+    <script src="prescription.js"></script>
   </body>
 </html>

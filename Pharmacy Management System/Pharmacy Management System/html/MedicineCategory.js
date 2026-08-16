@@ -1,142 +1,36 @@
-const API_URL = "https://localhost:7293/api/MedicineCategory";
-let categoriesList = [];
+// ============================================================
+// MedicineCategory.js
+// Logic for Medicine Category Management using api.js
+// ============================================================
 
-function getAuthToken() {
-  return localStorage.getItem("token");
-}
+let currentCategories = [];
 
-function checkAuth() {
-  const token = getAuthToken();
+// Check Access
+function checkAccess() {
+  const token = localStorage.getItem("token");
   if (!token) {
-    window.location.href = "login.html";
+    window.location.href = "auth.html";
     return false;
   }
-  return token;
+  return true;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  if (!checkAuth()) return;
-
-  loadCategories();
-
-  document.getElementById("searchBtn")?.addEventListener("click", handleSearch);
-  document.getElementById("searchInput")?.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleSearch();
-  });
-
-  // Add Category Submit (POST)
-  document
-    .getElementById("addCategoryForm")
-    ?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const payload = {
-        medicineCategoryName: document.getElementById("categoryName").value,
-        medicineCategoryDescription: document.getElementById(
-          "categoryDescription",
-        ).value,
-      };
-
-      if (
-        await sendRequest(`${API_URL}/AddMedicineCategory`, "POST", payload)
-      ) {
-        e.target.reset();
-        const modalEl = document.getElementById("addCategoryModal");
-        const modalInstance =
-          bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.hide();
-        loadCategories();
-      }
-    });
-
-  // Edit Category Submit (PUT)
-  document
-    .getElementById("editCategoryForm")
-    ?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = parseInt(document.getElementById("editCategoryId").value);
-      const payload = {
-        medicineCategoryId: id,
-        medicineCategoryName: document.getElementById("editCategoryName").value,
-        medicineCategoryDescription: document.getElementById(
-          "editCategoryDescription",
-        ).value,
-      };
-
-      if (
-        await sendRequest(
-          `${API_URL}/UpdateMedicineCategory/${id}`,
-          "PUT",
-          payload,
-        )
-      ) {
-        const modalEl = document.getElementById("editCategoryModal");
-        const modalInstance =
-          bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modalInstance.hide();
-        loadCategories();
-      }
-    });
-});
-
-async function sendRequest(url, method, body = null) {
-  const token = checkAuth();
-  if (!token) return false;
-
+// 1. GET ALL CATEGORIES
+async function fetchCategories() {
   try {
-    const headers = {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-
-    const options = { method, headers };
-    if (body !== null)
-      options.body =
-        typeof body === "string" ? JSON.stringify(body) : JSON.stringify(body);
-
-    const res = await fetch(url, options);
-
-    if (res.status === 401 || res.status === 403) {
-      alert("Session expired or unauthorized. Please log in again.");
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-      return false;
+    const data = await apiGetMedicineCategories();
+    currentCategories = data || [];
+    renderTable(currentCategories);
+  } catch (error) {
+    console.error("Error loading categories:", error);
+    const tbody = document.getElementById("categoriesTableBody");
+    if (tbody) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">Failed to load categories: ${error.message}</td></tr>`;
     }
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(errorText || "Action failed");
-    }
-    return true;
-  } catch (err) {
-    alert("Error: " + err.message);
-    return false;
   }
 }
 
-// Fetch All Categories (GET)
-async function loadCategories() {
-  const token = getAuthToken();
-
-  try {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch(`${API_URL}/GetAllMedicineCategories`, { headers });
-
-    if (res.status === 401 || res.status === 403) {
-      alert("Session expired or unauthorized. Please log in again.");
-      localStorage.removeItem("token");
-      window.location.href = "login.html";
-      return;
-    }
-
-    if (!res.ok) throw new Error("Failed to load categories");
-    categoriesList = await res.json();
-    renderTable(categoriesList);
-  } catch (err) {
-    alert("Error loading categories: " + err.message);
-  }
-}
-
-// Render Table
+// Render data to table
 function renderTable(data) {
   const tbody = document.getElementById("categoriesTableBody");
   if (!tbody) return;
@@ -147,164 +41,218 @@ function renderTable(data) {
   }
 
   tbody.innerHTML = data
-    .map(
-      (item) => `
-    <tr>
-      <td>${item.medicineCategoryId}</td>
-      <td class="fw-bold">${item.medicineCategoryName || "N/A"}</td>
-      <td>${item.medicineCategoryDescription || "N/A"}</td>
-      <td class="text-center">
-        <button class="btn btn-sm btn-info text-white me-1" onclick="openDetailsModal(${item.medicineCategoryId})">Details</button>
-        <button class="btn btn-sm btn-warning me-1" onclick="openEditModal(${item.medicineCategoryId})">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteCategory(${item.medicineCategoryId})">Delete</button>
-      </td>
-    </tr>
-  `,
-    )
+    .map((item) => {
+      const id = item.medicineCategoryId ?? item.MedicineCategoryId;
+      const name = item.medicineCategoryName ?? item.MedicineCategoryName ?? item.categoryName ?? item.CategoryName ?? "";
+      const desc = item.medicineCategoryDescription ?? item.MedicineCategoryDescription ?? item.categoryDescription ?? item.CategoryDescription ?? "";
+
+      return `
+        <tr>
+          <td class="fw-bold">${id}</td>
+          <td>${name}</td>
+          <td>${desc}</td>
+          <td class="text-center text-nowrap">
+            <button class="btn btn-info btn-sm text-white me-1" onclick="openDetailsModal(${id})">Details</button>
+            <button class="btn btn-warning btn-sm me-1" onclick="openEditModal(${id})">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${id})">Delete</button>
+          </td>
+        </tr>
+      `;
+    })
     .join("");
 }
 
-// Handles local, Name API, and Description API searches
-async function handleSearch() {
-  const query = document.getElementById("searchInput")?.value.trim() || "";
-  const type = document.getElementById("searchType")?.value || "client";
+// 2. ADD CATEGORY
+document.getElementById("addCategoryForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  if (!query) {
-    loadCategories();
+  const name = document.getElementById("categoryName").value.trim();
+  const description = document.getElementById("categoryDescription").value.trim();
+
+  const newCategory = {
+    medicineCategoryName: name,
+    medicineCategoryDescription: description,
+  };
+
+  try {
+    await apiAddMedicineCategory(newCategory);
+    alert("Category added successfully!");
+
+    document.getElementById("addCategoryForm").reset();
+    const modalEl = document.getElementById("addCategoryModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+
+    fetchCategories();
+  } catch (error) {
+    console.error("Error adding category:", error);
+    alert(`Failed to add category: ${error.message}`);
+  }
+});
+
+// 3. EDIT FULL CATEGORY (PUT)
+document.getElementById("editCategoryForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const id = document.getElementById("editCategoryId").value;
+  const name = document.getElementById("editCategoryName").value.trim();
+  const description = document.getElementById("editCategoryDescription").value.trim();
+
+  const updatedCategory = {
+    medicineCategoryId: parseInt(id),
+    medicineCategoryName: name,
+    medicineCategoryDescription: description,
+  };
+
+  try {
+    await apiUpdateMedicineCategory(id, updatedCategory);
+    alert("Category updated successfully!");
+
+    const modalEl = document.getElementById("editCategoryModal");
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal?.hide();
+
+    fetchCategories();
+  } catch (error) {
+    console.error("Error updating category:", error);
+    alert(`Failed to update category: ${error.message}`);
+  }
+});
+
+// 4. PATCH CATEGORY NAME
+async function patchCategoryName() {
+  const id = document.getElementById("editCategoryId").value;
+  const name = document.getElementById("editCategoryName").value.trim();
+
+  if (!name) return alert("Category Name cannot be empty.");
+
+  try {
+    await apiUpdateMedicineCategoryName(id, name);
+    alert("Category Name patched successfully!");
+    fetchCategories();
+  } catch (error) {
+    console.error("Error patching category name:", error);
+    alert(`Patch failed: ${error.message}`);
+  }
+}
+
+// 5. PATCH CATEGORY DESCRIPTION
+async function patchCategoryDescription() {
+  const id = document.getElementById("editCategoryId").value;
+  const description = document.getElementById("editCategoryDescription").value.trim();
+
+  try {
+    await apiUpdateMedicineCategoryDescription(id, description);
+    alert("Category Description patched successfully!");
+    fetchCategories();
+  } catch (error) {
+    console.error("Error patching category description:", error);
+    alert(`Patch failed: ${error.message}`);
+  }
+}
+
+// 6. DELETE CATEGORY
+async function deleteCategory(id) {
+  if (!confirm(`Are you sure you want to delete Category ID: ${id}?`)) return;
+
+  try {
+    await apiDeleteMedicineCategory(id);
+    alert("Category deleted successfully!");
+    fetchCategories();
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    alert(`Failed to delete category: ${error.message}`);
+  }
+}
+
+// 7. OPEN DETAILS MODAL
+async function openDetailsModal(id) {
+  try {
+    const data = await apiGetMedicineCategoryById(id);
+    const idVal = data.medicineCategoryId ?? data.MedicineCategoryId;
+    const nameVal = data.medicineCategoryName ?? data.MedicineCategoryName ?? data.categoryName ?? data.CategoryName ?? "";
+    const descVal = data.medicineCategoryDescription ?? data.MedicineCategoryDescription ?? data.categoryDescription ?? data.CategoryDescription ?? "";
+
+    document.getElementById("detailCategoryId").innerText = idVal;
+    document.getElementById("detailCategoryName").innerText = nameVal;
+    document.getElementById("detailCategoryDescription").innerText = descVal;
+
+    const modal = new bootstrap.Modal(document.getElementById("categoryDetailsModal"));
+    modal.show();
+  } catch (error) {
+    console.error("Error loading category details:", error);
+    alert(`Failed to fetch details: ${error.message}`);
+  }
+}
+
+// 8. OPEN EDIT MODAL
+async function openEditModal(id) {
+  try {
+    const data = await apiGetMedicineCategoryById(id);
+    const idVal = data.medicineCategoryId ?? data.MedicineCategoryId;
+    const nameVal = data.medicineCategoryName ?? data.MedicineCategoryName ?? data.categoryName ?? data.CategoryName ?? "";
+    const descVal = data.medicineCategoryDescription ?? data.MedicineCategoryDescription ?? data.categoryDescription ?? data.CategoryDescription ?? "";
+
+    document.getElementById("editCategoryId").value = idVal;
+    document.getElementById("editCategoryName").value = nameVal;
+    document.getElementById("editCategoryDescription").value = descVal;
+
+    const modal = new bootstrap.Modal(document.getElementById("editCategoryModal"));
+    modal.show();
+  } catch (error) {
+    console.error("Error loading category for edit:", error);
+    alert(`Failed to load category data: ${error.message}`);
+  }
+}
+
+// 9. SEARCH HANDLING
+async function handleSearch() {
+  const type = document.getElementById("searchType").value;
+  const input = document.getElementById("searchInput").value.trim();
+
+  if (!input) {
+    renderTable(currentCategories);
     return;
   }
 
   if (type === "client") {
-    const filtered = categoriesList.filter(
-      (c) =>
-        c.medicineCategoryName?.toLowerCase().includes(query.toLowerCase()) ||
-        c.medicineCategoryDescription
-          ?.toLowerCase()
-          .includes(query.toLowerCase()),
-    );
+    const query = input.toLowerCase();
+    const filtered = currentCategories.filter((c) => {
+      const name = (c.medicineCategoryName ?? c.MedicineCategoryName ?? c.categoryName ?? c.CategoryName ?? "").toLowerCase();
+      const desc = (c.medicineCategoryDescription ?? c.MedicineCategoryDescription ?? c.categoryDescription ?? c.CategoryDescription ?? "").toLowerCase();
+      return name.includes(query) || desc.includes(query);
+    });
     renderTable(filtered);
-  } else if (type === "name") {
-    // API Search by Name (GET)
-    try {
-      const res = await fetch(
-        `${API_URL}/GetMedicineCategoriesByName?name=${encodeURIComponent(query)}`,
-      );
-      if (!res.ok) throw new Error("Search failed");
-      const data = await res.json();
-      renderTable(data);
-    } catch (err) {
-      alert("Error searching by name: " + err.message);
-    }
-  } else if (type === "description") {
-    // API Search by Description (GET)
-    try {
-      const res = await fetch(
-        `${API_URL}/GetMedicineCategoriesByDescription?description=${encodeURIComponent(query)}`,
-      );
-      if (!res.ok) throw new Error("Search failed");
-      const data = await res.json();
-      renderTable(data);
-    } catch (err) {
-      alert("Error searching by description: " + err.message);
-    }
+    return;
   }
-}
 
-// Fetch single category details from API (GET)
-async function openDetailsModal(id) {
   try {
-    const res = await fetch(`${API_URL}/GetMedicineCategoryById/${id}`);
-    if (!res.ok) throw new Error("Failed to load details");
-    const item = await res.json();
-
-    document.getElementById("detailCategoryId").textContent =
-      item.medicineCategoryId;
-    document.getElementById("detailCategoryName").textContent =
-      item.medicineCategoryName || "N/A";
-    document.getElementById("detailCategoryDescription").textContent =
-      item.medicineCategoryDescription || "N/A";
-
-    const modal = new bootstrap.Modal(
-      document.getElementById("categoryDetailsModal"),
-    );
-    modal.show();
-  } catch (err) {
-    alert("Error fetching category details: " + err.message);
-  }
-}
-
-function openEditModal(id) {
-  const item = categoriesList.find((c) => c.medicineCategoryId === id);
-  if (!item) return;
-
-  document.getElementById("editCategoryId").value = item.medicineCategoryId;
-  document.getElementById("editCategoryName").value =
-    item.medicineCategoryName || "";
-  document.getElementById("editCategoryDescription").value =
-    item.medicineCategoryDescription || "";
-
-  const modal = new bootstrap.Modal(
-    document.getElementById("editCategoryModal"),
-  );
-  modal.show();
-}
-
-// Patch Name Only (PATCH)
-async function patchCategoryName() {
-  const id = parseInt(document.getElementById("editCategoryId").value);
-  const newName = document.getElementById("editCategoryName").value;
-
-  if (
-    await sendRequest(
-      `${API_URL}/UpdateMedicineCategoryName/${id}`,
-      "PATCH",
-      newName,
-    )
-  ) {
-    const modalEl = document.getElementById("editCategoryModal");
-    const modalInstance =
-      bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-    modalInstance.hide();
-    loadCategories();
-  }
-}
-
-// Patch Description Only (PATCH)
-async function patchCategoryDescription() {
-  const id = parseInt(document.getElementById("editCategoryId").value);
-  const newDescription = document.getElementById(
-    "editCategoryDescription",
-  ).value;
-
-  if (
-    await sendRequest(
-      `${API_URL}/UpdateMedicineCategoryDescription/${id}`,
-      "PATCH",
-      newDescription,
-    )
-  ) {
-    const modalEl = document.getElementById("editCategoryModal");
-    const modalInstance =
-      bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-    modalInstance.hide();
-    loadCategories();
-  }
-}
-
-// Delete Category (DELETE)
-async function deleteCategory(id) {
-  if (confirm("Are you sure you want to delete this category?")) {
-    if (
-      await sendRequest(`${API_URL}/RemoveMedicineCategory/${id}`, "DELETE")
-    ) {
-      loadCategories();
+    let result = [];
+    if (type === "name") {
+      result = await apiGetMedicineCategoriesByName(input);
+    } else if (type === "description") {
+      result = await apiGetMedicineCategoriesByDescription(input);
     }
+    renderTable(Array.isArray(result) ? result : [result]);
+  } catch (error) {
+    renderTable([]);
   }
 }
 
-window.openDetailsModal = openDetailsModal;
-window.openEditModal = openEditModal;
-window.patchCategoryName = patchCategoryName;
-window.patchCategoryDescription = patchCategoryDescription;
-window.deleteCategory = deleteCategory;
-window.loadCategories = loadCategories;
+function clearCategorySearch() {
+  document.getElementById("searchInput").value = "";
+  renderTable(currentCategories);
+}
+
+// Event Listeners & Initialize
+document.addEventListener("DOMContentLoaded", () => {
+  if (checkAccess()) {
+    fetchCategories();
+
+    document.getElementById("searchBtn")?.addEventListener("click", handleSearch);
+    document.getElementById("searchInput")?.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") handleSearch();
+      if (document.getElementById("searchType").value === "client") handleSearch();
+    });
+  }
+});

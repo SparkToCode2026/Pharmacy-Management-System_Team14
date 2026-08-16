@@ -12,6 +12,7 @@
   </head>
 
   <body>
+    <!-- Dynamic Navigation Bar -->
     <div id="navbar-placeholder"></div>
 
     <main class="container my-5">
@@ -26,21 +27,21 @@
           <form id="addOrderItemForm" onsubmit="return false;">
             <div class="row g-3">
               <div class="col-md-3">
-                <label class="form-label">Select Order</label>
+                <label class="form-label fw-bold">Select Order <span class="text-danger">*</span></label>
                 <select id="itemOrder" class="form-select" required>
-                  <option value="">— select —</option>
+                  <option value="">— select order —</option>
                 </select>
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Select Medicine</label>
+                <label class="form-label fw-bold">Select Medicine <span class="text-danger">*</span></label>
                 <select id="itemMedicine" class="form-select" required>
-                  <option value="">— select —</option>
+                  <option value="">— select medicine —</option>
                 </select>
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Quantity</label>
+                <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
                 <input
                   type="number"
                   class="form-control"
@@ -52,7 +53,7 @@
               </div>
 
               <div class="col-md-3">
-                <label class="form-label">Unit Price ($)</label>
+                <label class="form-label fw-bold">Unit Price ($) <span class="text-danger">*</span></label>
                 <input
                   type="number"
                   step="0.01"
@@ -64,7 +65,7 @@
               </div>
             </div>
 
-            <button type="button" id="addItemBtn" class="btn btn-success mt-3">
+            <button type="button" id="addItemBtn" class="btn btn-success mt-3 px-4">
               Add Order Item
             </button>
           </form>
@@ -74,7 +75,7 @@
       <!-- Order Items Table Card -->
       <div class="card shadow-sm">
         <div
-          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
+          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap gap-2"
         >
           <h5 class="card-title mb-0">Registered Order Items</h5>
           <div class="d-flex gap-2">
@@ -127,7 +128,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header bg-warning">
-            <h5 class="modal-title">Edit Order Item</h5>
+            <h5 class="modal-title fw-bold">Edit Order Item</h5>
             <button
               type="button"
               class="btn-close"
@@ -140,14 +141,14 @@
               <input type="hidden" id="editItemId" />
 
               <div class="mb-3">
-                <label class="form-label">Select Medicine</label>
+                <label class="form-label fw-bold">Select Medicine</label>
                 <select id="editMedicine" class="form-select" required>
                   <option value="">— select —</option>
                 </select>
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Quantity</label>
+                <label class="form-label fw-bold">Quantity</label>
                 <input
                   type="number"
                   class="form-control"
@@ -158,7 +159,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Unit Price ($)</label>
+                <label class="form-label fw-bold">Unit Price ($)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -186,24 +187,13 @@
       </div>
     </div>
 
+    <!-- Footer Placeholder -->
     <div id="footer-placeholder"></div>
 
-    <script>
-      fetch("navbar.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("navbar-placeholder").innerHTML = data;
-        });
-
-      fetch("footer.html")
-        .then((response) => response.text())
-        .then((data) => {
-          document.getElementById("footer-placeholder").innerHTML = data;
-        });
-    </script>
-
+    <!-- Bootstrap JS, API, Navbar, OrderItem JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="OrderItem.js"></script>
+    <script src="api.js"></script>
     <script src="navbar.js"></script>
+    <script src="OrderItem.js"></script>
   </body>
 </html>
