@@ -1,7 +1,0 @@
-/* Keep every card's image the same height regardless of the
-   source image's real aspect ratio — Bootstrap has no utility
-   for this, so it's the one thing that lives in this file. */
-.card-img-top {
-  height: 180px;
-  object-fit: cover;
-}

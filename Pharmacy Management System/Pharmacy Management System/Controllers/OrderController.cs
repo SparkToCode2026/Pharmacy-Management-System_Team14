@@ -76,7 +76,7 @@ namespace Pharmacy_Management_System.Controllers
 
                 // Deduct stock for this medicine at the order's branch
                 var stock = await _context.StockLevel
-                    .FirstOrDefaultAsync(s => s.MedicineId == item.MedicineId && s.BranchId == order.BranchId);
+                    .FirstOrDefaultAsync(s => s.MedicineId == item.MedicineId );
 
                 if (stock != null)
                 {
@@ -100,8 +100,27 @@ namespace Pharmacy_Management_System.Controllers
                         }
                         anyStock.CurrentQuantity -= item.Quantity;
                     }
+
+                }
+                if (stock != null && stock.CurrentQuantity < 50)
+                {
+
+                    var receiptBody =
+                        $"Hello,\n\n" +
+                        $"Low Stock Alert\n\n" +
+                        $"Medicine: {medicine.MedicineName}\n" +
+                        $"Medicine ID: {medicine.MedicineId}\n" +
+                        $"Current Quantity: {stock.CurrentQuantity}\n" +      
+                        $"Please place a replenishment order to avoid stockout.\n\n" +
+                        $"Generated at: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC\n\n" +
+                        $"Regards,\nPharmacy Management System";
+
+                    await _emailService.SendEmailAsync(
+                        "haifi112233@gmail.com", "confirmation of low stock",
+                        receiptBody);
                 }
             }
+
 
             order.OrderDate = DateTime.Now;
             order.Status = "Pending";
