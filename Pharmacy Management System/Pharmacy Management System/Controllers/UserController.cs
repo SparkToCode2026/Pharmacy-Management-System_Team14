@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,12 +14,15 @@ namespace Pharmacy_Management_System.Controllers
     public class UserController : ControllerBase
     {
         private ProjectContext _context;
-        public UserController(ProjectContext context, IConfiguration configuration)
+        private readonly IConfiguration _configuration;
+        private readonly Pharmacy_Management_System.Services.IEmailService _emailService;
+
+        public UserController(ProjectContext context, IConfiguration configuration, Pharmacy_Management_System.Services.IEmailService emailService)
         {
             _context = context;
             _configuration = configuration;
+            _emailService = emailService;
         }
-        private readonly IConfiguration _configuration;
 
 
         // Register a new user
@@ -41,6 +44,26 @@ namespace Pharmacy_Management_System.Controllers
             U.Password = BCrypt.Net.BCrypt.HashPassword(U.Password);
             _context.User.Add(U);
             _context.SaveChanges();
+
+            if (!string.IsNullOrWhiteSpace(U.Email))
+            {
+                try
+                {
+                    var welcomeBody =
+                        $"Hello {U.Username},\n\n" +
+                        $"Welcome to the Pharmacy Management System!\n\n" +
+                        $"Your account has been created successfully.\n" +
+                        $"You can now log in, browse medicines, manage prescriptions, and place orders.\n\n" +
+                        $"Best regards,\nPharmacy Management Team";
+
+                    _emailService.SendEmailAsync(U.Email, "Welcome to Pharmacy Management System", welcomeBody);
+                }
+                catch
+                {
+                    // Do not fail registration if email delivery encounters an issue
+                }
+            }
+
             return Ok(U.UserId);
         }
 

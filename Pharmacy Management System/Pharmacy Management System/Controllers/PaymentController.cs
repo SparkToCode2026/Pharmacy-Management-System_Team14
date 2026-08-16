@@ -13,10 +13,12 @@ namespace Pharmacy_Management_System.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly ProjectContext _context;
+        private readonly Pharmacy_Management_System.Services.IEmailService _emailService;
 
-        public PaymentController(ProjectContext context)
+        public PaymentController(ProjectContext context, Pharmacy_Management_System.Services.IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         // Process a new payment transaction (Admin / Pharmacist / Customer)
@@ -48,6 +50,37 @@ namespace Pharmacy_Management_System.Controllers
             }
 
             _context.SaveChanges();
+
+            // Send payment confirmation email to the user
+            try
+            {
+                var order = _context.Orders
+                    .Include(o => o.User)
+                    .FirstOrDefault(o => o.OrderId == payment.OrderId);
+
+                if (order?.User != null && !string.IsNullOrWhiteSpace(order.User.Email))
+                {
+                    var receiptBody =
+                        $"Hello {order.User.Username},\n\n" +
+                        $"We have successfully received your payment!\n\n" +
+                        $"Payment Receipt ID: #{payment.PaymentId}\n" +
+                        $"Order Number: #{payment.OrderId}\n" +
+                        $"Amount Paid: ${payment.Amount:F2}\n" +
+                        $"Payment Method: {payment.PaymentMethod}\n" +
+                        $"Payment Date: {payment.PaymentDate:g}\n" +
+                        $"Payment Status: {payment.PaymentStatus}\n\n" +
+                        $"Thank you for your business.\nPharmacy Management Team";
+
+                    _emailService.SendEmailAsync(
+                        order.User.Email,
+                        $"Payment Confirmation - Receipt #{payment.PaymentId} for Order #{payment.OrderId}",
+                        receiptBody);
+                }
+            }
+            catch
+            {
+                // Prevent email failures from failing payment recording
+            }
 
             return Ok(payment);
         }
