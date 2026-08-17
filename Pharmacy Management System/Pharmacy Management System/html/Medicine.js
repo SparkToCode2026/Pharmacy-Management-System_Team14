@@ -114,7 +114,7 @@ function renderTable(data) {
         <tr>
           <td class="fw-bold">${id}</td>
           <td class="fw-semibold text-primary">${name}</td>
-          <td><strong>$${price}</strong></td>
+          <td><strong>${price} OMR</strong></td>
           <td><span class="badge bg-secondary">${catName}</span></td>
           <td>${formattedExp}</td>
           <td class="text-center text-nowrap">
@@ -228,7 +228,7 @@ async function openDetailsModal(id) {
         <div class="col-md-6">
           <p><strong>Medicine ID:</strong> ${med.medicineId ?? med.MedicineId}</p>
           <p><strong>Name:</strong> ${med.medicineName ?? med.MedicineName}</p>
-          <p><strong>Price:</strong> $${price}</p>
+          <p><strong>Price:</strong> ${price} OMR</p>
           <p><strong>Category:</strong> ${cat?.medicineCategoryName ?? cat?.MedicineCategoryName ?? "General"}</p>
         </div>
         <div class="col-md-6">

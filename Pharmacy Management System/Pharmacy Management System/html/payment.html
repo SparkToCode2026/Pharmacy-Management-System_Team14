@@ -29,7 +29,7 @@
         <div class="d-flex align-items-center justify-content-between w-100 flex-wrap gap-2">
           <div>
             <h5 class="alert-heading fw-bold mb-1">💳 Checkout for Order #<span id="bannerOrderId">—</span></h5>
-            <span>Order Total Due: <strong class="fs-5 text-success" id="bannerOrderAmount">$0.00</strong></span>
+            <span>Order Total Due: <strong class="fs-5 text-success" id="bannerOrderAmount">0.00 OMR</strong></span>
           </div>
           <span class="badge bg-primary fs-6 px-3 py-2">Autofilled from Order</span>
         </div>
@@ -59,7 +59,7 @@
 
               <div class="col-md-4">
                 <label for="paymentAmount" class="form-label fw-bold">
-                  Amount Due ($) <span class="text-danger">*</span>
+                  Amount Due (OMR) <span class="text-danger">*</span>
                 </label>
                 <input
                   type="number"
@@ -187,7 +187,7 @@
             <div class="modal-body">
               <input type="hidden" id="editPaymentId" />
               <div class="mb-3">
-                <label for="editPaymentAmount" class="form-label fw-bold">Amount ($)</label>
+                <label for="editPaymentAmount" class="form-label fw-bold">Amount (OMR)</label>
                 <input
                   type="number"
                   step="0.01"

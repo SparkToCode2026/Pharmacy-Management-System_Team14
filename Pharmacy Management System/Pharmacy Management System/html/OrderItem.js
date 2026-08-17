@@ -51,8 +51,8 @@ function renderItems(items) {
         <td>#${orderId}</td>
         <td class="fw-semibold">${medName}</td>
         <td>${qty}</td>
-        <td>$${Number(unitPrice).toFixed(2)}</td>
-        <td><strong>$${Number(subtotal).toFixed(2)}</strong></td>
+        <td>${Number(unitPrice).toFixed(2)} OMR</td>
+        <td><strong>${Number(subtotal).toFixed(2)} OMR</strong></td>
         <td class="text-center text-nowrap">
           <button class="btn btn-sm btn-warning me-1" onclick="openEditModal(${id}, ${medId}, ${qty}, ${unitPrice})">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="handleDeleteItem(${id})">Delete</button>
@@ -104,7 +104,7 @@ async function loadDropdowns() {
           const id = m.medicineId ?? m.MedicineId;
           const name = m.medicineName ?? m.MedicineName;
           const price = m.medicinePrice ?? m.MedicinePrice ?? m.price ?? 0;
-          return `<option value="${id}" data-price="${price}">${name} ($${Number(price).toFixed(2)})</option>`;
+          return `<option value="${id}" data-price="${price}">${name} (${Number(price).toFixed(2)} OMR)</option>`;
         })
         .join("");
 

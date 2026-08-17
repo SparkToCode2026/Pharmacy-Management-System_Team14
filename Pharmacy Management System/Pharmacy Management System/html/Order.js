@@ -55,7 +55,7 @@ function renderOrders(orders) {
         <td>${formattedDate}</td>
         <td>${userId}</td>
         <td>${branchId}</td>
-        <td class="fw-semibold">$${total}</td>
+        <td class="fw-semibold">${total} OMR</td>
         <td>
           <select class="form-select form-select-sm" style="max-width: 140px;" onchange="handleStatusChange(${orderId}, this.value)">
             ${statuses.map((s) => `<option ${currentStatus === s ? "selected" : ""}>${s}</option>`).join("")}
@@ -102,7 +102,7 @@ async function loadDropdowns() {
             const id = m.medicineId ?? m.MedicineId;
             const name = m.medicineName ?? m.MedicineName;
             const price = m.medicinePrice ?? m.MedicinePrice ?? m.price ?? 0;
-            return `<option value="${id}" data-price="${price}">${name} ($${Number(price).toFixed(2)})</option>`;
+            return `<option value="${id}" data-price="${price}">${name} (${Number(price).toFixed(2)} OMR)</option>`;
           })
           .join("");
     }
@@ -176,14 +176,14 @@ function renderNewItems() {
       <tr>
         <td>${it.medicineName}</td>
         <td>${it.quantity}</td>
-        <td>$${it.unitPrice.toFixed(2)}</td>
-        <td>$${sub.toFixed(2)}</td>
+        <td>${it.unitPrice.toFixed(2)} OMR</td>
+        <td>${sub.toFixed(2)} OMR</td>
         <td class="text-center"><button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeNewItem(${i})">×</button></td>
       </tr>`;
     })
     .join("");
 
-  if (totalCell) totalCell.textContent = `$${total.toFixed(2)}`;
+  if (totalCell) totalCell.textContent = `${total.toFixed(2)} OMR`;
 }
 
 function removeNewItem(index) {
@@ -299,15 +299,15 @@ async function loadSales() {
           <div class="text-muted small">Total Orders</div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="h3 fw-bold text-success mb-0">$${Number(s.totalSales ?? 0).toFixed(2)}</div>
+          <div class="h3 fw-bold text-success mb-0">${Number(s.totalSales ?? 0).toFixed(2)} OMR</div>
           <div class="text-muted small">Total Sales</div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="h3 fw-bold text-info mb-0">$${Number(s.averageOrderValue ?? 0).toFixed(2)}</div>
+          <div class="h3 fw-bold text-info mb-0">${Number(s.averageOrderValue ?? 0).toFixed(2)} OMR</div>
           <div class="text-muted small">Average Order</div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="h3 fw-bold text-warning mb-0">$${Number(s.highestOrderValue ?? 0).toFixed(2)}</div>
+          <div class="h3 fw-bold text-warning mb-0">${Number(s.highestOrderValue ?? 0).toFixed(2)} OMR</div>
           <div class="text-muted small">Highest Value</div>
         </div>
       </div>`;

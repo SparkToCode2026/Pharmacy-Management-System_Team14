@@ -40,7 +40,7 @@ async function loadDropdowns() {
               const id = m.medicineId ?? m.MedicineId;
               const name = m.medicineName ?? m.MedicineName;
               const price = Number(m.medicinePrice ?? m.MedicinePrice ?? m.price ?? 0).toFixed(2);
-              return `<option value="${id}">${name} (ID #${id} • $${price})</option>`;
+              return `<option value="${id}">${name} (ID #${id} • ${price} OMR)</option>`;
             })
             .join("");
       }

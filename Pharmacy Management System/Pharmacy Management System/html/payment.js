@@ -54,7 +54,7 @@ async function checkUrlParamsAndAutofill() {
     if (finalAmount !== null && !isNaN(finalAmount)) {
       if (amountInput) amountInput.value = finalAmount.toFixed(2);
       if (bannerOrderAmount)
-        bannerOrderAmount.textContent = `$${finalAmount.toFixed(2)}`;
+        bannerOrderAmount.textContent = `${finalAmount.toFixed(2)} OMR`;
     }
 
     if (banner) {
@@ -118,7 +118,7 @@ function renderPayments(payments) {
         <tr>
             <td class="fw-bold">#${id}</td>
             <td class="fw-semibold">#${orderId}</td>
-            <td class="fw-bold text-success fs-6">$${amount}</td>
+            <td class="fw-bold text-success fs-6">${amount} OMR</td>
             <td>${formattedDate}</td>
             <td><span class="badge bg-light text-dark border">${method}</span></td>
             <td>${statusBadge(status)}</td>
@@ -185,7 +185,7 @@ document.getElementById("paymentForm")?.addEventListener("submit", async (e) => 
   try {
     await createPayment(newPayment);
 
-    alert(`🎉 Payment of $${amount.toFixed(2)} for Order #${orderId} processed successfully!`);
+    alert(`🎉 Payment of ${amount.toFixed(2)} OMR for Order #${orderId} processed successfully!`);
 
     document.getElementById("paymentForm").reset();
     setDefaultDate();

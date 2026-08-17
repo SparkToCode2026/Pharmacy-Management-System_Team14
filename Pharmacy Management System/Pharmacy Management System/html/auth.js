@@ -118,9 +118,9 @@ if (
 
         showAlert(`Welcome back, ${username}! Redirecting...`, "success");
 
-        let redirectUrl = "user-dashboard.html";
+        let redirectUrl = "index.html";
         if (["admin", "pharmacist"].includes(role)) {
-          redirectUrl = "admin-dashboard.html";
+          redirectUrl = "index.html";
         }
 
         setTimeout(() => {

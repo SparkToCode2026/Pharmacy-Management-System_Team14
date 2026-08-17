@@ -115,7 +115,7 @@ async function loadUserOrders() {
           <td class="fw-bold">#${orderId}</td>
           <td>${orderDate}</td>
           <td>${branchName}</td>
-          <td class="fw-bold text-success fs-6">$${totalAmount}</td>
+          <td class="fw-bold text-success fs-6">${totalAmount} OMR</td>
           <td><span class="badge ${statusBadge}">${status}</span></td>
           <td class="text-center text-nowrap">
             <button class="btn btn-sm btn-primary" onclick="viewOrderDetails(${orderId})">
@@ -162,7 +162,7 @@ function populateModalDropdowns() {
           const price = Number(
             m.medicinePrice ?? m.MedicinePrice ?? m.price ?? 0,
           ).toFixed(2);
-          return `<option value="${id}" data-price="${price}">${name} ($${price})</option>`;
+          return `<option value="${id}" data-price="${price}">${name} (${price} OMR)</option>`;
         })
         .join("");
   }
@@ -179,7 +179,7 @@ document.getElementById("modalAddItemBtn")?.addEventListener("click", () => {
   if (!medId) return alert("Please select a medicine.");
   if (!qty || qty <= 0) return alert("Quantity must be at least 1.");
 
-  const medName = selectedOption.text.split(" ($")[0];
+  const medName = selectedOption.text.split(" (")[0];
 
   const existing = modalOrderItems.find((it) => it.medicineId === medId);
   if (existing) {
@@ -204,7 +204,7 @@ function renderModalItems() {
 
   if (modalOrderItems.length === 0) {
     body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-2">No items added to this order yet.</td></tr>`;
-    if (totalCell) totalCell.textContent = "$0.00";
+    if (totalCell) totalCell.textContent = "0.00 OMR";
     return;
   }
 
@@ -217,8 +217,8 @@ function renderModalItems() {
       <tr>
         <td class="fw-semibold">${it.medicineName}</td>
         <td>${it.quantity}</td>
-        <td>$${it.unitPrice.toFixed(2)}</td>
-        <td>$${sub.toFixed(2)}</td>
+        <td>${it.unitPrice.toFixed(2)} OMR</td>
+        <td>${sub.toFixed(2)} OMR</td>
         <td class="text-center">
           <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeModalItem(${i})">×</button>
         </td>
@@ -226,7 +226,7 @@ function renderModalItems() {
     })
     .join("");
 
-  if (totalCell) totalCell.textContent = `$${total.toFixed(2)}`;
+  if (totalCell) totalCell.textContent = `${total.toFixed(2)} OMR`;
 }
 
 function removeModalItem(index) {
@@ -339,8 +339,8 @@ async function viewOrderDetails(orderId) {
           <tr>
             <td class="fw-semibold">${medName}</td>
             <td>${qty}</td>
-            <td>$${price}</td>
-            <td class="fw-bold text-success">$${subtotal}</td>
+            <td>${price} OMR</td>
+            <td class="fw-bold text-success">${subtotal} OMR</td>
           </tr>
         `;
       });
@@ -363,7 +363,7 @@ async function viewOrderDetails(orderId) {
         </div>
         <div class="col-md-6">
           <p class="mb-1"><strong>Status:</strong> <span class="badge bg-secondary">${status}</span></p>
-          <p class="mb-1"><strong>Total Amount:</strong> <span class="fw-bold text-success fs-5">$${totalAmount}</span></p>
+          <p class="mb-1"><strong>Total Amount:</strong> <span class="fw-bold text-success fs-5">${totalAmount} OMR</span></p>
         </div>
       </div>
 

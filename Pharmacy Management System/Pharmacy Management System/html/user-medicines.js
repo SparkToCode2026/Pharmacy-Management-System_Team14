@@ -116,8 +116,8 @@ function renderCart() {
             <button class="btn btn-outline-secondary" type="button" onclick="changeCartQty(${item.medicineId}, 1)">+</button>
           </div>
         </td>
-        <td>$${item.unitPrice.toFixed(2)}</td>
-        <td class="fw-bold">$${subtotal.toFixed(2)}</td>
+        <td>${item.unitPrice.toFixed(2)} OMR</td>
+        <td class="fw-bold">${subtotal.toFixed(2)} OMR</td>
         <td class="text-center">
           <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeCartItem(${item.medicineId})">×</button>
         </td>
@@ -126,7 +126,7 @@ function renderCart() {
     })
     .join("");
 
-  totalEl.textContent = `$${total.toFixed(2)}`;
+  totalEl.textContent = `${total.toFixed(2)} OMR`;
 }
 
 // Load branches into checkout modal dropdown
@@ -314,7 +314,7 @@ function renderMedicines(medicines) {
         <div class="medicine-name">${medicineName}</div>
         <div class="medicine-info"><span class="badge bg-secondary">${categoryName}</span></div>
         <div class="medicine-info mt-2 text-muted">${description.substring(0, 85)}${description.length > 85 ? "..." : ""}</div>
-        <div class="medicine-price text-success">$${price}</div>
+        <div class="medicine-price text-success">${price} OMR</div>
         <div class="d-flex gap-2 mt-3">
           <button class="btn btn-sm btn-outline-primary flex-fill" onclick="viewMedicineDetails(${medicineId})">
             Details
@@ -363,7 +363,7 @@ async function viewMedicineDetails(medicineId) {
       <div class="mb-3">
         <h4 class="text-primary fw-bold">${medicineName}</h4>
         <p class="text-muted"><span class="badge bg-secondary">${categoryName}</span></p>
-        <p class="fs-4 text-success fw-bold">Price: $${price}</p>
+        <p class="fs-4 text-success fw-bold">Price: ${price} OMR</p>
         <hr>
         <p class="fw-bold mb-1">Description & Indications:</p>
         <p class="text-secondary">${description}</p>
@@ -374,7 +374,7 @@ async function viewMedicineDetails(medicineId) {
     document.getElementById("medicineDetailsFooter").innerHTML = `
       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       <button type="button" class="btn btn-success" onclick="addToCart(${medicineId}); bootstrap.Modal.getInstance(document.getElementById('medicineDetailsModal')).hide();">
-        🛒 Add to Cart ($${price})
+        🛒 Add to Cart (${price} OMR)
       </button>
     `;
 
