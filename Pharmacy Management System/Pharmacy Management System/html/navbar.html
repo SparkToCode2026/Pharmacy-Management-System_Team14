@@ -1,0 +1,113 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow">
+  <div class="container-fluid px-4">
+    <!-- Brand/Logo -->
+    <a class="navbar-brand fw-bold fs-5" href="index.html">Pharmacy System</a>
+
+    <!-- Hamburger Toggle for Mobile -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNavigation"
+      aria-controls="navbarNavigation"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Navbar Collapse Content -->
+    <div class="collapse navbar-collapse" id="navbarNavigation">
+      <!-- Navigation Links (collapse on mobile, show on desktop) -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" href="index.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="orders.html">Orders</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branch.html">Branches</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="Medicine.html">Medicines</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="MedicineCategory.html">Categories</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="Manufacturer.html">Manufacturers</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="suppliers.html">Suppliers</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="orderitems.html">Order Items</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="prescriptions.html">Prescriptions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="payment.html">Payments</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="stocklevel.html">Stock Levels</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="users.html">Users</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="customer_profile.html">Customer Profiles</a>
+        </li>
+      </ul>
+
+      <!-- User Auth Section (same for desktop and mobile) -->
+      <div id="nav-auth-section" class="d-flex gap-2">
+        <!-- Injected dynamically via navbar.js -->
+      </div>
+    </div>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+  }
+
+  .navbar-brand {
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+  }
+
+  .nav-link {
+    color: rgba(255, 255, 255, 0.95) !important;
+    transition:
+      color 0.3s ease,
+      text-decoration 0.3s ease;
+    font-weight: 500;
+    margin: 0 0.25rem;
+  }
+
+  .nav-link:hover {
+    color: #ffc107 !important;
+    text-decoration: underline;
+  }
+
+  .nav-link.active {
+    color: #ffc107 !important;
+    border-bottom: 2px solid #ffc107;
+  }
+
+  @media (max-width: 991px) {
+    .nav-link {
+      padding: 0.5rem 0 !important;
+    }
+
+    .nav-link.active {
+      border-bottom: none;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-left: 3px solid #ffc107;
+      padding-left: 0.75rem !important;
+    }
+  }
+</style>

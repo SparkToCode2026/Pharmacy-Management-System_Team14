@@ -1,6 +1,10 @@
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Pharmacy_Management_System.Models;
+using Pharmacy_Management_System.Services;
+using System.Text;
 
 namespace Pharmacy_Management_System
 {
@@ -10,17 +14,69 @@ namespace Pharmacy_Management_System
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-            builder.Services.AddDbContext<ProjectContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            // 1. Define CORS Policy Name
+            var allowAllOrigins = "_allowAllOrigins";
 
-            //builder.Services.AddControllers();
+            // Add Database Context
+            builder.Services.AddDbContext<ProjectContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            //for the email service
+            builder.Services.Configure<EmailSettings>(
+            builder.Configuration.GetSection("EmailSettings"));
+
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
+            // 2. Register CORS Service
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: allowAllOrigins,
+                    policy =>
+                    {
+                        policy.AllowAnyOrigin()
+                              .AllowAnyMethod()
+                              .AllowAnyHeader();
+                    });
+            });
+
+            // 3. Register JWT Authentication Service
+            var jwtKey = builder.Configuration["Jwt:Key"];
+            var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+            var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtIssuer,
+                    ValidAudience = jwtAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                };
+            });
+
+            builder.Services.AddAuthorization();
+
             builder.Services.AddControllers(options =>
             {
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+            })
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
             });
 
             builder.Services.AddEndpointsApiExplorer();
+
+            // Swagger Configuration with JWT Bearer Definition
             builder.Services.AddSwaggerGen(c =>
             {
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -47,8 +103,7 @@ namespace Pharmacy_Management_System
                         new List<string>()
                     }
                 });
-                        });
-
+            });
 
             var app = builder.Build();
 
@@ -58,11 +113,18 @@ namespace Pharmacy_Management_System
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            else
+            {
+                app.UseHttpsRedirection();
+            }
 
-            app.UseHttpsRedirection();
+            // Enable CORS Middleware (Must be before UseAuthentication & UseAuthorization)
+            app.UseCors(allowAllOrigins);
+
+            // Enable Authentication (MUST be placed BEFORE UseAuthorization)
+            app.UseAuthentication();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 

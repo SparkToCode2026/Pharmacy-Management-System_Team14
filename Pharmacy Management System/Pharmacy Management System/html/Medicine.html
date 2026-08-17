@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Medicine Management - Pharmacy System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body class="bg-light">
+    <!-- Dynamic Navigation Bar -->
+    <div id="navbar-placeholder"></div>
+
+    <div class="container my-5">
+      <!-- Page Header & Actions -->
+      <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+          <h2 class="fw-bold text-primary mb-0">Medicines Catalog</h2>
+          <p class="text-muted small mb-0">
+            Manage pharmaceuticals, pricing, suppliers, and batch expirations
+          </p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+          <button
+            class="btn btn-success shadow-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#addMedicineModal"
+          >
+            + Add New Medicine
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters & Search Toolbar -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+          <div class="row g-2 align-items-center">
+            <!-- Search by Name -->
+            <div class="col-md-5">
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="form-control"
+                  placeholder="Search medicine by name..."
+                />
+                <button class="btn btn-primary" id="searchBtn">Search</button>
+                <button
+                  class="btn btn-outline-secondary"
+                  id="clearSearchBtn"
+                  onclick="clearSearch()"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter by Category -->
+            <div class="col-md-4">
+              <select id="filterCategory" class="form-select">
+                <option value="">All Categories</option>
+                <!-- Populated via JS -->
+              </select>
+            </div>
+
+            <!-- Sort By Price -->
+            <div class="col-md-3 text-md-end">
+              <button
+                class="btn btn-outline-primary w-100"
+                id="sortPriceBtn"
+                onclick="sortMedicinesByPrice()"
+              >
+                Sort by Price ↕
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medicine Data Table -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-dark">
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Medicine Name</th>
+                  <th scope="col">Price</th>
+                  <th scope="col">Category</th>
+                  <th scope="col">Expiry Date</th>
+                  <th scope="col" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="medicinesTableBody">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD MEDICINE MODAL -->
+    <div
+      class="modal fade"
+      id="addMedicineModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title fw-bold">Add New Medicine</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <form id="addMedicineForm">
+            <div class="modal-body p-4">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="addMedName" class="form-label fw-bold"
+                    >Medicine Name <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="addMedName"
+                    class="form-control"
+                    placeholder="e.g. Paracetamol 500mg"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="addMedPrice" class="form-label fw-bold"
+                    >Price (OMR) <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="addMedPrice"
+                    class="form-control"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label for="addMedCategory" class="form-label fw-bold"
+                    >Category <span class="text-danger">*</span></label
+                  >
+                  <select
+                    id="addMedCategory"
+                    class="form-select"
+                    required
+                  ></select>
+                </div>
+                <div class="col-md-4">
+                  <label for="addMedManufacturer" class="form-label fw-bold"
+                    >Manufacturer <span class="text-danger">*</span></label
+                  >
+                  <select
+                    id="addMedManufacturer"
+                    class="form-select"
+                    required
+                  ></select>
+                </div>
+                <div class="col-md-4">
+                  <label for="addMedSupplier" class="form-label fw-bold"
+                    >Supplier <span class="text-danger">*</span></label
+                  >
+                  <select
+                    id="addMedSupplier"
+                    class="form-select"
+                    required
+                  ></select>
+                </div>
+                <div class="col-md-6">
+                  <label for="addMedProdDate" class="form-label fw-bold"
+                    >Production Date</label
+                  >
+                  <input type="date" id="addMedProdDate" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                  <label for="addMedExpDate" class="form-label fw-bold"
+                    >Expiry Date <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="date"
+                    id="addMedExpDate"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <div class="col-12">
+                  <label for="addMedDesc" class="form-label fw-bold"
+                    >Description</label
+                  >
+                  <textarea
+                    id="addMedDesc"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Indications, storage, dosage..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-success">
+                Save Medicine
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT MEDICINE MODAL -->
+    <div
+      class="modal fade"
+      id="editMedicineModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title fw-bold">Edit Medicine</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <form id="editMedicineForm">
+            <div class="modal-body p-4">
+              <input type="hidden" id="editMedId" />
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="editMedName" class="form-label fw-bold"
+                    >Medicine Name <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="editMedName"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="editMedPrice" class="form-label fw-bold"
+                    >Price (OMR) <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="number"
+                    step="0.01"
+                    id="editMedPrice"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label for="editMedCategory" class="form-label fw-bold"
+                    >Category <span class="text-danger">*</span></label
+                  >
+                  <select
+                    id="editMedCategory"
+                    class="form-select"
+                    required
+                  ></select>
+                </div>
+                <div class="col-md-4">
+                  <label for="editMedManufacturer" class="form-label fw-bold"
+                    >Manufacturer <span class="text-danger">*</span></label
+                  >
+                  <select
+                    id="editMedManufacturer"
+                    class="form-select"
+                    required
+                  ></select>
+                </div>
+                <div class="col-md-4">
+                  <label for="editMedSupplier" class="form-label fw-bold"
+                    >Supplier <span class="text-danger">*</span></label
+                  >
+                  <select
+                    id="editMedSupplier"
+                    class="form-select"
+                    required
+                  ></select>
+                </div>
+                <div class="col-md-6">
+                  <label for="editMedProdDate" class="form-label fw-bold"
+                    >Production Date</label
+                  >
+                  <input
+                    type="date"
+                    id="editMedProdDate"
+                    class="form-control"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="editMedExpDate" class="form-label fw-bold"
+                    >Expiry Date <span class="text-danger">*</span></label
+                  >
+                  <input
+                    type="date"
+                    id="editMedExpDate"
+                    class="form-control"
+                    required
+                  />
+                </div>
+                <div class="col-12">
+                  <label for="editMedDesc" class="form-label fw-bold"
+                    >Description</label
+                  >
+                  <textarea
+                    id="editMedDesc"
+                    class="form-control"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-warning">
+                Update Medicine
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETAILS MEDICINE MODAL -->
+    <div
+      class="modal fade"
+      id="medicineDetailsModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title fw-bold">Medicine Information</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body p-4" id="medicineDetailsBody">
+            <!-- Populated via JS -->
+          </div>
+          <div class="modal-footer bg-light">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Bootstrap 5 JS, API, Navbar, Medicine JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script src="navbar.js"></script>
+    <script src="Medicine.js"></script>
+  </body>
+</html>

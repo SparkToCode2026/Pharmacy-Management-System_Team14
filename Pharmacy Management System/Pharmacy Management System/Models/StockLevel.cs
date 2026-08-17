@@ -6,7 +6,7 @@ namespace Pharmacy_Management_System.Models
     public class StockLevel
     {
         [Key]
-        [JsonIgnore]
+        
         public int StockLevelId { get; set; }
 
         [Required]

@@ -1,16 +1,20 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 
 namespace Pharmacy_Management_System.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
     public class PrescriptionController : ControllerBase
     {
         // Database context used to access Prescription table and related entities
         private readonly ProjectContext _context;
-
 
         // Constructor receives the database context using Dependency Injection
         public PrescriptionController(ProjectContext context)
@@ -18,62 +22,90 @@ namespace Pharmacy_Management_System.Controllers
             _context = context;
         }
 
-
-
         // =====================================================
         // 1. POST: Create a new Prescription
         // Create prescription record with validation
         [HttpPost("CreatePrescription")]
-        public async Task<ActionResult<Prescription>> CreatePrescription(Prescription prescription)
+        public IActionResult CreatePrescription([FromBody] Prescription prescription)
         {
+            // If UserId is not provided (or 0), fallback to current logged-in user from JWT
+            if (prescription.UserId <= 0)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? User.FindFirst("nameid")?.Value
+                    ?? User.FindFirst("sub")?.Value;
+
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int tokenUserId))
+                {
+                    prescription.UserId = tokenUserId;
+                }
+            }
+
+            // Validate that the User exists in the database
+            if (!_context.Users.Any(u => u.UserId == prescription.UserId))
+            {
+                return BadRequest($"User with ID {prescription.UserId} does not exist.");
+            }
+
             // Check if the submitted data follows the validation rules
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
+            try
+            {
+                // Add the new prescription to the database
+                _context.Prescriptions.Add(prescription);
 
-            // Add the new prescription to the database
-            _context.Prescriptions.Add(prescription);
+                // Save changes permanently
+                _context.SaveChanges();
 
-
-            // Save changes permanently
-            await _context.SaveChangesAsync();
-
-
-            // Return the created prescription details
-            return CreatedAtAction(
-                nameof(GetPrescriptionById),
-                new { id = prescription.PrescriptionId },
-                prescription
-            );
+                // Return the created prescription details
+                return CreatedAtAction(
+                    nameof(GetPrescriptionById),
+                    new { id = prescription.PrescriptionId },
+                    prescription
+                );
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, $"Database error while saving prescription: {ex.InnerException?.Message ?? ex.Message}");
+            }
         }
 
-
-
+        // =====================================================
         // 2. PUT: Update Prescription information
         // Update all prescription details
-        [HttpPut("UpdatePrescription")]
-        public async Task<IActionResult> UpdatePrescription(int id, Prescription prescription)
+        [Authorize(Roles = "1,2")]
+        [HttpPut("UpdatePrescription/{id}")]
+        public IActionResult UpdatePrescription(int id, [FromBody] Prescription prescription)
         {
             // Check if the route id matches the prescription id
             if (id != prescription.PrescriptionId)
             {
-                return BadRequest();
+                return BadRequest("ID mismatch.");
             }
 
+            // Validate that the User exists in the database
+            if (!_context.Users.Any(u => u.UserId == prescription.UserId))
+            {
+                return BadRequest($"User with ID {prescription.UserId} does not exist.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             // Find the existing prescription in the database
-            var existingPrescription = await _context.Prescriptions
-                .FindAsync(id);
-
+            var existingPrescription = _context.Prescriptions.Find(id);
 
             // Return NotFound if the prescription does not exist
             if (existingPrescription == null)
             {
-                return NotFound();
+                return NotFound($"Prescription with ID {id} was not found.");
             }
-
 
             // Update prescription information
             existingPrescription.PrescriptionDoctorName = prescription.PrescriptionDoctorName;
@@ -83,170 +115,158 @@ namespace Pharmacy_Management_System.Controllers
             existingPrescription.PrescriptionStatus = prescription.PrescriptionStatus;
             existingPrescription.UserId = prescription.UserId;
 
-
-            // Save the updated data
-            await _context.SaveChangesAsync();
-
-
-            return NoContent();
+            try
+            {
+                // Save the updated data
+                _context.SaveChanges();
+                return Ok(existingPrescription);
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, $"Database error while updating prescription: {ex.InnerException?.Message ?? ex.Message}");
+            }
         }
 
-
-
-
-        // 3. PUT: Second update case
-        // Update prescription status only
-        [HttpPut("UpdatePrescriptionStatus  ")]
-        public async Task<IActionResult> UpdatePrescriptionStatus(int id, string status)
+        // =====================================================
+        // 3. PATCH: Update prescription status only
+        [Authorize(Roles = "1,2")]
+        [HttpPatch("UpdatePrescriptionStatus/{id}")]
+        public IActionResult UpdatePrescriptionStatus(int id, [FromBody] string status)
         {
-            // Search for the prescription by id
-            var prescription = await _context.Prescriptions
-                .FindAsync(id);
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return BadRequest("Status cannot be empty.");
+            }
 
+            // Search for the prescription by id
+            var prescription = _context.Prescriptions.Find(id);
 
             // Check if the prescription exists
             if (prescription == null)
             {
-                return NotFound();
+                return NotFound($"Prescription with ID {id} was not found.");
             }
-
 
             // Update prescription status
             prescription.PrescriptionStatus = status;
 
-
             // Save changes
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
-
-            return NoContent();
+            return Ok(prescription);
         }
-
-
-
-
 
         // =====================================================
         // 4. DELETE: Delete Prescription
-        [HttpDelete("DeletePrescription")]
-        public async Task<IActionResult> DeletePrescription(int id)
+        [Authorize(Roles = "1,2")]
+        [HttpDelete("DeletePrescription/{id}")]
+        public IActionResult DeletePrescription(int id)
         {
             // Find the prescription that should be deleted
-            var prescription = await _context.Prescriptions
-                .FindAsync(id);
-
+            var prescription = _context.Prescriptions.Find(id);
 
             // Return NotFound if it does not exist
             if (prescription == null)
             {
-                return NotFound();
+                return NotFound($"Prescription with ID {id} was not found.");
             }
-
 
             // Remove prescription from database
             _context.Prescriptions.Remove(prescription);
 
-
             // Save delete operation
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
 
-
-            return NoContent();
+            return Ok("Prescription deleted successfully.");
         }
 
-
-
-
-        // 5. GET: Get all prescriptions
-        // Include related User and Medicines data
+        // =====================================================
+        // 5. GET: Get all prescriptions (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
         [HttpGet("GetAllPrescriptions")]
-        public async Task<ActionResult<IEnumerable<Prescription>>> GetPrescriptions()
+        public IActionResult GetPrescriptions()
         {
-            return await _context.Prescriptions
-
-                // Include related User information
+            List<Prescription> prescriptions = _context.Prescriptions
                 .Include(x => x.User)
-
-                // Include related Medicines information
                 .Include(x => x.Medicines)
+                .ToList();
 
-                .ToListAsync();
+            return Ok(prescriptions);
         }
 
-
-
-
-        // 6. GET: Find prescription by Id
-        [HttpGet("GetPrescriptionById")]
-        public async Task<ActionResult<Prescription>> GetPrescriptionById(int id)
+        // 5b. GET: Get my prescriptions (any authenticated user)
+        [HttpGet("GetMyPrescriptions")]
+        public IActionResult GetMyPrescriptions()
         {
-            // Search for prescription and include related data
-            var prescription = await _context.Prescriptions
+            var userIdClaim = User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst("nameid")?.Value
+                ?? User.FindFirst("sub")?.Value;
 
-                .Include(x => x.User)
-                .Include(x => x.Medicines)
-
-                .FirstOrDefaultAsync(
-                    x => x.PrescriptionId == id
-                );
-
-
-            // Check if prescription exists
-            if (prescription == null)
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                return NotFound();
+                return Unauthorized("Could not determine user identity.");
             }
 
+            var prescriptions = _context.Prescriptions
+                .Include(x => x.Medicines)
+                .Where(x => x.UserId == userId)
+                .ToList();
 
-            return prescription;
+            return Ok(prescriptions);
         }
 
-
-
-
-
-        // 7. GET: Filter prescriptions using LINQ
-        // Filter by prescription status
-        [HttpGet("FilterPrescription")]
-        public async Task<ActionResult<IEnumerable<Prescription>>> FilterPrescription(string status)
+        // =====================================================
+        // 6. GET: Find prescription by Id
+        [HttpGet("GetPrescriptionById/{id}")]
+        public IActionResult GetPrescriptionById(int id)
         {
-            var prescriptions = await _context.Prescriptions
-
-                // Load related entities
+            var prescription = _context.Prescriptions
                 .Include(x => x.User)
                 .Include(x => x.Medicines)
+                .FirstOrDefault(x => x.PrescriptionId == id);
 
-                // Filter records by prescription status
-                .Where(x => x.PrescriptionStatus == status)
+            if (prescription == null)
+            {
+                return NotFound($"Prescription with ID {id} was not found.");
+            }
 
-                .ToListAsync();
-
-
-            return prescriptions;
+            return Ok(prescription);
         }
 
-
-
-
-
         // =====================================================
-        // 8. GET: Sort Prescriptions
-        // Sorts prescriptions by date from newest to oldest.
-        // Uses LINQ OrderByDescending().
-        // =====================================================
-        [HttpGet("sort")]
-        public async Task<ActionResult<IEnumerable<Prescription>>> SortPrescriptions()
+        // 7. GET: Filter prescriptions by status
+        [Authorize(Roles = "1,2")]
+        [HttpGet("FilterPrescription")]
+        public IActionResult FilterPrescription([FromQuery] string status)
         {
-            var prescriptions = await _context.Prescriptions
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return BadRequest("Status parameter cannot be empty.");
+            }
 
-                // Sort prescriptions by prescription date
-                .OrderByDescending(x => x.PrescriptionDate)
+            var prescriptions = _context.Prescriptions
+                .Include(x => x.User)
+                .Include(x => x.Medicines)
+                .Where(x => x.PrescriptionStatus.ToLower() == status.ToLower())
+                .ToList();
 
-                .ToListAsync();
-
-
-            return prescriptions;
+            return Ok(prescriptions);
         }
 
+        // =====================================================
+        // 8. GET: Sort Prescriptions by date
+        [Authorize(Roles = "1,2")]
+        [HttpGet("sort")]
+        public IActionResult SortPrescriptions()
+        {
+            var prescriptions = _context.Prescriptions
+                .Include(x => x.User)
+                .Include(x => x.Medicines)
+                .OrderByDescending(x => x.PrescriptionDate)
+                .ToList();
+
+            return Ok(prescriptions);
+        }
     }
 }

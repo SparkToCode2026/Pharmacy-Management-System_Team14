@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Branch Management - Pharmacy Management System</title>
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Navigation Bar Placeholder -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Main -->
+    <main class="container my-5">
+      <h2 class="mb-4 text-primary">Branch Management</h2>
+
+      <!-- Add New Branch -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">Add New Branch</h5>
+        </div>
+        <div class="card-body">
+          <form id="branchForm">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label for="BranchName" class="form-label">Branch Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="BranchName"
+                  placeholder="Enter branch name"
+                  required
+                />
+              </div>
+              <div class="col-md-3">
+                <label for="BranchAddress" class="form-label">Address</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="BranchAddress"
+                  placeholder="Branch location"
+                  required
+                />
+              </div>
+              <div class="col-md-3">
+                <label for="BranchCity" class="form-label">City</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="BranchCity"
+                  placeholder="Enter branch city"
+                  required
+                />
+              </div>
+              <div class="col-md-3">
+                <label for="BranchPhone" class="form-label">Phone</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="BranchPhone"
+                  placeholder="e.g. 12345678"
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success mt-3">
+              Add Branch
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Display Branches -->
+      <div class="card shadow-sm">
+        <div
+          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center"
+        >
+          <div class="d-flex align-items-center gap-3">
+            <h5 class="card-title mb-0">Branches Directory</h5>
+            <span class="badge bg-light text-dark" id="totalBranchesBadge"
+              >Total: --</span
+            >
+          </div>
+          <div class="d-flex gap-2">
+            <button onclick="getAllBranches()" class="btn btn-sm btn-light">
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- City Filter Input -->
+          <div class="row mb-3">
+            <div class="col-md-5">
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="searchCityInput"
+                  class="form-control"
+                  placeholder="Filter by city..."
+                />
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  onclick="searchByCity()"
+                >
+                  Search
+                </button>
+                <button
+                  class="btn btn-outline-danger"
+                  type="button"
+                  onclick="clearCityFilter()"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Branch Name</th>
+                  <th>Address</th>
+                  <th>City</th>
+                  <th>Phone</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="branchesTable">
+                <!-- Dynamic Data -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Edit Branch Modal -->
+    <div
+      class="modal fade"
+      id="editBranchModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title">Edit Branch</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="editBranchForm">
+              <input type="hidden" id="editBranchId" />
+              <div class="mb-3">
+                <label for="editBranchName" class="form-label">Branch Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editBranchName"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="editBranchAddress" class="form-label">Address</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editBranchAddress"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="editBranchCity" class="form-label">City</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editBranchCity"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="editBranchPhone" class="form-label">Phone</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="editBranchPhone"
+                  required
+                />
+              </div>
+              <div class="text-end">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Branch Modal -->
+    <div
+      class="modal fade"
+      id="viewBranchModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title">Branch Details</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body" id="viewBranchBody">
+            <!-- Details loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script src="navbar.js"></script>
+    <script src="branches.js"></script>
+  </body>
+</html>

@@ -1,139 +1,186 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Pharmacy_Management_System.Controllers
 {
     [ApiController]
-    [Route("Manufacturer")]
+    [Route("api/[controller]")]
+    [Authorize]
     public class ManufacturerController : ControllerBase
     {
-        private ProjectContext _context;
+        private readonly ProjectContext _context;
+
         public ManufacturerController(ProjectContext context)
         {
             _context = context;
         }
 
-        //Create a new manufacturer
+        // Create a new manufacturer (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
         [HttpPost("CreateManufacturer")]
         public IActionResult CreateManufacturer([FromBody] Manufacturer manufacturer)
         {
-            bool ManuExists = _context.Manufacturer.Any(m => m.ManufacturerName == manufacturer.ManufacturerName || m.LicenseNumber == manufacturer.LicenseNumber);
-            if (ManuExists)
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            bool manuExists = _context.Manufacturer
+                .Any(m => m.ManufacturerName == manufacturer.ManufacturerName || m.LicenseNumber == manufacturer.LicenseNumber);
+
+            if (manuExists)
             {
                 return BadRequest("Manufacturer Name or License Number is already taken.");
             }
+
             _context.Manufacturer.Add(manufacturer);
             _context.SaveChanges();
+
             return Ok(manufacturer);
         }
 
-        [HttpPut("UpdateManufacturer")]
+        // Update a manufacturer (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpPut("UpdateManufacturer/{id}")]
         public IActionResult UpdateManufacturer(int id, [FromBody] Manufacturer manufacturer)
         {
-            //Check if the manufacturer exists in the database
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var manu = _context.Manufacturer.Find(id);
             if (manu == null)
             {
-                return NotFound();
+                return NotFound($"Manufacturer with ID {id} was not found.");
             }
+
             manu.ManufacturerName = manufacturer.ManufacturerName;
             manu.LicenseNumber = manufacturer.LicenseNumber;
+            manu.ContactNumber = manufacturer.ContactNumber;
+            manu.ContactEmail = manufacturer.ContactEmail;
 
             _context.SaveChanges();
             return Ok(manu);
         }
 
-
-
-        //Update the contact information of a manufacturer
-        [HttpPatch("UpdateManufacturerContact")]
+        // Update contact info only (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpPatch("UpdateManufacturerContact/{id}")]
         public IActionResult UpdateContactManufacturer(int id, [FromBody] string newContactInfo)
         {
-            //Check if the manufacturer exists in the database
+            if (string.IsNullOrWhiteSpace(newContactInfo))
+            {
+                return BadRequest("Contact information cannot be empty.");
+            }
+
             var manu = _context.Manufacturer.Find(id);
             if (manu == null)
             {
-                return NotFound();
+                return NotFound($"Manufacturer with ID {id} was not found.");
             }
+
             manu.ContactNumber = newContactInfo;
             _context.SaveChanges();
+
             return Ok(manu);
         }
 
-
-
-        //Delete a manufacturer
-        [HttpDelete("DeleteManufacturer")]
+        // Delete a manufacturer (Admin / Pharmacist only)
+        [Authorize(Roles = "1,2")]
+        [HttpDelete("DeleteManufacturer/{id}")]
         public IActionResult DeleteManufacturer(int id)
         {
-            //Check if the manufacturer exists in the database
             var manu = _context.Manufacturer.Find(id);
             if (manu == null)
             {
-                return NotFound();
+                return NotFound($"Manufacturer with ID {id} was not found.");
             }
+
             _context.Manufacturer.Remove(manu);
             _context.SaveChanges();
-            return Ok();
+
+            return Ok("Manufacturer deleted successfully.");
         }
 
-
-        //Get all manufacturers with their medicines
+        // Get all manufacturers (Public access)
+        [AllowAnonymous]
         [HttpGet("GetAllManufacturers")]
         public IActionResult GetAllManufacturer()
         {
-            //Get all manufacturers with their medicines
-            var manufacturers = _context.Manufacturer.
-                                                Include(m => m.Medicines)
-                                                .ToList();
+            var manufacturers = _context.Manufacturer
+                .Select(m => new
+                {
+                    m.ManufacturerId,
+                    m.ManufacturerName,
+                    m.LicenseNumber,
+                    m.ContactNumber,
+                    m.ContactEmail
+                })
+                .ToList();
+
             return Ok(manufacturers);
         }
 
-
-
-        //Get a manufacturer by id with their medicines
-        [HttpGet("GetManufacturerById")]
+        // Get manufacturer by ID (Public access)
+        [AllowAnonymous]
+        [HttpGet("GetManufacturerById/{id}")]
         public IActionResult GetManufacturer(int id)
         {
-            //Check if the manufacturer exists in the database
             var manu = _context.Manufacturer
-                                 .Include(m => m.Medicines)
-                                 .FirstOrDefault(m => m.ManufacturerId == id);
+                .Select(m => new
+                {
+                    m.ManufacturerId,
+                    m.ManufacturerName,
+                    m.LicenseNumber,
+                    m.ContactNumber,
+                    m.ContactEmail
+                })
+                .FirstOrDefault(m => m.ManufacturerId == id);
+
             if (manu == null)
             {
-                return NotFound();
+                return NotFound($"Manufacturer with ID {id} was not found.");
             }
+
             return Ok(manu);
         }
 
-
-        //Search for manufacturers by name
+        // Search manufacturers by name (Public access)
+        [AllowAnonymous]
         [HttpGet("SearchManufacturer")]
         public IActionResult SearchManufacturer([FromQuery] string? name)
         {
-            //Search for manufacturers by name
-            var query = _context.Manufacturer
-                        .Include(m => m.Medicines)
-                        .AsQueryable();
-            //If the name is not null or empty, filter the manufacturers by name
+            var query = _context.Manufacturer.AsQueryable();
+
             if (!string.IsNullOrWhiteSpace(name))
             {
-                query = query.Where(m => m.ManufacturerName.Contains(name));
+                query = query.Where(m => m.ManufacturerName.ToLower().Contains(name.ToLower()));
             }
-            var manufacturers = query.ToList();
+
+            var manufacturers = query.Select(m => new
+            {
+                m.ManufacturerId,
+                m.ManufacturerName,
+                m.LicenseNumber,
+                m.ContactNumber,
+                m.ContactEmail
+            }).ToList();
+
             return Ok(manufacturers);
         }
 
-
-
-        //Get the count of manufacturers
+        // Count manufacturers (Public access)
+        [AllowAnonymous]
         [HttpGet("count")]
         public IActionResult Count()
         {
-            var count = _context.Manufacturer.Count();
-            return Ok(count);
+            int count = _context.Manufacturer.Count();
+            return Ok(new { TotalManufacturers = count });
         }
     }
 }
-

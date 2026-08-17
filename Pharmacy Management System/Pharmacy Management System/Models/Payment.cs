@@ -6,7 +6,7 @@ namespace Pharmacy_Management_System.Models
     public class Payment
     {
         [Key]
-        [JsonIgnore]
+        
         public int PaymentId { get; set; }
 
         [Required]

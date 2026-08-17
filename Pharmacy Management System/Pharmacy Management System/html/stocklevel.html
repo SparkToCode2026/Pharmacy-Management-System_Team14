@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock & Inventory Management - Pharmacy Management System</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <!-- Dynamic Navigation Bar -->
+    <div id="navbar-placeholder"></div>
+
+    <main class="container my-5">
+      <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+          <h2 class="text-primary fw-bold mb-1">Stock & Inventory Management</h2>
+          <p class="text-muted mb-0">
+            Monitor and adjust medicine quantities and reorder thresholds across pharmacy branches
+          </p>
+        </div>
+      </div>
+
+      <!-- Add New Stock Record Card -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">📦 Add / Link Medicine Stock to Branch</h5>
+        </div>
+        <div class="card-body p-4">
+          <form id="stockLevelForm">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="medicineSelect" class="form-label fw-bold">
+                  Select Medicine <span class="text-danger">*</span>
+                </label>
+                <select id="medicineSelect" class="form-select" required>
+                  <option value="">— Loading medicines... —</option>
+                </select>
+                <small class="text-muted">Choose the medicine to track in inventory.</small>
+              </div>
+
+              <div class="col-md-6">
+                <label for="branchSelect" class="form-label fw-bold">
+                  Select Pharmacy Branch <span class="text-danger">*</span>
+                </label>
+                <select id="branchSelect" class="form-select" required>
+                  <option value="">— Loading branches... —</option>
+                </select>
+                <small class="text-muted">Select the branch location holding this stock.</small>
+              </div>
+
+              <div class="col-md-4">
+                <label for="currentQuantity" class="form-label fw-bold">
+                  Current In-Stock Quantity <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="currentQuantity"
+                  placeholder="e.g. 150"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div class="col-md-4">
+                <label for="reorderLevel" class="form-label fw-bold">
+                  Reorder Alert Threshold <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="reorderLevel"
+                  placeholder="e.g. 20"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div class="col-md-4">
+                <label for="lastRestockedDate" class="form-label fw-bold">
+                  Last Restocked Date <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="lastRestockedDate"
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-success mt-4 px-4 fw-bold">
+              ✓ Save Medicine Stock Record
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Stock Level Table Card -->
+      <div class="card mb-5 shadow-sm">
+        <div
+          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <div class="d-flex align-items-center gap-3">
+            <h5 class="card-title mb-0">Inventory Stock Records</h5>
+            <span class="badge bg-light text-dark" id="stockCountBadge">Total: --</span>
+          </div>
+          <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-sm btn-warning text-dark fw-bold" id="showLowStockBtn" onclick="toggleLowStock()">
+              ⚠️ Show Low Stock Only
+            </button>
+            <button
+              type="button"
+              class="btn btn-light btn-sm"
+              id="refreshStockLevels"
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- Filters & Search Toolbar -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <input
+                type="text"
+                id="stockSearchInput"
+                class="form-control"
+                placeholder="Search inventory by medicine name..."
+              />
+            </div>
+            <div class="col-md-6">
+              <select id="filterBranchSelect" class="form-select">
+                <option value="">All Branches</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th style="width: 8%">ID</th>
+                  <th style="width: 25%">Medicine</th>
+                  <th style="width: 20%">Branch</th>
+                  <th style="width: 15%">Current Quantity</th>
+                  <th style="width: 12%">Reorder Level</th>
+                  <th style="width: 10%">Last Restocked</th>
+                  <th style="width: 10%" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="stockLevelTableBody">
+                <tr>
+                  <td colspan="7" class="text-center text-muted py-4">
+                    Loading stock levels...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Edit Stock Level Modal -->
+    <div
+      class="modal fade"
+      id="editStockLevelModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+          <form id="editStockLevelForm">
+            <div class="modal-header bg-warning text-dark">
+              <h5 class="modal-title fw-bold">✏️ Update Medicine Stock</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+            <div class="modal-body p-4">
+              <input type="hidden" id="editStockLevelId" />
+
+              <!-- Linked Medicine Info Banner -->
+              <div class="alert alert-light border mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="text-muted small d-block">Linked Medicine:</span>
+                    <strong class="fs-5 text-primary" id="editMedicineName">—</strong>
+                  </div>
+                  <div class="text-end">
+                    <span class="text-muted small d-block">Branch:</span>
+                    <span class="badge bg-secondary" id="editBranchName">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="editCurrentQuantity" class="form-label fw-bold">
+                  Current Stock Quantity <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  class="form-control form-control-lg"
+                  id="editCurrentQuantity"
+                  min="0"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="editReorderLevel" class="form-label fw-bold">
+                  Reorder Alert Threshold <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="editReorderLevel"
+                  min="1"
+                  required
+                />
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary fw-bold">
+                ✓ Save Stock Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script src="navbar.js"></script>
+    <script src="stocklevel.js"></script>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Items Management - Pharmacy System</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="style.css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <!-- Dynamic Navigation Bar -->
+    <div id="navbar-placeholder"></div>
+
+    <main class="container my-5">
+      <h2 class="mb-4 text-primary">Order Items Management</h2>
+
+      <!-- Add Order Item Card -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">Add Item to Order</h5>
+        </div>
+        <div class="card-body">
+          <form id="addOrderItemForm" onsubmit="return false;">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label fw-bold">Select Order <span class="text-danger">*</span></label>
+                <select id="itemOrder" class="form-select" required>
+                  <option value="">— select order —</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">Select Medicine <span class="text-danger">*</span></label>
+                <select id="itemMedicine" class="form-select" required>
+                  <option value="">— select medicine —</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">Quantity <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="itemQty"
+                  value="1"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">Unit Price (OMR) <span class="text-danger">*</span></label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  id="itemPrice"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+            </div>
+
+            <button type="button" id="addItemBtn" class="btn btn-success mt-3 px-4">
+              Add Order Item
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Order Items Table Card -->
+      <div class="card shadow-sm">
+        <div
+          class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+          <h5 class="card-title mb-0">Registered Order Items</h5>
+          <div class="d-flex gap-2">
+            <select
+              id="filterOrder"
+              class="form-select form-select-sm"
+              style="width: auto"
+            >
+              <option value="">All orders</option>
+            </select>
+            <button id="applyFilterBtn" class="btn btn-sm btn-light">
+              Filter
+            </button>
+            <button id="clearFilterBtn" class="btn btn-sm btn-outline-light">
+              Clear
+            </button>
+            <button id="refreshBtn" class="btn btn-sm btn-light">
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Item ID</th>
+                  <th>Order ID</th>
+                  <th>Medicine</th>
+                  <th>Quantity</th>
+                  <th>Unit Price</th>
+                  <th>Subtotal</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="itemsTableBody">
+                <tr>
+                  <td colspan="7" class="text-center">Loading items...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Edit Order Item Modal -->
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title fw-bold">Edit Order Item</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <form id="editOrderItemForm" onsubmit="return false;">
+            <div class="modal-body">
+              <input type="hidden" id="editItemId" />
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Select Medicine</label>
+                <select id="editMedicine" class="form-select" required>
+                  <option value="">— select —</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Quantity</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  id="editQty"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-bold">Unit Price (OMR)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  class="form-control"
+                  id="editPrice"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button type="button" id="saveEditBtn" class="btn btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Placeholder -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Bootstrap JS, API, Navbar, OrderItem JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="api.js"></script>
+    <script src="navbar.js"></script>
+    <script src="OrderItem.js"></script>
+  </body>
+</html>

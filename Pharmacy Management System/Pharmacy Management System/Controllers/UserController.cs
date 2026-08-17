@@ -1,21 +1,32 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Pharmacy_Management_System.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 namespace Pharmacy_Management_System.Controllers
 {
     [ApiController]
     [Route("User")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private ProjectContext _context;
-        public UserController(ProjectContext context)
+        private readonly IConfiguration _configuration;
+        private readonly Pharmacy_Management_System.Services.IEmailService _emailService;
+
+        public UserController(ProjectContext context, IConfiguration configuration, Pharmacy_Management_System.Services.IEmailService emailService)
         {
             _context = context;
+            _configuration = configuration;
+            _emailService = emailService;
         }
 
 
-
         // Register a new user
+        [AllowAnonymous]
         [HttpPost("register")]
         public IActionResult Register(User U)
         {
@@ -25,10 +36,34 @@ namespace Pharmacy_Management_System.Controllers
             {
                 return BadRequest("Username or Email is already taken.");
             }
+            if (U.RoleId == null || U.RoleId == 0)
+            {
+                U.RoleId = 3;
+            }
             // Hash the password before saving it to the database
             U.Password = BCrypt.Net.BCrypt.HashPassword(U.Password);
             _context.User.Add(U);
             _context.SaveChanges();
+
+            if (!string.IsNullOrWhiteSpace(U.Email))
+            {
+                try
+                {
+                    var welcomeBody =
+                        $"Hello {U.Username},\n\n" +
+                        $"Welcome to the Pharmacy Management System!\n\n" +
+                        $"Your account has been created successfully.\n" +
+                        $"You can now log in, browse medicines, manage prescriptions, and place orders.\n\n" +
+                        $"Best regards,\nPharmacy Management Team";
+
+                    _emailService.SendEmailAsync(U.Email, "Welcome to Pharmacy Management System", welcomeBody);
+                }
+                catch
+                {
+                    // Do not fail registration if email delivery encounters an issue
+                }
+            }
+
             return Ok(U.UserId);
         }
 
@@ -36,18 +71,32 @@ namespace Pharmacy_Management_System.Controllers
 
 
         // Update the username and email of a user
-        [HttpPut("UpdateUser")] 
+        [HttpPut("UpdateUser")]
         public IActionResult UpdateUser(int id, [FromBody] User U)
         {
-            //Check if the user exists in the database
+            // Check if the user exists in the database
             var user = _context.User.Find(id);
             if (user == null)
             {
                 return NotFound();
             }
+
             user.Username = U.Username;
             user.Email = U.Email;
-            
+            if (U.RoleId > 0)
+            {
+                user.RoleId = U.RoleId;
+            }
+
+            // Remove Password and Role from ModelState validation checks
+            ModelState.Remove("Password");
+            ModelState.Remove("Role");
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             _context.SaveChanges();
             return Ok(user);
         }
@@ -68,7 +117,7 @@ namespace Pharmacy_Management_System.Controllers
             }
             // Hash the new password before saving it to the database
             user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            
+
             _context.SaveChanges();
             return Ok(user);
         }
@@ -104,7 +153,8 @@ namespace Pharmacy_Management_System.Controllers
 
         // Get a specific user by ID along with their related entity
         [HttpGet("GetUserById")]
-        public IActionResult getUser(int id) {
+        public IActionResult getUser(int id)
+        {
             // Retrieve the user by ID including their related entity
             var user = _context.User
                                 .Include(u => u.CustomerProfile)
@@ -132,7 +182,7 @@ namespace Pharmacy_Management_System.Controllers
                 query = query.Where(u => u.Username.Contains(search) || u.Email.Contains(search));
             }
 
-            
+
             var users = query.ToList();
             return Ok(users);
         }
@@ -149,5 +199,63 @@ namespace Pharmacy_Management_System.Controllers
                                 .ToList();
             return Ok(user);
         }
+
+
+        // Login endpoint with BCrypt password verification
+        [AllowAnonymous]
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] User loginData)
+        {
+            // Find user by Username or Email
+            var user = _context.User
+                .FirstOrDefault(u => u.Username == loginData.Username || u.Email == loginData.Email);
+
+            if (user == null)
+            {
+                return BadRequest("Invalid username or password.");
+            }
+
+            // Verify the hashed password using BCrypt
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginData.Password, user.Password);
+            if (!isPasswordValid)
+            {
+                return BadRequest("Invalid username or password.");
+            }
+
+            var token = GenerateJwtToken(user);
+
+            return Ok(new
+            {
+                Token = token,
+                UserId = user.UserId,
+                Role = user.Role
+            });
+
+        }
+        private string GenerateJwtToken(User user)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Role, user.RoleId?.ToString() ?? "3")
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(7),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
     }
 }
+    
+
+
