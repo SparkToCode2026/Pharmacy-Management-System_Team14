@@ -25,7 +25,7 @@ async function fetchManufacturers() {
     console.error("Error loading manufacturers:", error);
     const tbody = document.getElementById("manufacturersTableBody");
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load manufacturers: ${error.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load manufacturers: ${error.message}</td></tr>`;
     }
   }
 }
@@ -36,7 +36,7 @@ function renderTable(data) {
   if (!tbody) return;
 
   if (!data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No manufacturers found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No manufacturers found.</td></tr>`;
     return;
   }
 
@@ -44,15 +44,17 @@ function renderTable(data) {
     .map((item) => {
       const id = item.manufacturerId ?? item.ManufacturerId;
       const name = item.manufacturerName ?? item.ManufacturerName ?? "";
-      const country = item.manufacturerCountry ?? item.ManufacturerCountry ?? "";
-      const contact = item.manufacturerContactInfo ?? item.ManufacturerContactInfo ?? "";
+      const license = item.licenseNumber ?? item.LicenseNumber ?? "";
+      const contactNum = item.contactNumber ?? item.ContactNumber ?? "";
+      const contactMail = item.contactEmail ?? item.ContactEmail ?? "";
 
       return `
         <tr>
-          <td class="fw-bold">${id}</td>
-          <td>${name}</td>
-          <td>${country || "—"}</td>
-          <td>${contact || "—"}</td>
+          <td class="fw-bold">#${id}</td>
+          <td class="fw-semibold">${name}</td>
+          <td>${license || "—"}</td>
+          <td>${contactNum || "—"}</td>
+          <td>${contactMail || "—"}</td>
           <td class="text-center text-nowrap">
             <button class="btn btn-info btn-sm text-white me-1" onclick="openDetailsModal(${id})">Details</button>
             <button class="btn btn-warning btn-sm me-1" onclick="openEditModal(${id})">Edit</button>
@@ -70,8 +72,9 @@ document.getElementById("createForm")?.addEventListener("submit", async (e) => {
 
   const newManufacturer = {
     manufacturerName: document.getElementById("createName").value.trim(),
-    manufacturerCountry: document.getElementById("createCountry").value.trim(),
-    manufacturerContactInfo: document.getElementById("createContact").value.trim(),
+    licenseNumber: document.getElementById("createLicense").value.trim(),
+    contactNumber: document.getElementById("createContactNumber").value.trim(),
+    contactEmail: document.getElementById("createContactEmail").value.trim(),
   };
 
   try {
@@ -98,8 +101,9 @@ document.getElementById("editForm")?.addEventListener("submit", async (e) => {
   const updatedManufacturer = {
     manufacturerId: parseInt(id),
     manufacturerName: document.getElementById("editName").value.trim(),
-    manufacturerCountry: document.getElementById("editCountry").value.trim(),
-    manufacturerContactInfo: document.getElementById("editContact").value.trim(),
+    licenseNumber: document.getElementById("editLicense").value.trim(),
+    contactNumber: document.getElementById("editContactNumber").value.trim(),
+    contactEmail: document.getElementById("editContactEmail").value.trim(),
   };
 
   try {
@@ -120,21 +124,26 @@ document.getElementById("editForm")?.addEventListener("submit", async (e) => {
 // 4. PATCH CONTACT INFO
 async function patchContactInfo() {
   const id = document.getElementById("editId").value;
-  const contact = document.getElementById("editContact").value.trim();
+  const contact = document.getElementById("editContactNumber").value.trim();
+
+  if (!contact) {
+    alert("Please enter a contact number.");
+    return;
+  }
 
   try {
     await apiUpdateManufacturerContact(id, contact);
-    alert("Contact Info patched successfully!");
+    alert("Contact number updated successfully!");
     fetchManufacturers();
   } catch (error) {
-    console.error("Error patching contact info:", error);
-    alert(`Patch failed: ${error.message}`);
+    console.error("Error updating contact number:", error);
+    alert(`Update failed: ${error.message}`);
   }
 }
 
 // 5. DELETE MANUFACTURER
 async function deleteManufacturer(id) {
-  if (!confirm(`Are you sure you want to delete Manufacturer ID: ${id}?`)) return;
+  if (!confirm(`Are you sure you want to delete Manufacturer ID: #${id}?`)) return;
 
   try {
     await apiDeleteManufacturer(id);
@@ -152,13 +161,15 @@ async function openDetailsModal(id) {
     const data = await apiGetManufacturerById(id);
     const idVal = data.manufacturerId ?? data.ManufacturerId;
     const nameVal = data.manufacturerName ?? data.ManufacturerName ?? "";
-    const countryVal = data.manufacturerCountry ?? data.ManufacturerCountry ?? "";
-    const contactVal = data.manufacturerContactInfo ?? data.ManufacturerContactInfo ?? "";
+    const licenseVal = data.licenseNumber ?? data.LicenseNumber ?? "";
+    const contactNumVal = data.contactNumber ?? data.ContactNumber ?? "";
+    const contactMailVal = data.contactEmail ?? data.ContactEmail ?? "";
 
-    document.getElementById("detailId").innerText = idVal;
+    document.getElementById("detailId").innerText = `#${idVal}`;
     document.getElementById("detailName").innerText = nameVal;
-    document.getElementById("detailCountry").innerText = countryVal || "—";
-    document.getElementById("detailContact").innerText = contactVal || "—";
+    document.getElementById("detailLicense").innerText = licenseVal || "—";
+    document.getElementById("detailContactNumber").innerText = contactNumVal || "—";
+    document.getElementById("detailContactEmail").innerText = contactMailVal || "—";
 
     const modal = new bootstrap.Modal(document.getElementById("detailsModal"));
     modal.show();
@@ -174,13 +185,15 @@ async function openEditModal(id) {
     const data = await apiGetManufacturerById(id);
     const idVal = data.manufacturerId ?? data.ManufacturerId;
     const nameVal = data.manufacturerName ?? data.ManufacturerName ?? "";
-    const countryVal = data.manufacturerCountry ?? data.ManufacturerCountry ?? "";
-    const contactVal = data.manufacturerContactInfo ?? data.ManufacturerContactInfo ?? "";
+    const licenseVal = data.licenseNumber ?? data.LicenseNumber ?? "";
+    const contactNumVal = data.contactNumber ?? data.ContactNumber ?? "";
+    const contactMailVal = data.contactEmail ?? data.ContactEmail ?? "";
 
     document.getElementById("editId").value = idVal;
     document.getElementById("editName").value = nameVal;
-    document.getElementById("editCountry").value = countryVal;
-    document.getElementById("editContact").value = contactVal;
+    document.getElementById("editLicense").value = licenseVal;
+    document.getElementById("editContactNumber").value = contactNumVal;
+    document.getElementById("editContactEmail").value = contactMailVal;
 
     const modal = new bootstrap.Modal(document.getElementById("editModal"));
     modal.show();
@@ -190,7 +203,7 @@ async function openEditModal(id) {
   }
 }
 
-// 8. SEARCH HANDLING (Backend & Client Fallback)
+// 8. SEARCH MANUFACTURERS
 async function handleSearch() {
   const query = document.getElementById("searchInput").value.trim();
 
@@ -206,8 +219,15 @@ async function handleSearch() {
     // Client-side fallback
     const filtered = currentManufacturers.filter((m) => {
       const name = (m.manufacturerName ?? m.ManufacturerName ?? "").toLowerCase();
-      const country = (m.manufacturerCountry ?? m.ManufacturerCountry ?? "").toLowerCase();
-      return name.includes(query.toLowerCase()) || country.includes(query.toLowerCase());
+      const lic = (m.licenseNumber ?? m.LicenseNumber ?? "").toLowerCase();
+      const phone = (m.contactNumber ?? m.ContactNumber ?? "").toLowerCase();
+      const email = (m.contactEmail ?? m.ContactEmail ?? "").toLowerCase();
+      return (
+        name.includes(query.toLowerCase()) ||
+        lic.includes(query.toLowerCase()) ||
+        phone.includes(query.toLowerCase()) ||
+        email.includes(query.toLowerCase())
+      );
     });
     renderTable(filtered);
   }
@@ -223,7 +243,7 @@ let sortAsc = true;
 function sortManufacturers() {
   currentManufacturers.sort((a, b) => {
     const nameA = (a.manufacturerName ?? a.ManufacturerName ?? "").toLowerCase();
-    const nameB = (b.manufacturerName ?? b.ManufacturerName ?? "").toLowerCase();
+    const nameB = (b.manufacturerName ?? b.SupplierName ?? "").toLowerCase();
     return sortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
   });
   sortAsc = !sortAsc;

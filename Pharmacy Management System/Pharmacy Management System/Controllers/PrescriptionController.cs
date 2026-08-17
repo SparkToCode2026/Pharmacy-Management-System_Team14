@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 
 namespace Pharmacy_Management_System.Controllers
 {
@@ -27,24 +28,50 @@ namespace Pharmacy_Management_System.Controllers
         [HttpPost("CreatePrescription")]
         public IActionResult CreatePrescription([FromBody] Prescription prescription)
         {
+            // If UserId is not provided (or 0), fallback to current logged-in user from JWT
+            if (prescription.UserId <= 0)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? User.FindFirst("nameid")?.Value
+                    ?? User.FindFirst("sub")?.Value;
+
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int tokenUserId))
+                {
+                    prescription.UserId = tokenUserId;
+                }
+            }
+
+            // Validate that the User exists in the database
+            if (!_context.Users.Any(u => u.UserId == prescription.UserId))
+            {
+                return BadRequest($"User with ID {prescription.UserId} does not exist.");
+            }
+
             // Check if the submitted data follows the validation rules
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            // Add the new prescription to the database
-            _context.Prescriptions.Add(prescription);
+            try
+            {
+                // Add the new prescription to the database
+                _context.Prescriptions.Add(prescription);
 
-            // Save changes permanently
-            _context.SaveChanges();
+                // Save changes permanently
+                _context.SaveChanges();
 
-            // Return the created prescription details
-            return CreatedAtAction(
-                nameof(GetPrescriptionById),
-                new { id = prescription.PrescriptionId },
-                prescription
-            );
+                // Return the created prescription details
+                return CreatedAtAction(
+                    nameof(GetPrescriptionById),
+                    new { id = prescription.PrescriptionId },
+                    prescription
+                );
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, $"Database error while saving prescription: {ex.InnerException?.Message ?? ex.Message}");
+            }
         }
 
         // =====================================================
@@ -58,6 +85,12 @@ namespace Pharmacy_Management_System.Controllers
             if (id != prescription.PrescriptionId)
             {
                 return BadRequest("ID mismatch.");
+            }
+
+            // Validate that the User exists in the database
+            if (!_context.Users.Any(u => u.UserId == prescription.UserId))
+            {
+                return BadRequest($"User with ID {prescription.UserId} does not exist.");
             }
 
             if (!ModelState.IsValid)
@@ -82,10 +115,16 @@ namespace Pharmacy_Management_System.Controllers
             existingPrescription.PrescriptionStatus = prescription.PrescriptionStatus;
             existingPrescription.UserId = prescription.UserId;
 
-            // Save the updated data
-            _context.SaveChanges();
-
-            return Ok(existingPrescription);
+            try
+            {
+                // Save the updated data
+                _context.SaveChanges();
+                return Ok(existingPrescription);
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, $"Database error while updating prescription: {ex.InnerException?.Message ?? ex.Message}");
+            }
         }
 
         // =====================================================

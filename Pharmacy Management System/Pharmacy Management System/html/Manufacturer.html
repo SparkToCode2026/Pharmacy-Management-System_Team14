@@ -45,7 +45,7 @@
                   type="text"
                   id="searchInput"
                   class="form-control"
-                  placeholder="Search manufacturer by name..."
+                  placeholder="Search manufacturer by name or license..."
                 />
                 <button class="btn btn-primary" id="searchBtn">Search</button>
                 <button
@@ -78,8 +78,9 @@
                 <tr>
                   <th scope="col">ID</th>
                   <th scope="col">Manufacturer Name</th>
-                  <th scope="col">Country</th>
-                  <th scope="col">Contact Info</th>
+                  <th scope="col">License Number</th>
+                  <th scope="col">Contact Number</th>
+                  <th scope="col">Contact Email</th>
                   <th scope="col" class="text-center">Actions</th>
                 </tr>
               </thead>
@@ -109,26 +110,51 @@
             <div class="modal-body p-4">
               <div class="mb-3">
                 <label for="createName" class="form-label fw-bold"
-                  >Name <span class="text-danger">*</span></label
+                  >Manufacturer Name <span class="text-danger">*</span></label
                 >
                 <input
                   type="text"
                   id="createName"
                   class="form-control"
+                  placeholder="e.g. Pfizer, Novartis"
                   required
                 />
               </div>
               <div class="mb-3">
-                <label for="createCountry" class="form-label fw-bold"
-                  >Country</label
+                <label for="createLicense" class="form-label fw-bold"
+                  >License Number <span class="text-danger">*</span></label
                 >
-                <input type="text" id="createCountry" class="form-control" />
+                <input
+                  type="text"
+                  id="createLicense"
+                  class="form-control"
+                  placeholder="e.g. LIC-98765"
+                  required
+                />
               </div>
               <div class="mb-3">
-                <label for="createContact" class="form-label fw-bold"
-                  >Contact Info</label
+                <label for="createContactNumber" class="form-label fw-bold"
+                  >Contact Number <span class="text-danger">*</span></label
                 >
-                <input type="text" id="createContact" class="form-control" />
+                <input
+                  type="text"
+                  id="createContactNumber"
+                  class="form-control"
+                  placeholder="e.g. +1 555-456-7890"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="createContactEmail" class="form-label fw-bold"
+                  >Contact Email <span class="text-danger">*</span></label
+                >
+                <input
+                  type="email"
+                  id="createContactEmail"
+                  class="form-control"
+                  placeholder="contact@manufacturer.com"
+                  required
+                />
               </div>
             </div>
             <div class="modal-footer bg-light">
@@ -164,7 +190,7 @@
               <input type="hidden" id="editId" />
               <div class="mb-3">
                 <label for="editName" class="form-label fw-bold"
-                  >Name <span class="text-danger">*</span></label
+                  >Manufacturer Name <span class="text-danger">*</span></label
                 >
                 <input
                   type="text"
@@ -174,25 +200,46 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="editCountry" class="form-label fw-bold"
-                  >Country</label
+                <label for="editLicense" class="form-label fw-bold"
+                  >License Number <span class="text-danger">*</span></label
                 >
-                <input type="text" id="editCountry" class="form-control" />
+                <input
+                  type="text"
+                  id="editLicense"
+                  class="form-control"
+                  required
+                />
               </div>
               <div class="mb-3">
-                <label for="editContact" class="form-label fw-bold"
-                  >Contact Info</label
+                <label for="editContactNumber" class="form-label fw-bold"
+                  >Contact Number <span class="text-danger">*</span></label
                 >
                 <div class="input-group">
-                  <input type="text" id="editContact" class="form-control" />
+                  <input
+                    type="text"
+                    id="editContactNumber"
+                    class="form-control"
+                    required
+                  />
                   <button
                     type="button"
                     class="btn btn-outline-secondary"
                     onclick="patchContactInfo()"
                   >
-                    Patch Contact
+                    Patch Phone
                   </button>
                 </div>
+              </div>
+              <div class="mb-3">
+                <label for="editContactEmail" class="form-label fw-bold"
+                  >Contact Email <span class="text-danger">*</span></label
+                >
+                <input
+                  type="email"
+                  id="editContactEmail"
+                  class="form-control"
+                  required
+                />
               </div>
             </div>
             <div class="modal-footer bg-light">
@@ -204,7 +251,7 @@
                 Cancel
               </button>
               <button type="submit" class="btn btn-warning">
-                Update Full
+                Update Manufacturer
               </button>
             </div>
           </form>
@@ -228,8 +275,9 @@
           <div class="modal-body p-4">
             <p><strong>ID:</strong> <span id="detailId"></span></p>
             <p><strong>Name:</strong> <span id="detailName"></span></p>
-            <p><strong>Country:</strong> <span id="detailCountry"></span></p>
-            <p><strong>Contact:</strong> <span id="detailContact"></span></p>
+            <p><strong>License Number:</strong> <span id="detailLicense"></span></p>
+            <p><strong>Contact Number:</strong> <span id="detailContactNumber"></span></p>
+            <p><strong>Contact Email:</strong> <span id="detailContactEmail"></span></p>
           </div>
           <div class="modal-footer bg-light">
             <button

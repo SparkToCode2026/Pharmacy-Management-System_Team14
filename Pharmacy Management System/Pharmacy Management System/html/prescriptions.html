@@ -79,14 +79,10 @@
               </div>
 
               <div class="col-md-3">
-                <label class="form-label fw-bold">User ID <span class="text-danger">*</span></label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="userId"
-                  placeholder="User account ID"
-                  required
-                />
+                <label class="form-label fw-bold">User <span class="text-danger">*</span></label>
+                <select class="form-select" id="userId" required>
+                  <option value="" disabled selected>Select a user...</option>
+                </select>
               </div>
             </div>
 
@@ -208,13 +204,10 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label fw-bold">User ID</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="editUserId"
-                  required
-                />
+                <label class="form-label fw-bold">User <span class="text-danger">*</span></label>
+                <select class="form-select" id="editUserId" required>
+                  <option value="" disabled selected>Select a user...</option>
+                </select>
               </div>
             </div>
 

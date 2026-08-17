@@ -45,7 +45,7 @@
                   type="text"
                   id="searchInput"
                   class="form-control"
-                  placeholder="Search supplier by name..."
+                  placeholder="Search supplier by name, email, phone, or address..."
                 />
                 <button class="btn btn-primary" id="searchBtn">Search</button>
                 <button
@@ -78,7 +78,8 @@
                 <tr>
                   <th scope="col">ID</th>
                   <th scope="col">Supplier Name</th>
-                  <th scope="col">Contact Info</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Phone</th>
                   <th scope="col">Address</th>
                   <th scope="col" class="text-center">Actions</th>
                 </tr>
@@ -120,25 +121,39 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="createContact" class="form-label fw-bold"
-                  >Contact Info</label
+                <label for="createEmail" class="form-label fw-bold"
+                  >Email <span class="text-danger">*</span></label
+                >
+                <input
+                  type="email"
+                  id="createEmail"
+                  class="form-control"
+                  placeholder="supplier@example.com"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="createPhone" class="form-label fw-bold"
+                  >Phone <span class="text-danger">*</span></label
                 >
                 <input
                   type="text"
-                  id="createContact"
+                  id="createPhone"
                   class="form-control"
-                  placeholder="Phone, email, or representative"
+                  placeholder="e.g. +1 555-123-4567"
+                  required
                 />
               </div>
               <div class="mb-3">
                 <label for="createAddress" class="form-label fw-bold"
-                  >Address</label
+                  >Address <span class="text-danger">*</span></label
                 >
                 <input
                   type="text"
                   id="createAddress"
                   class="form-control"
                   placeholder="Distribution warehouse location"
+                  required
                 />
               </div>
             </div>
@@ -185,16 +200,37 @@
                 />
               </div>
               <div class="mb-3">
-                <label for="editContact" class="form-label fw-bold"
-                  >Contact Info</label
+                <label for="editEmail" class="form-label fw-bold"
+                  >Email <span class="text-danger">*</span></label
                 >
-                <input type="text" id="editContact" class="form-control" />
+                <input
+                  type="email"
+                  id="editEmail"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="editPhone" class="form-label fw-bold"
+                  >Phone <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  id="editPhone"
+                  class="form-control"
+                  required
+                />
               </div>
               <div class="mb-3">
                 <label for="editAddress" class="form-label fw-bold"
-                  >Address</label
+                  >Address <span class="text-danger">*</span></label
                 >
-                <input type="text" id="editAddress" class="form-control" />
+                <input
+                  type="text"
+                  id="editAddress"
+                  class="form-control"
+                  required
+                />
               </div>
             </div>
             <div class="modal-footer bg-light">
@@ -230,7 +266,8 @@
           <div class="modal-body p-4">
             <p><strong>ID:</strong> <span id="detailId"></span></p>
             <p><strong>Name:</strong> <span id="detailName"></span></p>
-            <p><strong>Contact:</strong> <span id="detailContact"></span></p>
+            <p><strong>Email:</strong> <span id="detailEmail"></span></p>
+            <p><strong>Phone:</strong> <span id="detailPhone"></span></p>
             <p><strong>Address:</strong> <span id="detailAddress"></span></p>
           </div>
           <div class="modal-footer bg-light">

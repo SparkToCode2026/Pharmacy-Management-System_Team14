@@ -25,7 +25,7 @@ async function fetchSuppliers() {
     console.error("Error loading suppliers:", error);
     const tbody = document.getElementById("suppliersTableBody");
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Failed to load suppliers: ${error.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load suppliers: ${error.message}</td></tr>`;
     }
   }
 }
@@ -36,7 +36,7 @@ function renderTable(data) {
   if (!tbody) return;
 
   if (!data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No suppliers found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No suppliers found.</td></tr>`;
     return;
   }
 
@@ -44,14 +44,16 @@ function renderTable(data) {
     .map((item) => {
       const id = item.supplierId ?? item.SupplierId;
       const name = item.supplierName ?? item.SupplierName ?? "";
-      const contact = item.supplierContactInfo ?? item.SupplierContactInfo ?? "";
+      const email = item.supplierEmail ?? item.SupplierEmail ?? "";
+      const phone = item.supplierPhone ?? item.SupplierPhone ?? "";
       const address = item.supplierAddress ?? item.SupplierAddress ?? "";
 
       return `
         <tr>
-          <td class="fw-bold">${id}</td>
+          <td class="fw-bold">#${id}</td>
           <td class="fw-semibold">${name}</td>
-          <td>${contact || "—"}</td>
+          <td>${email || "—"}</td>
+          <td>${phone || "—"}</td>
           <td>${address || "—"}</td>
           <td class="text-center text-nowrap">
             <button class="btn btn-info btn-sm text-white me-1" onclick="openDetailsModal(${id})">Details</button>
@@ -70,7 +72,8 @@ document.getElementById("createForm")?.addEventListener("submit", async (e) => {
 
   const newSupplier = {
     supplierName: document.getElementById("createName").value.trim(),
-    supplierContactInfo: document.getElementById("createContact").value.trim(),
+    supplierEmail: document.getElementById("createEmail").value.trim(),
+    supplierPhone: document.getElementById("createPhone").value.trim(),
     supplierAddress: document.getElementById("createAddress").value.trim(),
   };
 
@@ -98,7 +101,8 @@ document.getElementById("editForm")?.addEventListener("submit", async (e) => {
   const updatedSupplier = {
     supplierId: id,
     supplierName: document.getElementById("editName").value.trim(),
-    supplierContactInfo: document.getElementById("editContact").value.trim(),
+    supplierEmail: document.getElementById("editEmail").value.trim(),
+    supplierPhone: document.getElementById("editPhone").value.trim(),
     supplierAddress: document.getElementById("editAddress").value.trim(),
   };
 
@@ -119,7 +123,7 @@ document.getElementById("editForm")?.addEventListener("submit", async (e) => {
 
 // 4. DELETE SUPPLIER
 async function deleteSupplierAction(id) {
-  if (!confirm(`Are you sure you want to delete Supplier ID: ${id}?`)) return;
+  if (!confirm(`Are you sure you want to delete Supplier ID: #${id}?`)) return;
 
   try {
     await apiDeleteSupplier(id);
@@ -137,12 +141,14 @@ async function openDetailsModal(id) {
     const data = await apiGetSupplierById(id);
     const idVal = data.supplierId ?? data.SupplierId;
     const nameVal = data.supplierName ?? data.SupplierName ?? "";
-    const contactVal = data.supplierContactInfo ?? data.SupplierContactInfo ?? "";
+    const emailVal = data.supplierEmail ?? data.SupplierEmail ?? "";
+    const phoneVal = data.supplierPhone ?? data.SupplierPhone ?? "";
     const addressVal = data.supplierAddress ?? data.SupplierAddress ?? "";
 
-    document.getElementById("detailId").innerText = idVal;
+    document.getElementById("detailId").innerText = `#${idVal}`;
     document.getElementById("detailName").innerText = nameVal;
-    document.getElementById("detailContact").innerText = contactVal || "—";
+    document.getElementById("detailEmail").innerText = emailVal || "—";
+    document.getElementById("detailPhone").innerText = phoneVal || "—";
     document.getElementById("detailAddress").innerText = addressVal || "—";
 
     const modal = new bootstrap.Modal(document.getElementById("detailsModal"));
@@ -159,12 +165,14 @@ async function openEditModal(id) {
     const data = await apiGetSupplierById(id);
     const idVal = data.supplierId ?? data.SupplierId;
     const nameVal = data.supplierName ?? data.SupplierName ?? "";
-    const contactVal = data.supplierContactInfo ?? data.SupplierContactInfo ?? "";
+    const emailVal = data.supplierEmail ?? data.SupplierEmail ?? "";
+    const phoneVal = data.supplierPhone ?? data.SupplierPhone ?? "";
     const addressVal = data.supplierAddress ?? data.SupplierAddress ?? "";
 
     document.getElementById("editId").value = idVal;
     document.getElementById("editName").value = nameVal;
-    document.getElementById("editContact").value = contactVal;
+    document.getElementById("editEmail").value = emailVal;
+    document.getElementById("editPhone").value = phoneVal;
     document.getElementById("editAddress").value = addressVal;
 
     const modal = new bootstrap.Modal(document.getElementById("editModal"));
@@ -191,9 +199,15 @@ async function handleSearch() {
     // Client-side fallback
     const filtered = currentSuppliers.filter((s) => {
       const name = (s.supplierName ?? s.SupplierName ?? "").toLowerCase();
-      const contact = (s.supplierContactInfo ?? s.SupplierContactInfo ?? "").toLowerCase();
+      const email = (s.supplierEmail ?? s.SupplierEmail ?? "").toLowerCase();
+      const phone = (s.supplierPhone ?? s.SupplierPhone ?? "").toLowerCase();
       const addr = (s.supplierAddress ?? s.SupplierAddress ?? "").toLowerCase();
-      return name.includes(query.toLowerCase()) || contact.includes(query.toLowerCase()) || addr.includes(query.toLowerCase());
+      return (
+        name.includes(query.toLowerCase()) ||
+        email.includes(query.toLowerCase()) ||
+        phone.includes(query.toLowerCase()) ||
+        addr.includes(query.toLowerCase())
+      );
     });
     renderTable(filtered);
   }

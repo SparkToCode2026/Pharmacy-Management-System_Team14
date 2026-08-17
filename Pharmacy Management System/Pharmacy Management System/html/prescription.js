@@ -4,6 +4,76 @@
 // ============================================================
 
 let currentPrescriptions = [];
+let allUsersList = [];
+
+// Helper: Get Current Logged-in User ID
+function getCurrentUserId() {
+  const userJson = localStorage.getItem("currentUser");
+  if (!userJson) return null;
+  try {
+    const user = JSON.parse(userJson);
+    return user.userId || user.UserId || null;
+  } catch {
+    return null;
+  }
+}
+
+// Load users and populate dropdowns in Add form and Edit modal
+async function loadUsersDropdown() {
+  try {
+    const users = await apiGetUsers();
+    allUsersList = users || [];
+
+    const addSelect = document.getElementById("userId");
+    const editSelect = document.getElementById("editUserId");
+
+    const currentUserId = getCurrentUserId();
+
+    if (!allUsersList || allUsersList.length === 0) {
+      if (addSelect) {
+        addSelect.innerHTML = '<option value="" disabled selected>No users found</option>';
+      }
+      if (editSelect) {
+        editSelect.innerHTML = '<option value="" disabled selected>No users found</option>';
+      }
+      return;
+    }
+
+    const buildOptions = (placeholderText) => {
+      let options = `<option value="" disabled selected>${placeholderText}</option>`;
+      options += allUsersList
+        .map((u) => {
+          const uid = u.userId ?? u.UserId;
+          const uname = u.username ?? u.Username ?? "User";
+          const uemail = u.email ?? u.Email ?? "";
+          const display = uemail ? `${uname} (${uemail}) - ID: ${uid}` : `${uname} - ID: ${uid}`;
+          return `<option value="${uid}">${display}</option>`;
+        })
+        .join("");
+      return options;
+    };
+
+    if (addSelect) {
+      addSelect.innerHTML = buildOptions("Select a user...");
+      // Auto-select logged-in user if exists in list, otherwise select the first user
+      if (currentUserId && allUsersList.some((u) => (u.userId ?? u.UserId) == currentUserId)) {
+        addSelect.value = currentUserId;
+      } else if (allUsersList.length > 0) {
+        addSelect.value = allUsersList[0].userId ?? allUsersList[0].UserId;
+      }
+    }
+
+    if (editSelect) {
+      editSelect.innerHTML = buildOptions("Select a user...");
+    }
+  } catch (error) {
+    console.error("Failed to load users for dropdown:", error);
+    const addSelect = document.getElementById("userId");
+    if (addSelect) {
+      addSelect.innerHTML = '<option value="" disabled selected>Error loading users</option>';
+    }
+  }
+}
 
 // Set Today's Date Default for Input
 function setDefaultDate() {
@@ -49,6 +119,14 @@ function displayPrescriptions(data) {
       const status = p.prescriptionStatus ?? p.PrescriptionStatus ?? "Pending";
       const userId = p.userId ?? p.UserId ?? "—";
 
+      // Find user name if available
+      const matchedUser = allUsersList.find((u) => (u.userId ?? u.UserId) == userId);
+      const userDisplay = matchedUser
+        ? `${matchedUser.username ?? matchedUser.Username} (#${userId})`
+        : p.user?.username
+          ? `${p.user.username} (#${userId})`
+          : `#${userId}`;
+
       const badgeColor = status === "Approved" ? "success" : status === "Pending" ? "warning text-dark" : "secondary";
 
       return `
@@ -59,7 +137,7 @@ function displayPrescriptions(data) {
             <td>${dosage}</td>
             <td>${duration}</td>
             <td><span class="badge bg-${badgeColor}">${status}</span></td>
-            <td>${userId}</td>
+            <td>${userDisplay}</td>
             <td class="text-center text-nowrap">
                 <button class="btn btn-sm btn-warning me-1" onclick="openEditModal(${id})">Edit</button>
                 <button class="btn btn-sm btn-danger" onclick="deletePrescriptionAction(${id})">Delete</button>
@@ -73,13 +151,19 @@ function displayPrescriptions(data) {
 document.getElementById("addPrescriptionForm")?.addEventListener("submit", async function (e) {
   e.preventDefault();
 
+  const userIdVal = document.getElementById("userId").value;
+  if (!userIdVal) {
+    alert("Please select a user from the dropdown.");
+    return;
+  }
+
   const prescription = {
     prescriptionDoctorName: document.getElementById("prescriptionDoctorName").value.trim(),
     prescriptionDate: document.getElementById("prescriptionDate").value,
     prescriptionDosage: document.getElementById("prescriptionDosage").value.trim(),
     prescriptionDuration: document.getElementById("prescriptionDuration").value.trim(),
     prescriptionStatus: document.getElementById("prescriptionStatus").value,
-    userId: parseInt(document.getElementById("userId").value),
+    userId: parseInt(userIdVal),
   };
 
   try {
@@ -87,6 +171,16 @@ document.getElementById("addPrescriptionForm")?.addEventListener("submit", async
     alert("Prescription added successfully!");
     document.getElementById("addPrescriptionForm").reset();
     setDefaultDate();
+    // Re-select current user or first user in dropdown after reset
+    const currentUserId = getCurrentUserId();
+    const addSelect = document.getElementById("userId");
+    if (addSelect) {
+      if (currentUserId && allUsersList.some((u) => (u.userId ?? u.UserId) == currentUserId)) {
+        addSelect.value = currentUserId;
+      } else if (allUsersList.length > 0) {
+        addSelect.value = allUsersList[0].userId ?? allUsersList[0].UserId;
+      }
+    }
     getAllPrescriptions();
   } catch (error) {
     console.error("Add Error:", error);
@@ -107,7 +201,11 @@ async function openEditModal(id) {
     document.getElementById("editDosage").value = p.prescriptionDosage ?? p.PrescriptionDosage ?? "";
     document.getElementById("editDuration").value = p.prescriptionDuration ?? p.PrescriptionDuration ?? "";
     document.getElementById("editStatus").value = p.prescriptionStatus ?? p.PrescriptionStatus ?? "Pending";
-    document.getElementById("editUserId").value = p.userId ?? p.UserId ?? "";
+    
+    const editUserSelect = document.getElementById("editUserId");
+    if (editUserSelect) {
+      editUserSelect.value = p.userId ?? p.UserId ?? "";
+    }
 
     const modalEl = document.getElementById("editPrescriptionModal");
     const modal = new bootstrap.Modal(modalEl);
@@ -123,6 +221,12 @@ document.getElementById("editPrescriptionForm")?.addEventListener("submit", asyn
   e.preventDefault();
 
   const id = parseInt(document.getElementById("editPrescriptionId").value);
+  const userIdVal = document.getElementById("editUserId").value;
+
+  if (!userIdVal) {
+    alert("Please select a user from the dropdown.");
+    return;
+  }
 
   const prescription = {
     prescriptionId: id,
@@ -131,7 +235,7 @@ document.getElementById("editPrescriptionForm")?.addEventListener("submit", asyn
     prescriptionDosage: document.getElementById("editDosage").value.trim(),
     prescriptionDuration: document.getElementById("editDuration").value.trim(),
     prescriptionStatus: document.getElementById("editStatus").value,
-    userId: parseInt(document.getElementById("editUserId").value),
+    userId: parseInt(userIdVal),
   };
 
   try {
@@ -178,7 +282,8 @@ async function sortPrescriptionsAction() {
 }
 
 // INITIAL LOAD
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   setDefaultDate();
+  await loadUsersDropdown();
   getAllPrescriptions();
 });

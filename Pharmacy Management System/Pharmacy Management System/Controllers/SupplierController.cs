@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pharmacy_Management_System.Models;
@@ -56,14 +56,21 @@ namespace Pharmacy_Management_System.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Suppliers.Add(supplier);
-            _context.SaveChanges();
+            try
+            {
+                _context.Suppliers.Add(supplier);
+                _context.SaveChanges();
 
-            return CreatedAtAction(
-                nameof(GetSupplierById),
-                new { id = supplier.SupplierId },
-                supplier
-            );
+                return CreatedAtAction(
+                    nameof(GetSupplierById),
+                    new { id = supplier.SupplierId },
+                    supplier
+                );
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, $"Database error while creating supplier: {ex.InnerException?.Message ?? ex.Message}");
+            }
         }
 
         // 4. PUT: Update supplier
